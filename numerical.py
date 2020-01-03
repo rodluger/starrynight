@@ -166,13 +166,13 @@ class Numerical(object):
 
             # T
             # This is the *actual* angle along the ellipse
-            xi_p = np.arctan(b * np.tan(xi))
+            xi_p = np.arctan(self.b * np.tan(xi))
             # TODO: Check this criterion
             xi_p[xi_p < 0] += np.pi
             arc = Arc(
                 (0, 0),
                 2,
-                2 * b,
+                2 * self.b,
                 self.theta * 180 / np.pi,
                 xi_p[1] * 180 / np.pi,
                 xi_p[0] * 180 / np.pi,
@@ -226,6 +226,7 @@ class Numerical(object):
         ax[2].plot(
             [-1, 1], [0, 0], color="k", ls="--", lw=0.5,
         )
+        ax[2].plot(0, 0, "C0o", ms=4, zorder=4)
 
         # Draw points of intersection & angles
         sz = [0.25, 0.5]
@@ -242,7 +243,7 @@ class Numerical(object):
             )
 
             # tangent line
-            if b > 0:
+            if self.b > 0:
                 x0 = np.cos(xi_i) * np.cos(self.theta)
                 y0 = np.cos(xi_i) * np.sin(self.theta)
             else:
@@ -362,9 +363,6 @@ class Numerical(object):
             ax[2].plot(
                 [np.cos(lam_i)], [np.sin(lam_i)], "C0o", ms=4, zorder=4,
             )
-            ax[2].plot(
-                [0, 0], "C0o", ms=4, zorder=4,
-            )
 
             # draw and label the angle arc
             angle = sorted([0, lam_i])
@@ -432,7 +430,7 @@ class Numerical(object):
                     Q[n] = self.Q(l, m, lam[0], lam[1])
                 n += 1
 
-        return (P + T + Q).dot(self.A).dot(y)
+        return (P + Q + T).dot(self.A).dot(self.y)
 
     def G(self, l, m):
         mu = l - m
@@ -503,6 +501,13 @@ class Numerical(object):
         dy = lambda phi: self.ro * np.cos(phi)
         return self.primitive(l, m, x, y, dx, dy, phi1, phi2)
 
+    def on_dayside(self, x, y):
+        """Return True if a point is on the dayside."""
+        xr = x * np.cos(self.theta) + y * np.sin(self.theta)
+        yr = -x * np.sin(self.theta) + y * np.cos(self.theta)
+        yt = self.b * np.sqrt(1 - xr ** 2)
+        return yr >= yt
+
     def angles(self):
 
         # TODO: Use Sturm's theorem here
@@ -562,55 +567,92 @@ class Numerical(object):
         # Get rid of any multiplicity
         x = np.array(list(set(x)))
 
-        # No intersections with the terminator
+        # P-Q
         if len(x) == 0:
 
+            # Use the standard starry algorithm instead!
             raise RuntimeError("Occultor does not intersect the terminator.")
 
         # P-Q-T
         if len(x) == 1:
 
-            # phi
-            phi = np.array(
-                [
-                    np.pi
-                    - np.arcsin(
-                        (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
-                    ),
-                    theta + np.arctan2(self.b * np.sqrt(1 - x[0] ** 2) - yo, x[0] - xo),
-                ]
+            # PHI
+            # ---
+
+            # Angle of intersection with occultor
+            phi_o = np.arcsin(
+                (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
             )
+            # There are always two points; always pick the one
+            # that's on the dayside for definiteness
+            if not self.on_dayside(
+                self.ro * np.sin(phi_o), self.bo + self.ro * np.cos(phi_o)
+            ):
+                phi_o = np.pi - phi_o
+
+            # Angle of intersection with the terminator
+            phi_t = self.theta + np.arctan2(
+                self.b * np.sqrt(1 - x[0] ** 2) - yo, x[0] - xo
+            )
+
+            # Now ensure phi *only* spans the dayside.
+            phi = np.array([phi_o, phi_t]) % (2 * np.pi)
+            if phi[1] < phi[0]:
+                phi[1] += 2 * np.pi
+            if not self.on_dayside(
+                self.ro * np.cos(np.mean(phi)), self.bo + self.ro * np.sin(np.mean(phi))
+            ):
+                phi = np.array([phi_t, phi_o]) % (2 * np.pi)
+            if phi[1] < phi[0]:
+                phi[1] += 2 * np.pi
+
+            # LAMBDA
+            # ------
+
+            # Angle of intersection with occultor
+            lam_o = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
+            # There are always two points; always pick the one
+            # that's on the dayside for definiteness
+            if not self.on_dayside(np.sin(lam_o), np.cos(lam_o)):
+                lam_o = np.pi - lam_o
+
+            # Angle of intersection with the terminator
+            lam_t = self.theta
+            # There are always two points; always pick the one
+            # that's inside the occultor
+            if np.cos(lam_t) ** 2 + (np.sin(lam_t) - self.bo) ** 2 > self.ro ** 2:
+                lam_t = np.pi + self.theta
+
+            # Now ensure lam *only* spans the inside of the occultor.
+            lam = np.array([lam_o, lam_t]) % (2 * np.pi)
+            if lam[1] < lam[0]:
+                lam[1] += 2 * np.pi
+            if (
+                np.cos(np.mean(lam)) ** 2 + (np.sin(np.mean(lam)) - self.bo) ** 2
+                > self.ro ** 2
+            ):
+                lam = np.array([lam_t, lam_o]) % (2 * np.pi)
+            if lam[1] < lam[0]:
+                lam[1] += 2 * np.pi
+
+            # XI
+            # --
 
             # xi
-            if (1 - xo) ** 2 + yo ** 2 < ro ** 2:
+            if (1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
                 x_xi = np.append(x, 1.0)
-            elif (-1 - xo) ** 2 + yo ** 2 < ro ** 2:
+            elif (-1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
                 x_xi = np.append(x, -1.0)
             xi = np.arctan2(np.sqrt(1 - x_xi ** 2), x_xi)
-
-            # lambda
-            lam = np.array(
-                [
-                    self.theta,
-                    np.pi
-                    - np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)),
-                ]
-            )
-
-            # TODO: What is the criterion for determining the order of these angles?
 
         # P-T
         elif len(x) == 2:
 
             # Sort from right to left
             x = x[np.argsort(x)[::-1]]
-            phi = theta + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
+            phi = self.theta + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
             xi = np.arctan2(np.sqrt(1 - x ** 2), x)
             lam = np.array([])
-
-            # Ensure we're integrating counter-clockwise
-            if phi[1] < phi[0]:
-                phi[1] += 2 * np.pi
 
         # There's a pathological case with 4 roots we need to code up
         else:
@@ -618,16 +660,30 @@ class Numerical(object):
             # TODO: Code this special case up
             raise NotImplementedError("TODO!")
 
+        # Ensure we're always integrating counter-clockwise
+        if phi[1] < phi[0]:
+            phi[1] += 2 * np.pi
+        if xi[0] < xi[1]:
+            xi[0] += 2 * np.pi
+        if lam[1] < lam[0]:
+            lam[1] += 2 * np.pi
+
         return phi, lam, xi
 
 
+# NOTE: theta ~ [0, 2pi]
+#       b ~ [-1, 1]
+#       bo ~ [0, +inf]
+
 # DEBUG
-b = 0.4
-theta = np.pi / 3
-bo = 0.5
-ro = 0.7
-y = [1, 1, 1, 1, 1, 1, 1, 1, 1]
-N = Numerical(y, b, theta, bo, ro)
+# args = b, theta, bo, ro
+args = [
+    [0.4, np.pi / 3, 0.5, 0.7],  # OK
+    [-0.4, np.pi / 3, 0.5, 0.7],  # OK but plotting bugged; I don't understand xi
+    [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
+]
+
+N = Numerical([1, 1, 1, 1, 1, 1, 1, 1, 1], *args[2])
 print(N.flux())
 print(N.flux_brute())
 N.visualize()
