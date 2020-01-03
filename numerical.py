@@ -590,8 +590,26 @@ class Numerical(object):
                 # All good
                 pass
             else:
-                # TODO
-                x = np.array([x[0]])
+                # There should be one root!
+                if len(x) == 0:
+                    raise ValueError("Unable to find root.")
+                elif len(x) == 2:
+                    # We likely have a rogue root that was included
+                    # becausse of the tolerance.
+                    # Pick the one with the smallest error
+                    x = np.array(
+                        [
+                            x[
+                                np.argmin(
+                                    np.abs(
+                                        (xi - xo) ** 2
+                                        + (self.b * np.sqrt(1 - xi ** 2) - yo) ** 2
+                                        - self.ro ** 2
+                                    )
+                                )
+                            ]
+                        ]
+                    )
 
         # P-Q
         if len(x) == 0:
