@@ -125,6 +125,7 @@ class Numerical(object):
                 fontsize=10,
                 color="C0",
             )
+        for i in range(len(lam)):
             ax[2].annotate(
                 r"$\lambda_{} = {:.1f}^\circ$".format(i + 1, lam[i] * 180 / np.pi),
                 xy=(0, 0),
@@ -169,18 +170,23 @@ class Numerical(object):
             xi_p = np.arctan(self.b * np.tan(xi))
             # TODO: Check this criterion
             xi_p[xi_p < 0] += np.pi
-            arc = Arc(
-                (0, 0),
-                2,
-                2 * self.b,
-                self.theta * 180 / np.pi,
-                xi_p[1] * 180 / np.pi,
-                xi_p[0] * 180 / np.pi,
-                color="r",
-                lw=2,
-                zorder=3,
-            )
-            ax[0].add_patch(arc)
+            if self.b == 0:
+                ax[0].plot(
+                    [np.cos(xi[0]), np.cos(xi[1])], [0, 0], color="r", lw=2, zorder=3,
+                )
+            else:
+                arc = Arc(
+                    (0, 0),
+                    2,
+                    2 * self.b,
+                    self.theta * 180 / np.pi,
+                    xi_p[1] * 180 / np.pi,
+                    xi_p[0] * 180 / np.pi,
+                    color="r",
+                    lw=2,
+                    zorder=3,
+                )
+                ax[0].add_patch(arc)
 
             # P
             arc = Arc(
@@ -195,6 +201,8 @@ class Numerical(object):
                 zorder=3,
             )
             ax[1].add_patch(arc)
+
+        if len(lam):
 
             # Q
             arc = Arc(
@@ -230,7 +238,7 @@ class Numerical(object):
 
         # Draw points of intersection & angles
         sz = [0.25, 0.5]
-        for i, phi_i, xi_i, lam_i in zip(range(len(phi)), phi, xi, lam):
+        for i, phi_i, xi_i in zip(range(len(phi)), phi, xi):
 
             # -- T --
 
@@ -341,11 +349,14 @@ class Numerical(object):
             ax[1].annotate(
                 r"${}\phi_{}$".format("-" if phi_i < 0 else "", i + 1),
                 xy=(
-                    0.5 * sz[i] * np.cos(0.5 * phi_i),
-                    self.bo + 0.5 * sz[i] * np.sin(0.5 * phi_i),
+                    0.5 * sz[i] * np.cos(0.5 * (phi_i % (2 * np.pi))),
+                    self.bo + 0.5 * sz[i] * np.sin(0.5 * (phi_i % (2 * np.pi))),
                 ),
                 xycoords="data",
-                xytext=(7 * np.cos(0.5 * phi_i), 7 * np.sin(0.5 * phi_i),),
+                xytext=(
+                    7 * np.cos(0.5 * (phi_i % (2 * np.pi))),
+                    7 * np.sin(0.5 * (phi_i % (2 * np.pi))),
+                ),
                 textcoords="offset points",
                 ha="center",
                 va="center",
@@ -353,6 +364,8 @@ class Numerical(object):
                 color="C0",
                 zorder=4,
             )
+
+        for i, lam_i in zip(range(len(lam)), lam):
 
             # -- Q --
 
@@ -567,6 +580,19 @@ class Numerical(object):
         # Get rid of any multiplicity
         x = np.array(list(set(x)))
 
+        # Check that the number of roots is correct
+        x_l = np.cos(self.theta)
+        y_l = np.sin(self.theta)
+        l1 = x_l ** 2 + (y_l - self.bo) ** 2 < self.ro
+        l2 = x_l ** 2 + (-y_l - self.bo) ** 2 < self.ro
+        if (l1 and not l2) or (l2 and not l1):
+            if len(x) == 1:
+                # All good
+                pass
+            else:
+                # TODO
+                x = np.array([x[0]])
+
         # P-Q
         if len(x) == 0:
 
@@ -599,9 +625,9 @@ class Numerical(object):
             phi = np.array([phi_o, phi_t]) % (2 * np.pi)
             if phi[1] < phi[0]:
                 phi[1] += 2 * np.pi
-            if not self.on_dayside(
-                self.ro * np.cos(np.mean(phi)), self.bo + self.ro * np.sin(np.mean(phi))
-            ):
+            x_mean = self.ro * np.cos(np.mean(phi))
+            y_mean = self.bo + self.ro * np.sin(np.mean(phi))
+            if not self.on_dayside(x_mean, y_mean):
                 phi = np.array([phi_t, phi_o]) % (2 * np.pi)
             if phi[1] < phi[0]:
                 phi[1] += 2 * np.pi
@@ -627,10 +653,9 @@ class Numerical(object):
             lam = np.array([lam_o, lam_t]) % (2 * np.pi)
             if lam[1] < lam[0]:
                 lam[1] += 2 * np.pi
-            if (
-                np.cos(np.mean(lam)) ** 2 + (np.sin(np.mean(lam)) - self.bo) ** 2
-                > self.ro ** 2
-            ):
+            x_mean = np.cos(np.mean(lam))
+            y_mean = np.sin(np.mean(lam))
+            if x_mean ** 2 + (y_mean - self.bo) ** 2 > self.ro ** 2:
                 lam = np.array([lam_t, lam_o]) % (2 * np.pi)
             if lam[1] < lam[0]:
                 lam[1] += 2 * np.pi
@@ -638,12 +663,29 @@ class Numerical(object):
             # XI
             # --
 
-            # xi
+            # Angle of intersection with occultor
+            xi_o = np.arctan2(np.sqrt(1 - x[0] ** 2), x[0])
+
+            # Angle of intersection with the limb
             if (1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
-                x_xi = np.append(x, 1.0)
-            elif (-1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
-                x_xi = np.append(x, -1.0)
-            xi = np.arctan2(np.sqrt(1 - x_xi ** 2), x_xi)
+                xi_l = 0
+            else:
+                xi_l = np.pi
+
+            # Now ensure xi *only* spans the inside of the occultor.
+            xi = np.array([xi_l, xi_o]) % (2 * np.pi)
+            if xi[0] < xi[1]:
+                xi[0] += 2 * np.pi
+            x_mean = np.cos(self.theta) * np.cos(np.mean(xi)) - self.b * np.sin(
+                self.theta
+            ) * np.sin(np.mean(xi))
+            y_mean = np.sin(self.theta) * np.cos(np.mean(xi)) + self.b * np.cos(
+                self.theta
+            ) * np.sin(np.mean(xi))
+            if x_mean ** 2 + (y_mean - self.bo) ** 2 > self.ro ** 2:
+                xi = np.array([xi_o, xi_l]) % (2 * np.pi)
+            if xi[0] < xi[1]:
+                xi[0] += 2 * np.pi
 
         # P-T
         elif len(x) == 2:
@@ -654,19 +696,19 @@ class Numerical(object):
             xi = np.arctan2(np.sqrt(1 - x ** 2), x)
             lam = np.array([])
 
+            # Ensure we're always integrating counter-clockwise
+            if phi[1] < phi[0]:
+                phi[1] += 2 * np.pi
+            if xi[0] < xi[1]:
+                xi[0] += 2 * np.pi
+
         # There's a pathological case with 4 roots we need to code up
         else:
 
             # TODO: Code this special case up
             raise NotImplementedError("TODO!")
 
-        # Ensure we're always integrating counter-clockwise
-        if phi[1] < phi[0]:
-            phi[1] += 2 * np.pi
-        if xi[0] < xi[1]:
-            xi[0] += 2 * np.pi
-        if lam[1] < lam[0]:
-            lam[1] += 2 * np.pi
+        print(phi, lam, xi)
 
         return phi, lam, xi
 
@@ -674,16 +716,24 @@ class Numerical(object):
 # NOTE: theta ~ [0, 2pi]
 #       b ~ [-1, 1]
 #       bo ~ [0, +inf]
+#       ro ~ [0, +inf]
+
+# TODO:
+# - Potential issues when bo = 0 (root multiplicity?)
 
 # DEBUG
 # args = b, theta, bo, ro
 args = [
     [0.4, np.pi / 3, 0.5, 0.7],  # OK
     [-0.4, np.pi / 3, 0.5, 0.7],  # OK but plotting bugged; I don't understand xi
-    [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
+    [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],  # OK
+    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],  # OK
+    [0.4, np.pi / 2, 0.5, 0.7],  # OK
+    [0.0, np.pi / 2, 0.5, 0.7],  # OK but plotting bugged
+    [0.01, np.pi / 2 - 0.01, 0.5, 0.7],  # BAD
 ]
 
-N = Numerical([1, 1, 1, 1, 1, 1, 1, 1, 1], *args[2])
+N = Numerical([1, 1, 1, 1, 1, 1, 1, 1, 1], *args[-2])
 print(N.flux())
 print(N.flux_brute())
 N.visualize()
