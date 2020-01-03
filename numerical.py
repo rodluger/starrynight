@@ -22,7 +22,7 @@ from matplotlib.patches import Arc
 
 
 class Numerical(object):
-    def __init__(self, y, b, theta, bo, ro, tol=1e-8, epsabs=1e-12, epsrel=1e-12):
+    def __init__(self, y, b, theta, bo, ro, tol=1e-7, epsabs=1e-12, epsrel=1e-12):
 
         self.y = y
         self.ydeg = int(np.sqrt(len(y)) - 1)
@@ -167,21 +167,32 @@ class Numerical(object):
 
             # T
             # This is the *actual* angle along the ellipse
-            xi_p = np.arctan(self.b * np.tan(xi))
-            # TODO: Check this criterion
+            xi_p = np.arctan(np.abs(self.b) * np.tan(xi))
             xi_p[xi_p < 0] += np.pi
-            if self.b == 0:
+            if np.abs(self.b) < 1e-4:
                 ax[0].plot(
-                    [np.cos(xi[0]), np.cos(xi[1])], [0, 0], color="r", lw=2, zorder=3,
+                    [
+                        np.cos(xi[0]) * np.cos(self.theta),
+                        np.cos(xi[1]) * np.cos(self.theta),
+                    ],
+                    [
+                        np.cos(xi[0]) * np.sin(self.theta),
+                        np.cos(xi[1]) * np.sin(self.theta),
+                    ],
+                    color="r",
+                    lw=2,
+                    zorder=3,
                 )
             else:
+                if self.b < 0:
+                    xi_p = xi_p[::-1]
                 arc = Arc(
                     (0, 0),
                     2,
-                    2 * self.b,
+                    2 * np.abs(self.b),
                     self.theta * 180 / np.pi,
-                    xi_p[1] * 180 / np.pi,
-                    xi_p[0] * 180 / np.pi,
+                    np.sign(self.b) * xi_p[1] * 180 / np.pi,
+                    np.sign(self.b) * xi_p[0] * 180 / np.pi,
                     color="r",
                     lw=2,
                     zorder=3,
@@ -238,28 +249,24 @@ class Numerical(object):
 
         # Draw points of intersection & angles
         sz = [0.25, 0.5]
-        for i, phi_i, xi_i in zip(range(len(phi)), phi, xi):
+        for i, xi_i in enumerate(xi):
 
             # -- T --
 
             # xi angle
             ax[0].plot(
-                [0, np.cos(xi_i + self.theta)],
-                [0, np.sin(xi_i + self.theta)],
+                [0, np.cos(np.sign(self.b) * xi_i + self.theta)],
+                [0, np.sin(np.sign(self.b) * xi_i + self.theta)],
                 color="C0",
                 lw=1,
             )
 
             # tangent line
-            if self.b > 0:
-                x0 = np.cos(xi_i) * np.cos(self.theta)
-                y0 = np.cos(xi_i) * np.sin(self.theta)
-            else:
-                x0 = self.ro * np.cos(phi_i)
-                y0 = self.bo + self.ro * np.sin(phi_i)
+            x0 = np.cos(xi_i) * np.cos(self.theta)
+            y0 = np.cos(xi_i) * np.sin(self.theta)
             ax[0].plot(
-                [x0, np.cos(xi_i + self.theta)],
-                [y0, np.sin(xi_i + self.theta)],
+                [x0, np.cos(np.sign(self.b) * xi_i + self.theta)],
+                [y0, np.sin(np.sign(self.b) * xi_i + self.theta)],
                 color="k",
                 ls="--",
                 lw=0.5,
@@ -267,8 +274,8 @@ class Numerical(object):
 
             # mark the polar angle
             ax[0].plot(
-                [np.cos(xi_i + self.theta)],
-                [np.sin(xi_i + self.theta)],
+                [np.cos(np.sign(self.b) * xi_i + self.theta)],
+                [np.sin(np.sign(self.b) * xi_i + self.theta)],
                 "C0o",
                 ms=4,
                 zorder=4,
@@ -276,7 +283,7 @@ class Numerical(object):
 
             # draw and label the angle arc
             if np.sin(xi_i) != 0:
-                angle = sorted([self.theta, xi_i + self.theta])
+                angle = sorted([self.theta, np.sign(self.b) * xi_i + self.theta])
                 arc = Arc(
                     (0, 0),
                     sz[i],
@@ -291,13 +298,13 @@ class Numerical(object):
                 ax[0].annotate(
                     r"$\xi_{}$".format(i + 1),
                     xy=(
-                        0.5 * sz[i] * np.cos(0.5 * xi_i + self.theta),
-                        0.5 * sz[i] * np.sin(0.5 * xi_i + self.theta),
+                        0.5 * sz[i] * np.cos(0.5 * np.sign(self.b) * xi_i + self.theta),
+                        0.5 * sz[i] * np.sin(0.5 * np.sign(self.b) * xi_i + self.theta),
                     ),
                     xycoords="data",
                     xytext=(
-                        7 * np.cos(0.5 * xi_i + self.theta),
-                        7 * np.sin(0.5 * xi_i + self.theta),
+                        7 * np.cos(0.5 * np.sign(self.b) * xi_i + self.theta),
+                        7 * np.sin(0.5 * np.sign(self.b) * xi_i + self.theta),
                     ),
                     textcoords="offset points",
                     ha="center",
@@ -306,14 +313,26 @@ class Numerical(object):
                     color="C0",
                 )
 
-                # points of intersection
-                ax[0].plot(
-                    [self.ro * np.cos(phi[1 - i])],
-                    [self.bo + self.ro * np.sin(phi[1 - i])],
-                    "C0o",
-                    ms=4,
-                    zorder=4,
-                )
+            # points of intersection?
+            for phi_i in phi:
+                x_phi = self.ro * np.cos(phi_i)
+                y_phi = self.bo + self.ro * np.sin(phi_i)
+                x_xi = np.cos(self.theta) * np.cos(xi_i) - self.b * np.sin(
+                    self.theta
+                ) * np.sin(xi_i)
+                y_xi = np.sin(self.theta) * np.cos(xi_i) + self.b * np.cos(
+                    self.theta
+                ) * np.sin(xi_i)
+                if np.abs(y_phi - y_xi) < self.tol and np.abs(x_phi - x_xi) < self.tol:
+                    ax[0].plot(
+                        [self.ro * np.cos(phi_i)],
+                        [self.bo + self.ro * np.sin(phi_i)],
+                        "C0o",
+                        ms=4,
+                        zorder=4,
+                    )
+
+        for i, phi_i in enumerate(phi):
 
             # -- P --
 
@@ -425,24 +444,21 @@ class Numerical(object):
         return flux
 
     def flux(self):
-
         self._setup()
-
         phi, lam, xi = self.angles()
-        T = np.zeros((self.ydeg + 1) ** 2)
         P = np.zeros((self.ydeg + 1) ** 2)
         Q = np.zeros((self.ydeg + 1) ** 2)
+        T = np.zeros((self.ydeg + 1) ** 2)
         n = 0
         for l in range(self.ydeg + 1):
             for m in range(-l, l + 1):
                 if len(phi):
                     P[n] = self.P(l, m, phi[0], phi[1])
-                if len(xi):
-                    T[n] = self.T(l, m, xi[0], xi[1])
                 if len(lam):
                     Q[n] = self.Q(l, m, lam[0], lam[1])
+                if len(xi):
+                    T[n] = self.T(l, m, xi[0], xi[1])
                 n += 1
-
         return (P + Q + T).dot(self.A).dot(self.y)
 
     def G(self, l, m):
@@ -518,12 +534,15 @@ class Numerical(object):
         """Return True if a point is on the dayside."""
         xr = x * np.cos(self.theta) + y * np.sin(self.theta)
         yr = -x * np.sin(self.theta) + y * np.cos(self.theta)
-        yt = self.b * np.sqrt(1 - xr ** 2)
+        term = 1 - xr ** 2
+        if term < 0 and term > -self.tol:
+            term = 0
+        yt = self.b * np.sqrt(term)
         return yr >= yt
 
     def angles(self):
 
-        # TODO: Use Sturm's theorem here
+        # TODO: Use Sturm's theorem here?
 
         # We'll solve for occultor-terminator intersections
         # in the frame where the semi-major axis of the
@@ -536,7 +555,6 @@ class Numerical(object):
 
             x = np.array([])
             term = np.sqrt(self.ro ** 2 - yo ** 2)
-            x = xo + term
             if np.abs(xo + term) < 1:
                 x = np.append(x, xo + term)
             if np.abs(xo - term) < 1:
@@ -592,7 +610,9 @@ class Numerical(object):
             else:
                 # There should be one root!
                 if len(x) == 0:
-                    raise ValueError("Unable to find root.")
+                    raise ValueError(
+                        "Unable to find the root. Try decreasing the tolerance."
+                    )
                 elif len(x) == 2:
                     # We likely have a rogue root that was included
                     # becausse of the tolerance.
@@ -602,8 +622,8 @@ class Numerical(object):
                             x[
                                 np.argmin(
                                     np.abs(
-                                        (xi - xo) ** 2
-                                        + (self.b * np.sqrt(1 - xi ** 2) - yo) ** 2
+                                        (x - xo) ** 2
+                                        + (self.b * np.sqrt(1 - x ** 2) - yo) ** 2
                                         - self.ro ** 2
                                     )
                                 )
@@ -630,7 +650,7 @@ class Numerical(object):
             # There are always two points; always pick the one
             # that's on the dayside for definiteness
             if not self.on_dayside(
-                self.ro * np.sin(phi_o), self.bo + self.ro * np.cos(phi_o)
+                self.ro * np.cos(phi_o), self.bo + self.ro * np.sin(phi_o)
             ):
                 phi_o = np.pi - phi_o
 
@@ -657,7 +677,7 @@ class Numerical(object):
             lam_o = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
             # There are always two points; always pick the one
             # that's on the dayside for definiteness
-            if not self.on_dayside(np.sin(lam_o), np.cos(lam_o)):
+            if not self.on_dayside(np.cos(lam_o), np.sin(lam_o)):
                 lam_o = np.pi - lam_o
 
             # Angle of intersection with the terminator
@@ -726,8 +746,6 @@ class Numerical(object):
             # TODO: Code this special case up
             raise NotImplementedError("TODO!")
 
-        print(phi, lam, xi)
-
         return phi, lam, xi
 
 
@@ -742,16 +760,21 @@ class Numerical(object):
 # DEBUG
 # args = b, theta, bo, ro
 args = [
-    [0.4, np.pi / 3, 0.5, 0.7],  # OK
-    [-0.4, np.pi / 3, 0.5, 0.7],  # OK but plotting bugged; I don't understand xi
-    [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],  # OK
-    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],  # OK
-    [0.4, np.pi / 2, 0.5, 0.7],  # OK
-    [0.0, np.pi / 2, 0.5, 0.7],  # OK but plotting bugged
-    [0.01, np.pi / 2 - 0.01, 0.5, 0.7],  # BAD
+    [0.4, np.pi / 3, 0.5, 0.7],
+    [-0.4, np.pi / 3, 0.5, 0.7],
+    [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
+    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
+    [0.4, np.pi / 2, 0.5, 0.7],
+    [0.4, np.pi / 2, 1.0, 0.2],
+    [0.00001, np.pi / 2, 0.5, 0.7],
+    [0, np.pi / 2, 0.5, 0.7],
+    [0.4, -np.pi / 2, 0.5, 0.7],
+    [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
-N = Numerical([1, 1, 1, 1, 1, 1, 1, 1, 1], *args[-2])
-print(N.flux())
-print(N.flux_brute())
-N.visualize()
+
+for arg in args[3:4]:
+    N = Numerical([1, 1, 1, 1, 1, 1, 1, 1, 1], *arg)
+    print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
+    N.visualize()
+
