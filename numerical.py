@@ -843,9 +843,9 @@ class Numerical(object):
         return phi, lam, xi, code
 
 
-# DEBUG
-# args = b, theta, bo, ro
+# CASE 1
 args = [
+    # b, theta, bo, ro
     [0.4, np.pi / 3, 0.5, 0.7],
     [-0.4, np.pi / 3, 0.5, 0.7],
     [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
@@ -858,9 +858,15 @@ args = [
     [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
+# CASE 2
+args = [
+    # b, theta, bo, ro
+    [0.4, np.pi / 6, 0.3, 0.3],
+]
 
-for arg in args[3:4]:
-    N = Numerical([1, 1, 1, 1, 1, 1, 1, 1], *arg)
+
+for arg in args:
+    N = Numerical([1, 1, 1], *arg)
     print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
     N.visualize()
 
