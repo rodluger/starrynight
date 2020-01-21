@@ -536,7 +536,7 @@ class Numerical(object):
         # Use it to compute the visible flux
         self.map[1:, :] = self.y[1:]
         if code == FLUX_DAY_OCC:
-            xs = np.sin(self.theta)
+            xs = -np.sin(self.theta)
             ys = np.cos(self.theta)
             zs = -self.b
             r = np.sqrt(xs ** 2 + ys ** 2 + zs ** 2)
@@ -859,10 +859,8 @@ args = [
 ]
 
 
-for arg in [
-    [-0.4, np.pi / 2, 1.0, 0.4],
-]:
-    N = Numerical([0, 0, 0], *arg)
+for arg in args[3:4]:
+    N = Numerical([1, 1, 1, 1, 1, 1, 1, 1], *arg)
     print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
     N.visualize()
 
