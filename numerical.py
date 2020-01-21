@@ -1,6 +1,4 @@
 """
-
-
 Singularities:
 
     - bo = 0
@@ -10,6 +8,7 @@ Singularities:
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import starry
 from starry._c_ops import Ops
 from starry._core.ops.rotation import dotROp
 from starry._core.ops.integration import sTOp
@@ -19,13 +18,23 @@ from scipy.integrate import quad
 from sympy import binomial
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc
+import warnings
+
+warnings.simplefilter("ignore")
+
+# Integration codes
+FLUX_NONE = 0
+FLUX_DAY_OCC = 1
+FLUX_DAY_VIS = 2
+FLUX_NIGHT_OCC = 3
+FLUX_NIGHT_VIS = 4
 
 
 class Numerical(object):
-    def __init__(self, y, b, theta, bo, ro, tol=1e-7, epsabs=1e-12, epsrel=1e-12):
+    def __init__(self, y1, b, theta, bo, ro, tol=1e-7, epsabs=1e-12, epsrel=1e-12):
 
-        self.y = y
-        self.ydeg = int(np.sqrt(len(y)) - 1)
+        self.y = np.append([1.0], y1)
+        self.ydeg = int(np.sqrt(len(self.y)) - 1)
         self.b = b
         self.theta = theta
         self.bo = bo
@@ -41,14 +50,18 @@ class Numerical(object):
             return
         self._do_setup = False
 
-        # Instantiate
-        ops = Ops(self.ydeg, 0, 0, 0)
+        # Instantiate a starry map
+        self.map = starry.Map(ydeg=self.ydeg, reflected=True)
 
-        # Basis transform from Ylm to Green's
-        self.A = np.array(ops.A.todense())
+        # Instantiate the ops
+        ops = Ops(self.ydeg + 1, 0, 0, 0)
+
+        # Basis transform from poly to Green's
+        self.A2 = np.array(theano.sparse.dot(ops.A, ops.A1Inv).eval())
 
         # Basis transform from Ylms to poly
-        self.A1 = np.array(ops.A1.todense())
+        N = (self.ydeg + 1) ** 2
+        self.A1 = np.array(ops.A1.todense())[:N, :N]
 
         # Z-rotation matrix
         theta = theano.tensor.dscalar()
@@ -72,12 +85,12 @@ class Numerical(object):
         x = theano.tensor.dvector()
         y = theano.tensor.dvector()
         z = theano.tensor.dvector()
-        self.pT = theano.function([x, y, z], pTOp(ops.pT, self.ydeg)(x, y, z),)
+        self.pT = theano.function([x, y, z], pTOp(ops.pT, self.ydeg + 1)(x, y, z),)
 
     def visualize(self, res=999):
 
         # Find angles of intersection
-        phi, lam, xi = self.angles()
+        phi, lam, xi, code = self.angles()
 
         # Equation of half-ellipse
         x = np.linspace(-1, 1, 1000)
@@ -97,6 +110,20 @@ class Numerical(object):
         img_day_occ[cond1 & cond2 & cond3] = 1
         img_night = np.zeros_like(xpt)
         img_night[~cond1 & cond2 & ~cond3] = 1
+
+        # Dayside image
+        p = np.linspace(-1, 1, res)
+        xpt = xpt.flatten()
+        ypt = ypt.flatten()
+        zpt = np.sqrt(1 - xpt ** 2 - ypt ** 2)
+        cond1 = xpt ** 2 + (ypt - self.bo) ** 2 > self.ro ** 2  # outside occultor
+        cond2 = xpt ** 2 + ypt ** 2 < 1  # inside occulted
+        xr = xpt * np.cos(self.theta) + ypt * np.sin(self.theta)
+        yr = -xpt * np.sin(self.theta) + ypt * np.cos(self.theta)
+        cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
+        image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
+        image[~(cond1 & cond2 & cond3)] = np.nan
+        image = image.reshape(res, res)
 
         # Plot
         fig, ax = plt.subplots(1, 3, figsize=(14, 5))
@@ -158,8 +185,16 @@ class Numerical(object):
                 img_night,
                 origin="lower",
                 extent=(-1, 1, -1, 1),
-                alpha=0.25,
+                alpha=0.75,
                 cmap=LinearSegmentedColormap.from_list("cmap1", [(0, 0, 0, 0), "k"], 2),
+            )
+            axis.imshow(
+                image,
+                origin="lower",
+                extent=(-1, 1, -1, 1),
+                cmap="Greys_r",
+                vmin=0,
+                alpha=0.75,
             )
 
         # Draw integration paths
@@ -427,6 +462,37 @@ class Numerical(object):
 
         plt.show()
 
+    def I(self):
+        # Illumination matrix
+        x = -np.sin(self.theta)
+        y = np.cos(self.theta)
+        z = -self.b
+        r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+        p = np.array([0, x, z, y]) * 1.5 / r  # NOTE: 3 / 2 is the starry normalization!
+        n1 = 0
+        n2 = 0
+        I = np.zeros(((self.ydeg + 2) ** 2, (self.ydeg + 1) ** 2))
+        for l1 in range(self.ydeg + 1):
+            for m1 in range(-l1, l1 + 1):
+                if (l1 + m1) % 2 == 0:
+                    odd1 = False
+                else:
+                    odd1 = True
+                n2 = 0
+                for l2 in range(2):
+                    for m2 in range(-l2, l2 + 1):
+                        l = l1 + l2
+                        n = l * l + l + m1 + m2
+                        if odd1 and ((l2 + m2) % 2 != 0):
+                            I[n - 4 * l + 2, n1] += p[n2]
+                            I[n - 2, n1] -= p[n2]
+                            I[n + 2, n1] -= p[n2]
+                        else:
+                            I[n, n1] += p[n2]
+                        n2 += 1
+                n1 += 1
+        return I
+
     def flux_brute(self, res=999):
         self._setup()
         p = np.linspace(-1, 1, res)
@@ -434,23 +500,27 @@ class Numerical(object):
         xpt = xpt.flatten()
         ypt = ypt.flatten()
         zpt = np.sqrt(1 - xpt ** 2 - ypt ** 2)
-        cond1 = xpt ** 2 + (ypt - self.bo) ** 2 < self.ro ** 2  # inside occultor
+        cond1 = xpt ** 2 + (ypt - self.bo) ** 2 > self.ro ** 2  # outside occultor
         cond2 = xpt ** 2 + ypt ** 2 < 1  # inside occulted
         xr = xpt * np.cos(self.theta) + ypt * np.sin(self.theta)
         yr = -xpt * np.sin(self.theta) + ypt * np.cos(self.theta)
         cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
-        image = self.pT(xpt, ypt, zpt).dot(self.A1).dot(self.y)
+        image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
         flux = 4 * np.sum(image[cond1 & cond2 & cond3]) / (res ** 2)
         return flux
 
     def flux(self):
         self._setup()
-        phi, lam, xi = self.angles()
-        P = np.zeros((self.ydeg + 1) ** 2)
-        Q = np.zeros((self.ydeg + 1) ** 2)
-        T = np.zeros((self.ydeg + 1) ** 2)
+
+        # Get integration limits
+        phi, lam, xi, code = self.angles()
+
+        # Compute primitive integrals
+        P = np.zeros((self.ydeg + 2) ** 2)
+        Q = np.zeros((self.ydeg + 2) ** 2)
+        T = np.zeros((self.ydeg + 2) ** 2)
         n = 0
-        for l in range(self.ydeg + 1):
+        for l in range(self.ydeg + 2):
             for m in range(-l, l + 1):
                 if len(phi):
                     P[n] = self.P(l, m, phi[0], phi[1])
@@ -459,7 +529,25 @@ class Numerical(object):
                 if len(xi):
                     T[n] = self.T(l, m, xi[0], xi[1])
                 n += 1
-        return (P + Q + T).dot(self.A).dot(self.y)
+
+        # Compute the occulted flux
+        f = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1).dot(self.y)
+
+        # Use it to compute the visible flux
+        self.map[1:, :] = self.y[1:]
+        if code == FLUX_DAY_OCC:
+            xs = np.sin(self.theta)
+            ys = np.cos(self.theta)
+            zs = -self.b
+            r = np.sqrt(xs ** 2 + ys ** 2 + zs ** 2)
+            xs /= r
+            ys /= r
+            zs /= r
+            fday = self.map.flux(xs=xs, ys=ys, zs=zs).eval()[0]
+            return fday - f
+        else:
+            # TODO
+            raise NotImplementedError("TODO!")
 
     def G(self, l, m):
         mu = l - m
@@ -610,12 +698,12 @@ class Numerical(object):
             else:
                 # There should be one root!
                 if len(x) == 0:
-                    raise ValueError(
+                    raise RuntimeError(
                         "Unable to find the root. Try decreasing the tolerance."
                     )
                 elif len(x) == 2:
                     # We likely have a rogue root that was included
-                    # becausse of the tolerance.
+                    # because of the tolerance.
                     # Pick the one with the smallest error
                     x = np.array(
                         [
@@ -635,7 +723,7 @@ class Numerical(object):
         if len(x) == 0:
 
             # Use the standard starry algorithm instead!
-            raise RuntimeError("Occultor does not intersect the terminator.")
+            return np.array([]), np.array([]), np.array([]), FLUX_NONE
 
         # P-Q-T
         if len(x) == 1:
@@ -725,6 +813,9 @@ class Numerical(object):
             if xi[0] < xi[1]:
                 xi[0] += 2 * np.pi
 
+            # In all cases, we're computing the dayside occulted flux
+            code = FLUX_DAY_OCC
+
         # P-T
         elif len(x) == 2:
 
@@ -740,22 +831,17 @@ class Numerical(object):
             if xi[0] < xi[1]:
                 xi[0] += 2 * np.pi
 
+            # TODO: Figure out the code
+            code = FLUX_NONE
+
         # There's a pathological case with 4 roots we need to code up
         else:
 
             # TODO: Code this special case up
             raise NotImplementedError("TODO!")
 
-        return phi, lam, xi
+        return phi, lam, xi, code
 
-
-# NOTE: theta ~ [0, 2pi]
-#       b ~ [-1, 1]
-#       bo ~ [0, +inf]
-#       ro ~ [0, +inf]
-
-# TODO:
-# - Potential issues when bo = 0 (root multiplicity?)
 
 # DEBUG
 # args = b, theta, bo, ro
@@ -773,8 +859,10 @@ args = [
 ]
 
 
-for arg in args[3:4]:
-    N = Numerical([1, 1, 1, 1, 1, 1, 1, 1, 1], *arg)
+for arg in [
+    [-0.4, np.pi / 2, 1.0, 0.4],
+]:
+    N = Numerical([0, 0, 0], *arg)
     print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
     N.visualize()
 
