@@ -51,7 +51,8 @@ class Numerical(object):
         self._do_setup = False
 
         # Instantiate a starry map
-        self.map = starry.Map(ydeg=self.ydeg, reflected=True)
+        self.map = starry.Map(ydeg=self.ydeg + 1)
+        self.map_refl = starry.Map(ydeg=self.ydeg, reflected=True)
 
         # Instantiate the ops
         ops = Ops(self.ydeg + 1, 0, 0, 0)
@@ -59,9 +60,10 @@ class Numerical(object):
         # Basis transform from poly to Green's
         self.A2 = np.array(theano.sparse.dot(ops.A, ops.A1Inv).eval())
 
-        # Basis transform from Ylms to poly
+        # Basis transform from Ylms to poly and back
         N = (self.ydeg + 1) ** 2
         self.A1 = np.array(ops.A1.todense())[:N, :N]
+        self.A1Inv = np.array(ops.A1Inv.todense())
 
         # Z-rotation matrix
         theta = theano.tensor.dscalar()
@@ -122,7 +124,7 @@ class Numerical(object):
         yr = -xpt * np.sin(self.theta) + ypt * np.cos(self.theta)
         cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
         image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
-        image[~(cond1 & cond2 & cond3)] = np.nan
+        # DEBUG image[~(cond1 & cond2 & cond3)] = np.nan
         image = image.reshape(res, res)
 
         # Plot
@@ -172,6 +174,7 @@ class Numerical(object):
             axis.set_xlim(-1.25, 1.25)
             axis.set_ylim(-1.25, 1.25)
             axis.set_aspect(1)
+            """
             axis.imshow(
                 img_day_occ,
                 origin="lower",
@@ -181,6 +184,7 @@ class Numerical(object):
                     "cmap1", [(0, 0, 0, 0), "C1"], 2
                 ),
             )
+            """  # DEBUG
             axis.imshow(
                 img_night,
                 origin="lower",
@@ -464,11 +468,11 @@ class Numerical(object):
 
     def I(self):
         # Illumination matrix
-        x = -np.sin(self.theta)
-        y = np.cos(self.theta)
+        y0 = np.sqrt(1 - self.b ** 2)
+        x = -y0 * np.sin(self.theta)
+        y = y0 * np.cos(self.theta)
         z = -self.b
-        r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-        p = np.array([0, x, z, y]) * 1.5 / r  # NOTE: 3 / 2 is the starry normalization!
+        p = np.array([0, x, z, y]) * 1.5  # NOTE: 3 / 2 is the starry normalization!
         n1 = 0
         n2 = 0
         I = np.zeros(((self.ydeg + 2) ** 2, (self.ydeg + 1) ** 2))
@@ -534,17 +538,32 @@ class Numerical(object):
         f = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1).dot(self.y)
 
         # Use it to compute the visible flux
-        self.map[1:, :] = self.y[1:]
+        y0 = np.sqrt(1 - self.b ** 2)
+        xs = -y0 * np.sin(self.theta)
+        ys = y0 * np.cos(self.theta)
+        zs = -self.b
+        y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
+        self.map[1:, :] = y_refl[1:]
+        self.map_refl[1:, :] = self.y[1:]
         if code == FLUX_DAY_OCC:
-            xs = -np.sin(self.theta)
-            ys = np.cos(self.theta)
-            zs = -self.b
-            r = np.sqrt(xs ** 2 + ys ** 2 + zs ** 2)
-            xs /= r
-            ys /= r
-            zs /= r
-            fday = self.map.flux(xs=xs, ys=ys, zs=zs).eval()[0]
-            return fday - f
+
+            fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
+            return fd - f
+
+        elif code == FLUX_NIGHT_OCC:
+
+            # TODO: SUPER HACKY, FIX ME
+            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            self.map.reset()
+            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            fs -= f0
+            fn = -self.map_refl.flux(xs=-xs, ys=-ys, zs=-zs).eval()[0]
+            return fs - (fn - f)
+
+        elif code == FLUX_DAY_VIS:
+
+            return f
+
         else:
             # TODO
             raise NotImplementedError("TODO!")
@@ -728,6 +747,8 @@ class Numerical(object):
         # P-Q-T
         if len(x) == 1:
 
+            # CASE 1
+
             # PHI
             # ---
 
@@ -748,15 +769,7 @@ class Numerical(object):
             )
 
             # Now ensure phi *only* spans the dayside.
-            phi = np.array([phi_o, phi_t]) % (2 * np.pi)
-            if phi[1] < phi[0]:
-                phi[1] += 2 * np.pi
-            x_mean = self.ro * np.cos(np.mean(phi))
-            y_mean = self.bo + self.ro * np.sin(np.mean(phi))
-            if not self.on_dayside(x_mean, y_mean):
-                phi = np.array([phi_t, phi_o]) % (2 * np.pi)
-            if phi[1] < phi[0]:
-                phi[1] += 2 * np.pi
+            phi = self.sort_phi(np.array([phi_o, phi_t]), dayside=True)
 
             # LAMBDA
             # ------
@@ -776,15 +789,7 @@ class Numerical(object):
                 lam_t = np.pi + self.theta
 
             # Now ensure lam *only* spans the inside of the occultor.
-            lam = np.array([lam_o, lam_t]) % (2 * np.pi)
-            if lam[1] < lam[0]:
-                lam[1] += 2 * np.pi
-            x_mean = np.cos(np.mean(lam))
-            y_mean = np.sin(np.mean(lam))
-            if x_mean ** 2 + (y_mean - self.bo) ** 2 > self.ro ** 2:
-                lam = np.array([lam_t, lam_o]) % (2 * np.pi)
-            if lam[1] < lam[0]:
-                lam[1] += 2 * np.pi
+            lam = self.sort_lam(np.array([lam_o, lam_t]))
 
             # XI
             # --
@@ -799,19 +804,7 @@ class Numerical(object):
                 xi_l = np.pi
 
             # Now ensure xi *only* spans the inside of the occultor.
-            xi = np.array([xi_l, xi_o]) % (2 * np.pi)
-            if xi[0] < xi[1]:
-                xi[0] += 2 * np.pi
-            x_mean = np.cos(self.theta) * np.cos(np.mean(xi)) - self.b * np.sin(
-                self.theta
-            ) * np.sin(np.mean(xi))
-            y_mean = np.sin(self.theta) * np.cos(np.mean(xi)) + self.b * np.cos(
-                self.theta
-            ) * np.sin(np.mean(xi))
-            if x_mean ** 2 + (y_mean - self.bo) ** 2 > self.ro ** 2:
-                xi = np.array([xi_o, xi_l]) % (2 * np.pi)
-            if xi[0] < xi[1]:
-                xi[0] += 2 * np.pi
+            xi = self.sort_xi(np.array([xi_l, xi_o]))
 
             # In all cases, we're computing the dayside occulted flux
             code = FLUX_DAY_OCC
@@ -819,20 +812,88 @@ class Numerical(object):
         # P-T
         elif len(x) == 2:
 
-            # Sort from right to left
-            x = x[np.argsort(x)[::-1]]
-            phi = self.theta + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
-            xi = np.arctan2(np.sqrt(1 - x ** 2), x)
+            # Angles are easy
             lam = np.array([])
+            phi = np.sort(
+                (self.theta + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo))
+                % (2 * np.pi)
+            )
+            xi = np.sort(np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi))
 
-            # Ensure we're always integrating counter-clockwise
-            if phi[1] < phi[0]:
-                phi[1] += 2 * np.pi
-            if xi[0] < xi[1]:
-                xi[0] += 2 * np.pi
+            # Cases
+            if self.bo <= 1 - self.ro:
 
-            # TODO: Figure out the code
-            code = FLUX_NONE
+                # No intersections with the limb
+
+                # CASE 2
+
+                phi = self.sort_phi(phi, dayside=True)
+                xi = self.sort_xi(xi)
+                code = FLUX_DAY_OCC
+
+            else:
+
+                # The occultor intersects the limb, so we need to
+                # integrate along the simplest path.
+
+                # Intersections with the limb (this is the same as `lam`)
+                psi1 = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
+                psi = np.sort(np.array([psi1, np.pi - psi1]) % (2 * np.pi))
+
+                if phi[0] < psi[0] < psi[1] < phi[1]:
+
+                    x = self.ro * np.cos(phi[1] + self.tol)
+                    y = self.bo + self.ro * np.sin(phi[1] + self.tol)
+                    if self.on_dayside(x, y):
+
+                        # CASE 2
+                        phi = self.sort_phi(phi, dayside=True)
+                        xi = self.sort_xi(xi)
+                        code = FLUX_DAY_OCC
+
+                    else:
+
+                        # CASE 3
+                        phi = self.sort_phi(phi, dayside=False)
+                        xi = self.sort_xi(xi)[::-1]
+                        code = FLUX_NIGHT_OCC
+
+                elif psi[0] < phi[0] < phi[1] < psi[1]:
+
+                    x = self.ro * np.cos(phi[0] + self.tol)
+                    y = self.bo + self.ro * np.sin(phi[0] + self.tol)
+                    if self.on_dayside(x, y):
+
+                        # CASE 4
+                        phi = self.sort_phi(phi, dayside=True)
+                        xi = self.sort_xi(xi)
+                        code = FLUX_DAY_VIS
+
+                        # DEBUG: Is this always needed?
+                        phi = [phi[1], phi[0]]
+                        xi = [xi[1], xi[0] - 2 * np.pi]
+
+                    else:
+
+                        raise NotImplementedError("TODO!")
+
+                elif phi[0] < phi[1] < psi[0] < psi[1]:
+
+                    x = self.ro * np.cos(phi[0] + self.tol)
+                    y = self.bo + self.ro * np.sin(phi[0] + self.tol)
+                    if self.on_dayside(x, y):
+
+                        raise NotImplementedError("TODO!")
+
+                    else:
+
+                        raise NotImplementedError("TODO!")
+
+                else:
+
+                    breakpoint()
+
+                    raise NotImplementedError("Unexpected branch.")
 
         # There's a pathological case with 4 roots we need to code up
         else:
@@ -841,6 +902,55 @@ class Numerical(object):
             raise NotImplementedError("TODO!")
 
         return phi, lam, xi, code
+
+    def sort_phi(self, phi, dayside=True):
+        # Sort a pair of `phi` angles according to the order
+        # of the integration limits.
+        phi1, phi2 = phi
+        phi = np.array([phi1, phi2]) % (2 * np.pi)
+        if phi[1] < phi[0]:
+            phi[1] += 2 * np.pi
+        x = self.ro * np.cos(phi[0] + self.tol)
+        y = self.bo + self.ro * np.sin(phi[0] + self.tol)
+        if dayside != self.on_dayside(x, y):
+            phi = np.array([phi2, phi1]) % (2 * np.pi)
+        if phi[1] < phi[0]:
+            phi[1] += 2 * np.pi
+        return phi
+
+    def sort_xi(self, xi):
+        # Sort a pair of `xi` angles according to the order
+        # of the integration limits.
+        xi1, xi2 = xi
+        xi = np.array([xi1, xi2]) % (2 * np.pi)
+        if xi[0] < xi[1]:
+            xi[0] += 2 * np.pi
+        x = np.cos(self.theta) * np.cos(xi[1] + self.tol) - self.b * np.sin(
+            self.theta
+        ) * np.sin(xi[1] + self.tol)
+        y = np.sin(self.theta) * np.cos(xi[1] + self.tol) + self.b * np.cos(
+            self.theta
+        ) * np.sin(xi[1] + self.tol)
+        if x ** 2 + (y - self.bo) ** 2 > self.ro ** 2:
+            xi = np.array([xi2, xi1]) % (2 * np.pi)
+        if xi[0] < xi[1]:
+            xi[0] += 2 * np.pi
+        return xi
+
+    def sort_lam(self, lam):
+        # Sort a pair of `lam` angles according to the order
+        # of the integration limits.
+        lam1, lam2 = lam
+        lam = np.array([lam1, lam2]) % (2 * np.pi)
+        if lam[1] < lam[0]:
+            lam[1] += 2 * np.pi
+        x = np.cos(lam[0] + self.tol)
+        y = np.sin(lam[0] + self.tol)
+        if x ** 2 + (y - self.bo) ** 2 > self.ro ** 2:
+            lam = np.array([lam2, lam1]) % (2 * np.pi)
+        if lam[1] < lam[0]:
+            lam[1] += 2 * np.pi
+        return lam
 
 
 # CASE 1
@@ -858,15 +968,43 @@ args = [
     [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
-# CASE 2
-args = [
-    # b, theta, bo, ro
+
+case2 = [
     [0.4, np.pi / 6, 0.3, 0.3],
 ]
 
+case3 = [
+    [0.4, np.pi / 6, 0.6, 0.5],
+]
 
-for arg in args:
-    N = Numerical([1, 1, 1], *arg)
+case4 = [
+    [-0.95, 0.0, 2.0, 2.5],
+]
+
+# BROKEN
+case4 = [
+    [-0.1, np.pi / 6, 0.6, 0.75],
+]
+
+for arg in case4:
+
+    #
+    b, theta, bo, ro = arg
+    x = np.linspace(-1, 1, 1000)
+    y = b * np.sqrt(1 - x ** 2)
+    x_t = x * np.cos(theta) - y * np.sin(theta)
+    y_t = x * np.sin(theta) + y * np.cos(theta)
+    fig, axis = plt.subplots(1)
+    axis.axis("off")
+    axis.add_artist(plt.Circle((0, bo), ro, fill=False))
+    axis.add_artist(plt.Circle((0, 0), 1, fill=False))
+    axis.plot(x_t, y_t, "k-", lw=1)
+    axis.set_xlim(-1.25, 1.25)
+    axis.set_ylim(-1.25, 1.25)
+    axis.set_aspect(1)
+    plt.show()
+
+    N = Numerical([0, 0, 0], *arg)
     print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
     N.visualize()
 
