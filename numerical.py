@@ -21,6 +21,8 @@ from matplotlib.patches import Arc
 import warnings
 
 warnings.simplefilter("ignore")
+starry.config.quiet = True
+
 
 # Integration codes
 FLUX_NONE = 0
@@ -110,22 +112,10 @@ class Numerical(object):
         cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
         img_day_occ = np.zeros_like(xpt)
         img_day_occ[cond1 & cond2 & cond3] = 1
+        img_night_occ = np.zeros_like(xpt)
+        img_night_occ[cond1 & cond2 & ~cond3] = 1
         img_night = np.zeros_like(xpt)
         img_night[~cond1 & cond2 & ~cond3] = 1
-
-        # Dayside image
-        p = np.linspace(-1, 1, res)
-        xpt = xpt.flatten()
-        ypt = ypt.flatten()
-        zpt = np.sqrt(1 - xpt ** 2 - ypt ** 2)
-        cond1 = xpt ** 2 + (ypt - self.bo) ** 2 > self.ro ** 2  # outside occultor
-        cond2 = xpt ** 2 + ypt ** 2 < 1  # inside occulted
-        xr = xpt * np.cos(self.theta) + ypt * np.sin(self.theta)
-        yr = -xpt * np.sin(self.theta) + ypt * np.cos(self.theta)
-        cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
-        image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
-        # DEBUG image[~(cond1 & cond2 & cond3)] = np.nan
-        image = image.reshape(res, res)
 
         # Plot
         fig, ax = plt.subplots(1, 3, figsize=(14, 5))
@@ -174,7 +164,6 @@ class Numerical(object):
             axis.set_xlim(-1.25, 1.25)
             axis.set_ylim(-1.25, 1.25)
             axis.set_aspect(1)
-            """
             axis.imshow(
                 img_day_occ,
                 origin="lower",
@@ -184,21 +173,21 @@ class Numerical(object):
                     "cmap1", [(0, 0, 0, 0), "C1"], 2
                 ),
             )
-            """  # DEBUG
+            axis.imshow(
+                img_night_occ,
+                origin="lower",
+                extent=(-1, 1, -1, 1),
+                alpha=0.25,
+                cmap=LinearSegmentedColormap.from_list(
+                    "cmap1", [(0, 0, 0, 0), "C3"], 2
+                ),
+            )
             axis.imshow(
                 img_night,
                 origin="lower",
                 extent=(-1, 1, -1, 1),
                 alpha=0.75,
                 cmap=LinearSegmentedColormap.from_list("cmap1", [(0, 0, 0, 0), "k"], 2),
-            )
-            axis.imshow(
-                image,
-                origin="lower",
-                extent=(-1, 1, -1, 1),
-                cmap="Greys_r",
-                vmin=0,
-                alpha=0.75,
             )
 
         # Draw integration paths
@@ -281,10 +270,11 @@ class Numerical(object):
             [-self.ro, self.ro], [self.bo, self.bo], color="k", ls="--", lw=0.5,
         )
         ax[1].plot([0], [self.bo], "C0o", ms=4, zorder=4)
-        ax[2].plot(
-            [-1, 1], [0, 0], color="k", ls="--", lw=0.5,
-        )
-        ax[2].plot(0, 0, "C0o", ms=4, zorder=4)
+        if len(lam):
+            ax[2].plot(
+                [-1, 1], [0, 0], color="k", ls="--", lw=0.5,
+            )
+            ax[2].plot(0, 0, "C0o", ms=4, zorder=4)
 
         # Draw points of intersection & angles
         sz = [0.25, 0.5]
@@ -464,7 +454,7 @@ class Numerical(object):
                 zorder=4,
             )
 
-        plt.show()
+        # DEBUG plt.show()
 
     def I(self):
         # Illumination matrix
@@ -511,6 +501,24 @@ class Numerical(object):
         cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
         image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
         flux = 4 * np.sum(image[cond1 & cond2 & cond3]) / (res ** 2)
+
+        # DEBUG
+        print(
+            "Dayside occulted:   {:5.3f}".format(
+                4 * np.sum(image[~cond1 & cond2 & cond3]) / (res ** 2)
+            )
+        )
+        print(
+            "Nightside occulted: {:5.3f}".format(
+                4 * np.sum(image[~cond1 & cond2 & ~cond3]) / (res ** 2)
+            )
+        )
+        print(
+            "Nightside visible: {:5.3f}".format(
+                4 * np.sum(image[cond1 & cond2 & ~cond3]) / (res ** 2)
+            )
+        )
+
         return flux
 
     def flux(self):
@@ -639,11 +647,11 @@ class Numerical(object):
 
     def on_dayside(self, x, y):
         """Return True if a point is on the dayside."""
+        if x ** 2 + y ** 2 > 1:
+            return False
         xr = x * np.cos(self.theta) + y * np.sin(self.theta)
         yr = -x * np.sin(self.theta) + y * np.cos(self.theta)
         term = 1 - xr ** 2
-        if term < 0 and term > -self.tol:
-            term = 0
         yt = self.b * np.sqrt(term)
         return yr >= yt
 
@@ -708,8 +716,8 @@ class Numerical(object):
         # Check that the number of roots is correct
         x_l = np.cos(self.theta)
         y_l = np.sin(self.theta)
-        l1 = x_l ** 2 + (y_l - self.bo) ** 2 < self.ro
-        l2 = x_l ** 2 + (-y_l - self.bo) ** 2 < self.ro
+        l1 = x_l ** 2 + (y_l - self.bo) ** 2 < self.ro ** 2
+        l2 = x_l ** 2 + (-y_l - self.bo) ** 2 < self.ro ** 2
         if (l1 and not l2) or (l2 and not l1):
             if len(x) == 1:
                 # All good
@@ -769,7 +777,7 @@ class Numerical(object):
             )
 
             # Now ensure phi *only* spans the dayside.
-            phi = self.sort_phi(np.array([phi_o, phi_t]), dayside=True)
+            phi = self.sort_phi(np.array([phi_o, phi_t]))
 
             # LAMBDA
             # ------
@@ -823,11 +831,10 @@ class Numerical(object):
             # Cases
             if self.bo <= 1 - self.ro:
 
-                # No intersections with the limb
+                # No intersections with the limb (easy)
 
                 # CASE 2
-
-                phi = self.sort_phi(phi, dayside=True)
+                phi = self.sort_phi(phi)
                 xi = self.sort_xi(xi)
                 code = FLUX_DAY_OCC
 
@@ -837,63 +844,32 @@ class Numerical(object):
                 # integrate along the simplest path.
 
                 # Intersections with the limb (this is the same as `lam`)
-                psi1 = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
-                psi = np.sort(np.array([psi1, np.pi - psi1]) % (2 * np.pi))
+                # psi1 = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
+                # psi = np.sort(np.array([psi1, np.pi - psi1]) % (2 * np.pi))
 
-                if phi[0] < psi[0] < psi[1] < phi[1]:
+                # TODO: Handedness changes when b < 0
 
-                    x = self.ro * np.cos(phi[1] + self.tol)
-                    y = self.bo + self.ro * np.sin(phi[1] + self.tol)
-                    if self.on_dayside(x, y):
+                # Need the point corresponding to xi[1] to be the same as the
+                # point corresponding to phi[0] for the path to be continuous
+                x_xi1 = np.cos(self.theta) * np.cos(xi[1]) - self.b * np.sin(
+                    self.theta
+                ) * np.sin(xi[1])
+                y_xi1 = np.sin(self.theta) * np.cos(xi[1]) + self.b * np.cos(
+                    self.theta
+                ) * np.sin(xi[1])
+                x_phi = self.ro * np.cos(phi)
+                y_phi = self.bo + self.ro * np.sin(phi)
+                if np.argmin((x_xi1 - x_phi) ** 2 + (y_xi1 - y_phi) ** 2) == 1:
+                    phi = phi[::-1]
 
-                        # CASE 2
-                        phi = self.sort_phi(phi, dayside=True)
-                        xi = self.sort_xi(xi)
-                        code = FLUX_DAY_OCC
+                # TODO: Sometimes we need
+                if phi[1] < phi[0]:
+                    phi[1] += 2 * np.pi
 
-                    else:
+                # TODO: Determine code
 
-                        # CASE 3
-                        phi = self.sort_phi(phi, dayside=False)
-                        xi = self.sort_xi(xi)[::-1]
-                        code = FLUX_NIGHT_OCC
-
-                elif psi[0] < phi[0] < phi[1] < psi[1]:
-
-                    x = self.ro * np.cos(phi[0] + self.tol)
-                    y = self.bo + self.ro * np.sin(phi[0] + self.tol)
-                    if self.on_dayside(x, y):
-
-                        # CASE 4
-                        phi = self.sort_phi(phi, dayside=True)
-                        xi = self.sort_xi(xi)
-                        code = FLUX_DAY_VIS
-
-                        # DEBUG: Is this always needed?
-                        phi = [phi[1], phi[0]]
-                        xi = [xi[1], xi[0] - 2 * np.pi]
-
-                    else:
-
-                        raise NotImplementedError("TODO!")
-
-                elif phi[0] < phi[1] < psi[0] < psi[1]:
-
-                    x = self.ro * np.cos(phi[0] + self.tol)
-                    y = self.bo + self.ro * np.sin(phi[0] + self.tol)
-                    if self.on_dayside(x, y):
-
-                        raise NotImplementedError("TODO!")
-
-                    else:
-
-                        raise NotImplementedError("TODO!")
-
-                else:
-
-                    breakpoint()
-
-                    raise NotImplementedError("Unexpected branch.")
+            # DEBUG DEBUG DEBUG
+            code = FLUX_DAY_VIS
 
         # There's a pathological case with 4 roots we need to code up
         else:
@@ -903,7 +879,7 @@ class Numerical(object):
 
         return phi, lam, xi, code
 
-    def sort_phi(self, phi, dayside=True):
+    def sort_phi(self, phi):
         # Sort a pair of `phi` angles according to the order
         # of the integration limits.
         phi1, phi2 = phi
@@ -912,7 +888,7 @@ class Numerical(object):
             phi[1] += 2 * np.pi
         x = self.ro * np.cos(phi[0] + self.tol)
         y = self.bo + self.ro * np.sin(phi[0] + self.tol)
-        if dayside != self.on_dayside(x, y):
+        if not self.on_dayside(x, y):
             phi = np.array([phi2, phi1]) % (2 * np.pi)
         if phi[1] < phi[0]:
             phi[1] += 2 * np.pi
@@ -953,8 +929,9 @@ class Numerical(object):
         return lam
 
 
-# CASE 1
-args = [
+# These are good
+
+case1 = [
     # b, theta, bo, ro
     [0.4, np.pi / 3, 0.5, 0.7],
     [-0.4, np.pi / 3, 0.5, 0.7],
@@ -968,27 +945,39 @@ args = [
     [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
-
 case2 = [
-    [0.4, np.pi / 6, 0.3, 0.3],
+    [0.4, np.pi / 6, 0.3, 0.3],  # 0.002
+    [0.4, np.pi + np.pi / 6, 0.1, 0.6],  # 0.002
+    [0.4, np.pi + np.pi / 3, 0.1, 0.6],  # 0.003
 ]
 
 case3 = [
-    [0.4, np.pi / 6, 0.6, 0.5],
+    [0.4, np.pi / 6, 0.6, 0.5],  # -0.018
+    [0.4, -np.pi / 6, 0.6, 0.5],  # -0.018
+    [0.4, 0.1, 2.2, 2.0],  # -0.008
+    [0.4, -0.1, 2.2, 2.0],  # -0.008
 ]
 
-case4 = [
-    [-0.95, 0.0, 2.0, 2.5],
+
+# These need work
+
+
+test = [
+    [0.4, np.pi + np.pi / 6, 0.3, 0.8],  # 0.004
+    [0.75, np.pi + 0.1, 4.5, 5.0],  # -0.020
 ]
 
-# BROKEN
-case4 = [
-    [-0.1, np.pi / 6, 0.6, 0.75],
+
+"""
+test_neg_b = [
+    [-0.95, 0.0, 2.0, 2.5],  #       4
+    [-0.1, np.pi / 6, 0.6, 0.75],  # 3
 ]
+"""
 
-for arg in case4:
+for arg in test:
 
-    #
+    """
     b, theta, bo, ro = arg
     x = np.linspace(-1, 1, 1000)
     y = b * np.sqrt(1 - x ** 2)
@@ -1003,8 +992,14 @@ for arg in case4:
     axis.set_ylim(-1.25, 1.25)
     axis.set_aspect(1)
     plt.show()
+    quit()
+    """
 
     N = Numerical([0, 0, 0], *arg)
-    print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
+    N.flux_brute()
+    print("Analytic:           {:5.3f}".format(N.flux()))
+    print("")
     N.visualize()
+
+plt.show()
 
