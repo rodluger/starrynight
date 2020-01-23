@@ -537,51 +537,33 @@ class Numerical(object):
         flux = 4 * np.sum(image[cond1 & cond2 & cond3]) / (res ** 2)
         return flux
 
-    def flux(self):
-        self._setup()
+    def fs(self):
+        self.map[1:, :] = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)[1:]
+        fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+        self.map.reset()
+        f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+        fs -= f0
+        return fs
 
-        # Get integration limits
-        phi, lam, xi, code = self.angles()
-
-        # Set up the starry maps
+    def fd(self):
         y0 = np.sqrt(1 - self.b ** 2)
         xs = -y0 * np.sin(self.theta)
         ys = y0 * np.cos(self.theta)
         zs = -self.b
-        y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
-        self.map[1:, :] = y_refl[1:]
         self.map_refl[1:, :] = self.y[1:]
+        fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
+        return fd
 
-        # Check for simple cases
-        if code == FLUX_ZERO:
+    def fn(self):
+        y0 = np.sqrt(1 - self.b ** 2)
+        xs = -y0 * np.sin(self.theta)
+        ys = y0 * np.cos(self.theta)
+        zs = -self.b
+        self.map_refl[1:, :] = self.y[1:]
+        fn = -self.map_refl.flux(xs=-xs, ys=-ys, zs=-zs).eval()[0]
+        return fn
 
-            return 0.0
-
-        elif code == FLUX_SIMPLE_OCC:
-
-            # TODO: SUPER HACKY, FIX ME
-            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            self.map.reset()
-            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            fs -= f0
-            return fs
-
-        elif code == FLUX_SIMPLE_REFL:
-
-            fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
-            return fd
-
-        elif code == FLUX_SIMPLE_OCC_REFL:
-
-            # TODO: SUPER HACKY, FIX ME
-            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            self.map.reset()
-            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            fs -= f0
-            fn = -self.map_refl.flux(xs=-xs, ys=-ys, zs=-zs).eval()[0]
-            return fs - fn
-
-        # Compute primitive integrals & occulted flux
+    def f(self, phi, lam, xi):
         P = np.zeros((self.ydeg + 2) ** 2)
         Q = np.zeros((self.ydeg + 2) ** 2)
         T = np.zeros((self.ydeg + 2) ** 2)
@@ -596,37 +578,33 @@ class Numerical(object):
                     T[n] = self.T(l, m, xi[0], xi[1])
                 n += 1
         f = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1).dot(self.y)
+        return f
 
-        if code == FLUX_DAY_OCC:
+    def flux(self):
+        # Setup
+        self._setup()
 
-            fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
-            return fd - f
+        # Get integration code & limits
+        phi, lam, xi, code = self.angles()
 
+        # All branches
+        if code == FLUX_ZERO:
+            return 0.0
+        elif code == FLUX_SIMPLE_OCC:
+            return self.fs()
+        elif code == FLUX_SIMPLE_REFL:
+            return self.fd()
+        elif code == FLUX_SIMPLE_OCC_REFL:
+            return self.fs() - self.fn()
+        elif code == FLUX_DAY_OCC:
+            return self.fd() - self.f(phi, lam, xi)
         elif code == FLUX_NIGHT_OCC:
-
-            # TODO: SUPER HACKY, FIX ME
-            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            self.map.reset()
-            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            fs -= f0
-            fn = -self.map_refl.flux(xs=-xs, ys=-ys, zs=-zs).eval()[0]
-            return fs - (fn - f)
-
+            return self.fs() - (self.fn() - self.f(phi, lam, xi))
         elif code == FLUX_DAY_VIS:
-
-            return f
-
+            return self.f(phi, lam, xi)
         elif code == FLUX_NIGHT_VIS:
-
-            # TODO: SUPER HACKY, FIX ME
-            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            self.map.reset()
-            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-            fs -= f0
-            return fs - f
-
+            return self.fs() - self.f(phi, lam, xi)
         else:
-
             raise NotImplementedError("Unexpected branch.")
 
     def G(self, l, m):
