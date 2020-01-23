@@ -12,6 +12,7 @@ Singularities:
     - bo = 0
     - bo = 0 and theta = 90 (only one root)
     - bo <~ 0.1 and theta = 90 (root finding fails I think)
+    - check all edge cases
 
 """
 import matplotlib.pyplot as plt
@@ -236,6 +237,8 @@ class Numerical(object):
             else:
                 if len(lam) == 0:
                     xi_p = np.sort(xi_p)[::-1]
+                if self.b < 0:
+                    xi_p = xi_p[::-1]
                 arc = Arc(
                     (0, 0),
                     2,
@@ -863,7 +866,7 @@ class Numerical(object):
                 # The occultor intersects the limb, so we need to
                 # integrate along the simplest path.
 
-                # Rotate the points of intersection into a frame where the
+                # 1. Rotate the points of intersection into a frame where the
                 # semi-major axis of the terminator ellipse lies along the x axis
                 # We're going to choose xi[0] to be the rightmost point in
                 # this frame, so that the integration is counter-clockwise along
@@ -878,7 +881,7 @@ class Numerical(object):
                 if xr[1] > xr[0]:
                     xi = xi[::-1]
 
-                # Now we need the point corresponding to xi[1] to be the same as the
+                # 2. Now we need the point corresponding to xi[1] to be the same as the
                 # point corresponding to phi[0] in order for the path to be continuous
                 x_xi1 = np.cos(self.theta) * np.cos(xi[1]) - self.b * np.sin(
                     self.theta
@@ -891,7 +894,7 @@ class Numerical(object):
                 if np.argmin((x_xi1 - x_phi) ** 2 + (y_xi1 - y_phi) ** 2) == 1:
                     phi = phi[::-1]
 
-                # Compare the *curvature* of the two sides of the
+                # 3. Compare the *curvature* of the two sides of the
                 # integration area. The curvatures are similar (i.e., same sign)
                 # when cos(theta) < 0, in which case we must integrate *clockwise* along P.
                 if np.cos(self.theta) < 0:
@@ -903,7 +906,7 @@ class Numerical(object):
                     if phi[1] < phi[0]:
                         phi[1] += 2 * np.pi
 
-                # Determine integration code. Let's identify the midpoint
+                # 4. Determine the integration code. Let's identify the midpoint
                 # along each integration path and average their (x, y)
                 # coordinates to determine what kind of region we are
                 # bounding.
@@ -923,15 +926,24 @@ class Numerical(object):
                     if x ** 2 + (y - self.bo) ** 2 < self.ro ** 2:
                         # Dayside under occultor
                         code = FLUX_DAY_OCC
+
                         # We need to reverse the integration path, since
                         # the terminator is *under* the arc along the limb
                         # and we should instead start at the *leftmost* xi
                         # value.
+
+                        # TODO: Check for b < 0
                         phi = phi[::-1]
                         xi = xi[::-1]
                     else:
                         # Dayside visible
                         code = FLUX_DAY_VIS
+
+                        # TODO: Check
+                        if self.b < 0:
+                            phi = phi[::-1]
+                            xi = xi[::-1]
+
                 else:
                     if x ** 2 + (y - self.bo) ** 2 < self.ro ** 2:
                         # Nightside under occultor
@@ -1008,6 +1020,10 @@ PQT = [
     [0.00001, np.pi / 2, 0.5, 0.7],
     [0, np.pi / 2, 0.5, 0.7],
     [0.4, -np.pi / 2, 0.5, 0.7],
+    #
+    [-0.4, np.pi / 3, 0.5, 0.7],
+    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
+    [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
 PT = [
@@ -1020,24 +1036,16 @@ PT = [
     [0.4, -0.1, 2.2, 2.0],
     [0.4, np.pi + np.pi / 6, 0.3, 0.8],
     [0.75, np.pi + 0.1, 4.5, 5.0],
-]
-
-
-test = []
-
-
-"""
-# case 1 actually ok
-    [-0.4, np.pi / 3, 0.5, 0.7],
-    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
-    [-0.4, np.pi / 2, 0.5, 0.7],
-
-# these are wrong
+    #
     [-0.95, 0.0, 2.0, 2.5],
     [-0.1, np.pi / 6, 0.6, 0.75],
-"""
+    [-0.5, np.pi, 0.8, 0.5],
+    [-0.1, 0.0, 0.5, 1.0],
+]
 
-for arg in test:
+cases = PQT + PT
+
+for arg in cases:
     N = Numerical([0, 0, 0], *arg)
     N.visualize()
 
