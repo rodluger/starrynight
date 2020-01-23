@@ -1,9 +1,17 @@
 """
+
+Ranges:
+
+    - 0 < bo < inf
+    - 0 < ro < inf
+    - 0 < theta < 2pi
+    - -1 < b < 1
+
 Singularities:
 
     - bo = 0
-    - b0 = 0 and theta = 90 (only one root)
-    - b0 <~ 0.1 and theta = 90 (root finding fails I think)
+    - bo = 0 and theta = 90 (only one root)
+    - bo <~ 0.1 and theta = 90 (root finding fails I think)
 
 """
 import matplotlib.pyplot as plt
@@ -118,11 +126,17 @@ class Numerical(object):
         img_night[~cond1 & cond2 & ~cond3] = 1
 
         # Plot
-        fig, ax = plt.subplots(1, 3, figsize=(14, 5))
-        fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.95)
-        ax[0].set_title("T", color="r")
-        ax[1].set_title("P", color="r")
-        ax[2].set_title("Q", color="r")
+        if len(lam):
+            fig, ax = plt.subplots(1, 3, figsize=(14, 5))
+            fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.95)
+            ax[0].set_title("T", color="r")
+            ax[1].set_title("P", color="r")
+            ax[2].set_title("Q", color="r")
+        else:
+            fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+            fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.95)
+            ax[0].set_title("T", color="r")
+            ax[1].set_title("P", color="r")
 
         # Labels
         for i in range(len(phi)):
@@ -212,15 +226,13 @@ class Numerical(object):
                     zorder=3,
                 )
             else:
-                if self.b < 0:
-                    xi_p = xi_p[::-1]
                 arc = Arc(
                     (0, 0),
                     2,
                     2 * np.abs(self.b),
                     self.theta * 180 / np.pi,
-                    np.sign(self.b) * xi_p[1] * 180 / np.pi,
-                    np.sign(self.b) * xi_p[0] * 180 / np.pi,
+                    np.sign(self.b) * np.min(xi_p) * 180 / np.pi,
+                    np.sign(self.b) * np.max(xi_p) * 180 / np.pi,
                     color="r",
                     lw=2,
                     zorder=3,
@@ -501,24 +513,6 @@ class Numerical(object):
         cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
         image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
         flux = 4 * np.sum(image[cond1 & cond2 & cond3]) / (res ** 2)
-
-        # DEBUG
-        print(
-            "Dayside occulted:   {:5.3f}".format(
-                4 * np.sum(image[~cond1 & cond2 & cond3]) / (res ** 2)
-            )
-        )
-        print(
-            "Nightside occulted: {:5.3f}".format(
-                4 * np.sum(image[~cond1 & cond2 & ~cond3]) / (res ** 2)
-            )
-        )
-        print(
-            "Nightside visible: {:5.3f}".format(
-                4 * np.sum(image[cond1 & cond2 & ~cond3]) / (res ** 2)
-            )
-        )
-
         return flux
 
     def flux(self):
@@ -553,6 +547,7 @@ class Numerical(object):
         y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
         self.map[1:, :] = y_refl[1:]
         self.map_refl[1:, :] = self.y[1:]
+
         if code == FLUX_DAY_OCC:
 
             fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
@@ -572,9 +567,18 @@ class Numerical(object):
 
             return f
 
+        elif code == FLUX_NIGHT_VIS:
+
+            # TODO: SUPER HACKY, FIX ME
+            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            self.map.reset()
+            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            fs -= f0
+            return fs - f
+
         else:
-            # TODO
-            raise NotImplementedError("TODO!")
+
+            raise NotImplementedError("Unexpected branch.")
 
     def G(self, l, m):
         mu = l - m
@@ -843,14 +847,23 @@ class Numerical(object):
                 # The occultor intersects the limb, so we need to
                 # integrate along the simplest path.
 
-                # Intersections with the limb (this is the same as `lam`)
-                # psi1 = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
-                # psi = np.sort(np.array([psi1, np.pi - psi1]) % (2 * np.pi))
+                # Rotate the points of intersection into a frame where the
+                # semi-major axis of the terminator ellipse lies along the x axis
+                # We're going to choose xi[0] to be the rightmost point in
+                # this frame, so that the integration is counter-clockwise along
+                # the terminator to xi[1].
+                x = np.cos(self.theta) * np.cos(xi) - self.b * np.sin(
+                    self.theta
+                ) * np.sin(xi)
+                y = np.sin(self.theta) * np.cos(xi) + self.b * np.cos(
+                    self.theta
+                ) * np.sin(xi)
+                xr = x * np.cos(self.theta) + y * np.sin(self.theta)
+                if xr[1] > xr[0]:
+                    xi = xi[::-1]
 
-                # TODO: Handedness changes when b < 0
-
-                # Need the point corresponding to xi[1] to be the same as the
-                # point corresponding to phi[0] for the path to be continuous
+                # Now we need the point corresponding to xi[1] to be the same as the
+                # point corresponding to phi[0] in order for the path to be continuous
                 x_xi1 = np.cos(self.theta) * np.cos(xi[1]) - self.b * np.sin(
                     self.theta
                 ) * np.sin(xi[1])
@@ -862,14 +875,54 @@ class Numerical(object):
                 if np.argmin((x_xi1 - x_phi) ** 2 + (y_xi1 - y_phi) ** 2) == 1:
                     phi = phi[::-1]
 
-                # TODO: Sometimes we need
-                if phi[1] < phi[0]:
-                    phi[1] += 2 * np.pi
+                # Compare the *curvature* of the two sides of the
+                # integration area. The curvatures are similar (i.e., same sign)
+                # when cos(theta) < 0, in which case we must integrate *clockwise* along P.
+                if np.cos(self.theta) < 0:
+                    # Integrate *clockwise* along P
+                    if phi[0] < phi[1]:
+                        phi[0] += 2 * np.pi
+                else:
+                    # Integrate *counter-clockwise* along P
+                    if phi[1] < phi[0]:
+                        phi[1] += 2 * np.pi
 
-                # TODO: Determine code
-
-            # DEBUG DEBUG DEBUG
-            code = FLUX_DAY_VIS
+                # Determine integration code. Let's identify the midpoint
+                # along each integration path and average their (x, y)
+                # coordinates to determine what kind of region we are
+                # bounding.
+                xi_mean = np.mean(xi)
+                x_xi = np.cos(self.theta) * np.cos(xi_mean) - self.b * np.sin(
+                    self.theta
+                ) * np.sin(xi_mean)
+                y_xi = np.sin(self.theta) * np.cos(xi_mean) + self.b * np.cos(
+                    self.theta
+                ) * np.sin(xi_mean)
+                phi_mean = np.mean(phi)
+                x_phi = self.ro * np.cos(phi_mean)
+                y_phi = self.bo + self.ro * np.sin(phi_mean)
+                x = 0.5 * (x_xi + x_phi)
+                y = 0.5 * (y_xi + y_phi)
+                if self.on_dayside(x, y):
+                    if x ** 2 + (y - self.bo) ** 2 < self.ro ** 2:
+                        # Dayside under occultor
+                        code = FLUX_DAY_OCC
+                        # We need to reverse the integration path, since
+                        # the terminator is *under* the arc along the limb
+                        # and we should instead start at the *leftmost* xi
+                        # value.
+                        phi = phi[::-1]
+                        xi = xi[::-1]
+                    else:
+                        # Dayside visible
+                        code = FLUX_DAY_VIS
+                else:
+                    if x ** 2 + (y - self.bo) ** 2 < self.ro ** 2:
+                        # Nightside under occultor
+                        code = FLUX_NIGHT_OCC
+                    else:
+                        # Nightside visible
+                        code = FLUX_NIGHT_VIS
 
         # There's a pathological case with 4 roots we need to code up
         else:
@@ -945,26 +998,16 @@ case1 = [
     [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
-case2 = [
-    [0.4, np.pi / 6, 0.3, 0.3],  # 0.002
-    [0.4, np.pi + np.pi / 6, 0.1, 0.6],  # 0.002
-    [0.4, np.pi + np.pi / 3, 0.1, 0.6],  # 0.003
-]
-
-case3 = [
-    [0.4, np.pi / 6, 0.6, 0.5],  # -0.018
-    [0.4, -np.pi / 6, 0.6, 0.5],  # -0.018
-    [0.4, 0.1, 2.2, 2.0],  # -0.008
-    [0.4, -0.1, 2.2, 2.0],  # -0.008
-]
-
-
-# These need work
-
-
-test = [
-    [0.4, np.pi + np.pi / 6, 0.3, 0.8],  # 0.004
-    [0.75, np.pi + 0.1, 4.5, 5.0],  # -0.020
+cases = [
+    [0.4, np.pi / 6, 0.3, 0.3],
+    [0.4, np.pi + np.pi / 6, 0.1, 0.6],
+    [0.4, np.pi + np.pi / 3, 0.1, 0.6],
+    [0.4, np.pi / 6, 0.6, 0.5],
+    [0.4, -np.pi / 6, 0.6, 0.5],
+    [0.4, 0.1, 2.2, 2.0],
+    [0.4, -0.1, 2.2, 2.0],
+    [0.4, np.pi + np.pi / 6, 0.3, 0.8],
+    [0.75, np.pi + 0.1, 4.5, 5.0],
 ]
 
 
@@ -975,30 +1018,10 @@ test_neg_b = [
 ]
 """
 
-for arg in test:
-
-    """
-    b, theta, bo, ro = arg
-    x = np.linspace(-1, 1, 1000)
-    y = b * np.sqrt(1 - x ** 2)
-    x_t = x * np.cos(theta) - y * np.sin(theta)
-    y_t = x * np.sin(theta) + y * np.cos(theta)
-    fig, axis = plt.subplots(1)
-    axis.axis("off")
-    axis.add_artist(plt.Circle((0, bo), ro, fill=False))
-    axis.add_artist(plt.Circle((0, 0), 1, fill=False))
-    axis.plot(x_t, y_t, "k-", lw=1)
-    axis.set_xlim(-1.25, 1.25)
-    axis.set_ylim(-1.25, 1.25)
-    axis.set_aspect(1)
-    plt.show()
-    quit()
-    """
+for arg in cases:
 
     N = Numerical([0, 0, 0], *arg)
-    N.flux_brute()
-    print("Analytic:           {:5.3f}".format(N.flux()))
-    print("")
+    print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
     N.visualize()
 
 plt.show()
