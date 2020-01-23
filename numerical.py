@@ -27,6 +27,7 @@ from sympy import binomial
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc
 import warnings
+import os
 
 warnings.simplefilter("ignore")
 starry.config.quiet = True
@@ -128,15 +129,26 @@ class Numerical(object):
         # Plot
         if len(lam):
             fig, ax = plt.subplots(1, 3, figsize=(14, 5))
-            fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.95)
+            fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.825)
             ax[0].set_title("T", color="r")
             ax[1].set_title("P", color="r")
             ax[2].set_title("Q", color="r")
         else:
-            fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-            fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.95)
+            fig, ax = plt.subplots(1, 2, figsize=(9, 5))
+            fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.825)
             ax[0].set_title("T", color="r")
             ax[1].set_title("P", color="r")
+
+        # Solution
+        flux = self.flux()
+        flux_brute = self.flux_brute()
+        if np.abs(flux - flux_brute) > 0.002:
+            filecode = "FAIL"
+            color = "r"
+        else:
+            filecode = "GOOD"
+            color = "k"
+        fig.suptitle("{:5.3f} / {:5.3f}".format(flux, flux_brute), color=color)
 
         # Labels
         for i in range(len(phi)):
@@ -183,18 +195,14 @@ class Numerical(object):
                 origin="lower",
                 extent=(-1, 1, -1, 1),
                 alpha=0.25,
-                cmap=LinearSegmentedColormap.from_list(
-                    "cmap1", [(0, 0, 0, 0), "C1"], 2
-                ),
+                cmap=LinearSegmentedColormap.from_list("cmap1", [(0, 0, 0, 0), "k"], 2),
             )
             axis.imshow(
                 img_night_occ,
                 origin="lower",
                 extent=(-1, 1, -1, 1),
-                alpha=0.25,
-                cmap=LinearSegmentedColormap.from_list(
-                    "cmap1", [(0, 0, 0, 0), "C3"], 2
-                ),
+                alpha=0.5,
+                cmap=LinearSegmentedColormap.from_list("cmap1", [(0, 0, 0, 0), "k"], 2),
             )
             axis.imshow(
                 img_night,
@@ -226,13 +234,15 @@ class Numerical(object):
                     zorder=3,
                 )
             else:
+                if len(lam) == 0:
+                    xi_p = np.sort(xi_p)[::-1]
                 arc = Arc(
                     (0, 0),
                     2,
                     2 * np.abs(self.b),
                     self.theta * 180 / np.pi,
-                    np.sign(self.b) * np.min(xi_p) * 180 / np.pi,
-                    np.sign(self.b) * np.max(xi_p) * 180 / np.pi,
+                    np.sign(self.b) * xi_p[1] * 180 / np.pi,
+                    np.sign(self.b) * xi_p[0] * 180 / np.pi,
                     color="r",
                     lw=2,
                     zorder=3,
@@ -466,7 +476,13 @@ class Numerical(object):
                 zorder=4,
             )
 
-        # DEBUG plt.show()
+        if not os.path.exists("tmp"):
+            os.mkdir("tmp")
+        fig.savefig(
+            "tmp/{:s}_{:.4f}_{:.4f}_{:.4f}_{:.4f}.pdf".format(
+                filecode, self.b, self.theta, self.bo, self.ro
+            )
+        )
 
     def I(self):
         # Illumination matrix
@@ -982,23 +998,19 @@ class Numerical(object):
         return lam
 
 
-# These are good
+# b, theta, bo, ro
 
-case1 = [
-    # b, theta, bo, ro
+PQT = [
     [0.4, np.pi / 3, 0.5, 0.7],
-    [-0.4, np.pi / 3, 0.5, 0.7],
     [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
-    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
     [0.4, np.pi / 2, 0.5, 0.7],
     [0.4, np.pi / 2, 1.0, 0.2],
     [0.00001, np.pi / 2, 0.5, 0.7],
     [0, np.pi / 2, 0.5, 0.7],
     [0.4, -np.pi / 2, 0.5, 0.7],
-    [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
-cases = [
+PT = [
     [0.4, np.pi / 6, 0.3, 0.3],
     [0.4, np.pi + np.pi / 6, 0.1, 0.6],
     [0.4, np.pi + np.pi / 3, 0.1, 0.6],
@@ -1011,18 +1023,21 @@ cases = [
 ]
 
 
+test = []
+
+
 """
-test_neg_b = [
-    [-0.95, 0.0, 2.0, 2.5],  #       4
-    [-0.1, np.pi / 6, 0.6, 0.75],  # 3
-]
+# case 1 actually ok
+    [-0.4, np.pi / 3, 0.5, 0.7],
+    [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
+    [-0.4, np.pi / 2, 0.5, 0.7],
+
+# these are wrong
+    [-0.95, 0.0, 2.0, 2.5],
+    [-0.1, np.pi / 6, 0.6, 0.75],
 """
 
-for arg in cases:
-
+for arg in test:
     N = Numerical([0, 0, 0], *arg)
-    print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
     N.visualize()
-
-plt.show()
 
