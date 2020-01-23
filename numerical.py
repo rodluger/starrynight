@@ -35,11 +35,14 @@ starry.config.quiet = True
 
 
 # Integration codes
-FLUX_NONE = 0
+FLUX_ZERO = 0
 FLUX_DAY_OCC = 1
 FLUX_DAY_VIS = 2
 FLUX_NIGHT_OCC = 3
 FLUX_NIGHT_VIS = 4
+FLUX_SIMPLE_OCC = 5
+FLUX_SIMPLE_REFL = 6
+FLUX_SIMPLE_OCC_REFL = 7
 
 
 class Numerical(object):
@@ -540,7 +543,45 @@ class Numerical(object):
         # Get integration limits
         phi, lam, xi, code = self.angles()
 
-        # Compute primitive integrals
+        # Set up the starry maps
+        y0 = np.sqrt(1 - self.b ** 2)
+        xs = -y0 * np.sin(self.theta)
+        ys = y0 * np.cos(self.theta)
+        zs = -self.b
+        y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
+        self.map[1:, :] = y_refl[1:]
+        self.map_refl[1:, :] = self.y[1:]
+
+        # Check for simple cases
+        if code == FLUX_ZERO:
+
+            return 0.0
+
+        elif code == FLUX_SIMPLE_OCC:
+
+            # TODO: SUPER HACKY, FIX ME
+            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            self.map.reset()
+            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            fs -= f0
+            return fs
+
+        elif code == FLUX_SIMPLE_REFL:
+
+            fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
+            return fd
+
+        elif code == FLUX_SIMPLE_OCC_REFL:
+
+            # TODO: SUPER HACKY, FIX ME
+            fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            self.map.reset()
+            f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+            fs -= f0
+            fn = -self.map_refl.flux(xs=-xs, ys=-ys, zs=-zs).eval()[0]
+            return fs - fn
+
+        # Compute primitive integrals & occulted flux
         P = np.zeros((self.ydeg + 2) ** 2)
         Q = np.zeros((self.ydeg + 2) ** 2)
         T = np.zeros((self.ydeg + 2) ** 2)
@@ -554,18 +595,7 @@ class Numerical(object):
                 if len(xi):
                     T[n] = self.T(l, m, xi[0], xi[1])
                 n += 1
-
-        # Compute the occulted flux
         f = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1).dot(self.y)
-
-        # Use it to compute the visible flux
-        y0 = np.sqrt(1 - self.b ** 2)
-        xs = -y0 * np.sin(self.theta)
-        ys = y0 * np.cos(self.theta)
-        zs = -self.b
-        y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
-        self.map[1:, :] = y_refl[1:]
-        self.map_refl[1:, :] = self.y[1:]
 
         if code == FLUX_DAY_OCC:
 
@@ -680,6 +710,14 @@ class Numerical(object):
 
     def angles(self):
 
+        # Trivial cases
+        if self.bo <= self.ro - 1:
+            # Complete occultation
+            return np.array([]), np.array([]), np.array([]), FLUX_ZERO
+        elif self.bo >= 1 + self.ro:
+            # No occultation
+            return np.array([]), np.array([]), np.array([]), FLUX_SIMPLE_REFL
+
         # TODO: Use Sturm's theorem here?
 
         # We'll solve for occultor-terminator intersections
@@ -772,13 +810,67 @@ class Numerical(object):
         # P-Q
         if len(x) == 0:
 
-            # Use the standard starry algorithm instead!
-            return np.array([]), np.array([]), np.array([]), FLUX_NONE
+            # Trivial: use the standard starry algorithm
+
+            if np.abs(1 - self.ro) <= self.bo <= 1 + self.ro:
+
+                # The occultor intersects the limb at this point
+                lam = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
+                x = (1 - self.tol) * np.cos(lam)
+                y = (1 - self.tol) * np.sin(lam)
+
+                if self.on_dayside(x, y):
+
+                    # This point is guaranteed to be on the night side
+                    # We're going to check if it's under the occultor or not
+                    x = (1 - self.tol) * np.cos(self.theta + 3 * np.pi / 2)
+                    y = (1 - self.tol) * np.sin(self.theta + 3 * np.pi / 2)
+
+                    if x ** 2 + (y - self.bo) ** 2 <= self.ro ** 2:
+
+                        # The occultor is blocking some daylight
+                        # and all of the night side
+                        code = FLUX_SIMPLE_OCC
+
+                    else:
+
+                        # The occultor is only blocking daylight
+                        code = FLUX_SIMPLE_OCC_REFL
+
+                else:
+
+                    # This point is guaranteed to be on the day side
+                    # We're going to check if it's under the occultor or not
+                    x = (1 - self.tol) * np.cos(self.theta + np.pi / 2)
+                    y = (1 - self.tol) * np.sin(self.theta + np.pi / 2)
+
+                    if x ** 2 + (y - self.bo) ** 2 <= self.ro ** 2:
+
+                        # The occultor is blocking some night side
+                        # and all of the day side
+                        code = FLUX_ZERO
+
+                    else:
+
+                        # The occultor is only blocking the night side
+                        code = FLUX_SIMPLE_REFL
+            else:
+
+                # The occultor does not intersect the limb or the terminator
+                if self.on_dayside(0, self.bo):
+
+                    # The occultor is only blocking daylight
+                    code = FLUX_SIMPLE_OCC_REFL
+
+                else:
+
+                    # The occultor is only blocking the night side
+                    code = FLUX_SIMPLE_REFL
+
+            return np.array([]), np.array([]), np.array([]), code
 
         # P-Q-T
         if len(x) == 1:
-
-            # CASE 1
 
             # PHI
             # ---
@@ -855,8 +947,6 @@ class Numerical(object):
             if self.bo <= 1 - self.ro:
 
                 # No intersections with the limb (easy)
-
-                # CASE 2
                 phi = self.sort_phi(phi)
                 xi = self.sort_xi(xi)
                 code = FLUX_DAY_OCC
@@ -1012,6 +1102,17 @@ class Numerical(object):
 
 # b, theta, bo, ro
 
+SIMPLE = [
+    [0.5, 0.1, 1.2, 0.1],
+    [0.5, 0.1, 0.1, 1.2],
+    [0.5, 0.1, 0.8, 0.1],
+    [0.5, 0.1, 0.9, 0.2],
+    [0.5, np.pi + 0.1, 0.8, 0.1],
+    [0.5, np.pi + 0.1, 0.9, 0.2],
+    [0.5, 0.1, 0.5, 1.25],
+    [0.5, np.pi + 0.1, 0.5, 1.25],
+]
+
 PQT = [
     [0.4, np.pi / 3, 0.5, 0.7],
     [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
@@ -1043,9 +1144,9 @@ PT = [
     [-0.1, 0.0, 0.5, 1.0],
 ]
 
-cases = PQT + PT
+ALL = SIMPLE + PQT + PT
 
-for arg in cases:
+for arg in ALL:
     N = Numerical([0, 0, 0], *arg)
     N.visualize()
 
