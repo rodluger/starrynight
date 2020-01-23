@@ -46,9 +46,9 @@ FLUX_SIMPLE_OCC_REFL = 7
 
 
 class Numerical(object):
-    def __init__(self, y1, b, theta, bo, ro, tol=1e-7, epsabs=1e-12, epsrel=1e-12):
+    def __init__(self, y, b, theta, bo, ro, tol=1e-7, epsabs=1e-12, epsrel=1e-12):
 
-        self.y = np.append([1.0], y1)
+        self.y = np.array(y)
         self.ydeg = int(np.sqrt(len(self.y)) - 1)
         self.b = b
         self.theta = theta
@@ -538,30 +538,25 @@ class Numerical(object):
         return flux
 
     def fs(self):
-        self.map[1:, :] = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)[1:]
-        fs = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-        self.map.reset()
-        f0 = self.map.flux(xo=0, yo=self.bo, ro=self.ro).eval()[0]
-        fs -= f0
-        return fs
+        y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
+        A = self.map.design_matrix(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+        return A.dot(y_refl)
 
     def fd(self):
         y0 = np.sqrt(1 - self.b ** 2)
         xs = -y0 * np.sin(self.theta)
         ys = y0 * np.cos(self.theta)
         zs = -self.b
-        self.map_refl[1:, :] = self.y[1:]
-        fd = self.map_refl.flux(xs=xs, ys=ys, zs=zs).eval()[0]
-        return fd
+        A = self.map_refl.design_matrix(xs=xs, ys=ys, zs=zs).eval()[0]
+        return A.dot(self.y)
 
     def fn(self):
         y0 = np.sqrt(1 - self.b ** 2)
         xs = -y0 * np.sin(self.theta)
         ys = y0 * np.cos(self.theta)
         zs = -self.b
-        self.map_refl[1:, :] = self.y[1:]
-        fn = -self.map_refl.flux(xs=-xs, ys=-ys, zs=-zs).eval()[0]
-        return fn
+        A = -self.map_refl.design_matrix(xs=-xs, ys=-ys, zs=-zs).eval()[0]
+        return A.dot(self.y)
 
     def f(self, phi, lam, xi):
         P = np.zeros((self.ydeg + 2) ** 2)
@@ -577,8 +572,8 @@ class Numerical(object):
                 if len(xi):
                     T[n] = self.T(l, m, xi[0], xi[1])
                 n += 1
-        f = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1).dot(self.y)
-        return f
+        A = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1)
+        return A.dot(self.y)
 
     def flux(self):
         # Setup
@@ -690,9 +685,12 @@ class Numerical(object):
 
         # Trivial cases
         if self.bo <= self.ro - 1:
+
             # Complete occultation
             return np.array([]), np.array([]), np.array([]), FLUX_ZERO
+
         elif self.bo >= 1 + self.ro:
+
             # No occultation
             return np.array([]), np.array([]), np.array([]), FLUX_SIMPLE_REFL
 
@@ -1125,6 +1123,6 @@ PT = [
 ALL = SIMPLE + PQT + PT
 
 for arg in ALL:
-    N = Numerical([0, 0, 0], *arg)
+    N = Numerical([1, 1, 1, 1], *arg)
     N.visualize()
 
