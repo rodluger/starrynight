@@ -29,6 +29,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc
 import warnings
 import os
+from tqdm import tqdm
 
 warnings.simplefilter("ignore")
 starry.config.quiet = True
@@ -43,6 +44,10 @@ FLUX_NIGHT_VIS = 4
 FLUX_SIMPLE_OCC = 5
 FLUX_SIMPLE_REFL = 6
 FLUX_SIMPLE_OCC_REFL = 7
+FLUX_TRIP_DAY_OCC = 8
+FLUX_TRIP_NIGHT_OCC = 9
+FLUX_QUAD_DAY_VIS = 10
+FLUX_QUAD_NIGHT_VIS = 11
 
 
 class Numerical(object):
@@ -104,7 +109,7 @@ class Numerical(object):
         z = theano.tensor.dvector()
         self.pT = theano.function([x, y, z], pTOp(ops.pT, self.ydeg + 1)(x, y, z),)
 
-    def visualize(self, res=999):
+    def visualize(self, res=4999, name=None):
 
         # Find angles of intersection
         phi, lam, xi, code = self.angles()
@@ -145,12 +150,10 @@ class Numerical(object):
 
         # Solution
         flux = self.flux()
-        flux_brute = self.flux_brute()
+        flux_brute = self.flux_brute(res=res)
         if np.abs(flux - flux_brute) > 0.002:
-            filecode = "FAIL"
             color = "r"
         else:
-            filecode = "GOOD"
             color = "k"
         fig.suptitle("{:5.3f} / {:5.3f}".format(flux, flux_brute), color=color)
 
@@ -218,56 +221,56 @@ class Numerical(object):
 
         # Draw integration paths
         if len(phi):
+            for k in range(0, len(phi) // 2 + 1, 2):
 
-            # T
-            # This is the *actual* angle along the ellipse
-            xi_p = np.arctan(np.abs(self.b) * np.tan(xi))
-            xi_p[xi_p < 0] += np.pi
-            if np.abs(self.b) < 1e-4:
-                ax[0].plot(
-                    [
-                        np.cos(xi[0]) * np.cos(self.theta),
-                        np.cos(xi[1]) * np.cos(self.theta),
-                    ],
-                    [
-                        np.cos(xi[0]) * np.sin(self.theta),
-                        np.cos(xi[1]) * np.sin(self.theta),
-                    ],
-                    color="r",
-                    lw=2,
-                    zorder=3,
-                )
-            else:
-                if len(lam) == 0:
-                    xi_p = np.sort(xi_p)[::-1]
-                if self.b < 0:
-                    xi_p = xi_p[::-1]
+                # T
+                # This is the *actual* angle along the ellipse
+                xi_p = np.arctan(np.abs(self.b) * np.tan(xi))
+                xi_p[xi_p < 0] += np.pi
+                if np.abs(self.b) < 1e-4:
+                    ax[0].plot(
+                        [
+                            np.cos(xi[k]) * np.cos(self.theta),
+                            np.cos(xi[k + 1]) * np.cos(self.theta),
+                        ],
+                        [
+                            np.cos(xi[k]) * np.sin(self.theta),
+                            np.cos(xi[k + 1]) * np.sin(self.theta),
+                        ],
+                        color="r",
+                        lw=2,
+                        zorder=3,
+                    )
+                else:
+                    if xi_p[k] > xi_p[k + 1]:
+                        # TODO: CHECK ME
+                        xi_p[[k, k + 1]] = xi_p[[k + 1, k]]
+                    arc = Arc(
+                        (0, 0),
+                        2,
+                        2 * np.abs(self.b),
+                        self.theta * 180 / np.pi,
+                        np.sign(self.b) * xi_p[k + 1] * 180 / np.pi,
+                        np.sign(self.b) * xi_p[k] * 180 / np.pi,
+                        color="r",
+                        lw=2,
+                        zorder=3,
+                    )
+                    ax[0].add_patch(arc)
+
+                # P
                 arc = Arc(
-                    (0, 0),
-                    2,
-                    2 * np.abs(self.b),
-                    self.theta * 180 / np.pi,
-                    np.sign(self.b) * xi_p[1] * 180 / np.pi,
-                    np.sign(self.b) * xi_p[0] * 180 / np.pi,
+                    (0, self.bo),
+                    2 * self.ro,
+                    2 * self.ro,
+                    0,
+                    phi[k] * 180 / np.pi,
+                    phi[k + 1] * 180 / np.pi,
                     color="r",
                     lw=2,
                     zorder=3,
                 )
-                ax[0].add_patch(arc)
-
-            # P
-            arc = Arc(
-                (0, self.bo),
-                2 * self.ro,
-                2 * self.ro,
-                0,
-                phi[0] * 180 / np.pi,
-                phi[1] * 180 / np.pi,
-                color="r",
-                lw=2,
-                zorder=3,
-            )
-            ax[1].add_patch(arc)
+                ax[1].add_patch(arc)
 
         if len(lam):
 
@@ -305,7 +308,7 @@ class Numerical(object):
             ax[2].plot(0, 0, "C0o", ms=4, zorder=4)
 
         # Draw points of intersection & angles
-        sz = [0.25, 0.5]
+        sz = [0.25, 0.5, 0.75, 1.0]
         for i, xi_i in enumerate(xi):
 
             # -- T --
@@ -482,13 +485,13 @@ class Numerical(object):
                 zorder=4,
             )
 
-        if not os.path.exists("tmp"):
-            os.mkdir("tmp")
-        fig.savefig(
-            "tmp/{:s}_{:.4f}_{:.4f}_{:.4f}_{:.4f}.pdf".format(
-                filecode, self.b, self.theta, self.bo, self.ro
-            )
-        )
+        if name is not None:
+            if not os.path.exists("tmp"):
+                os.mkdir("tmp")
+            fig.savefig("tmp/{}.pdf".format(name))
+        else:
+            plt.show()
+        plt.close()
 
     def I(self):
         # Illumination matrix
@@ -521,7 +524,7 @@ class Numerical(object):
                 n1 += 1
         return I
 
-    def flux_brute(self, res=999):
+    def flux_brute(self, res=4999):
         self._setup()
         p = np.linspace(-1, 1, res)
         xpt, ypt = np.meshgrid(p, p)
@@ -599,6 +602,18 @@ class Numerical(object):
             return self.f(phi, lam, xi)
         elif code == FLUX_NIGHT_VIS:
             return self.fs() - self.f(phi, lam, xi)
+        elif code == FLUX_TRIP_DAY_OCC:
+            return self.fd() - (
+                self.f(phi[:2], [], xi[:2]) + self.f(phi[2:], lam, xi[2:])
+            )
+        elif code == FLUX_TRIP_NIGHT_OCC:
+            return self.fs() - (
+                self.fn() - (self.f(phi[:2], [], xi[:2]) + self.f(phi[2:], lam, xi[2:]))
+            )
+        elif code == FLUX_QUAD_DAY_VIS:
+            return self.f(phi[:2], [], xi[:2]) + self.f(phi[2:], [], xi[:2])
+        elif code == FLUX_QUAD_NIGHT_VIS:
+            return self.fs() - self.f(phi[:2], [], xi[:2]) - self.f(phi[2:], [], xi[:2])
         else:
             raise NotImplementedError("Unexpected branch.")
 
@@ -674,7 +689,8 @@ class Numerical(object):
     def on_dayside(self, x, y):
         """Return True if a point is on the dayside."""
         if x ** 2 + y ** 2 > 1:
-            return False
+            breakpoint()
+            raise ValueError("Point not on the unit disk.")
         xr = x * np.cos(self.theta) + y * np.sin(self.theta)
         yr = -x * np.sin(self.theta) + y * np.cos(self.theta)
         term = 1 - xr ** 2
@@ -694,7 +710,7 @@ class Numerical(object):
             # No occultation
             return np.array([]), np.array([]), np.array([]), FLUX_SIMPLE_REFL
 
-        # TODO: Use Sturm's theorem here?
+        # TODO: Use Sturm's theorem here to save time?
 
         # We'll solve for occultor-terminator intersections
         # in the frame where the semi-major axis of the
@@ -858,7 +874,8 @@ class Numerical(object):
             # There are always two points; always pick the one
             # that's on the dayside for definiteness
             if not self.on_dayside(
-                self.ro * np.cos(phi_o), self.bo + self.ro * np.sin(phi_o)
+                (1 - self.tol) * self.ro * np.cos(phi_o),
+                (1 - self.tol) * (self.bo + self.ro * np.sin(phi_o)),
             ):
                 phi_o = np.pi - phi_o
 
@@ -877,7 +894,9 @@ class Numerical(object):
             lam_o = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
             # There are always two points; always pick the one
             # that's on the dayside for definiteness
-            if not self.on_dayside(np.cos(lam_o), np.sin(lam_o)):
+            if not self.on_dayside(
+                (1 - self.tol) * np.cos(lam_o), (1 - self.tol) * np.sin(lam_o)
+            ):
                 lam_o = np.pi - lam_o
 
             # Angle of intersection with the terminator
@@ -992,24 +1011,18 @@ class Numerical(object):
                     if x ** 2 + (y - self.bo) ** 2 < self.ro ** 2:
                         # Dayside under occultor
                         code = FLUX_DAY_OCC
-
                         # We need to reverse the integration path, since
                         # the terminator is *under* the arc along the limb
                         # and we should instead start at the *leftmost* xi
                         # value.
-
-                        # TODO: Check for b < 0
                         phi = phi[::-1]
                         xi = xi[::-1]
                     else:
                         # Dayside visible
                         code = FLUX_DAY_VIS
-
-                        # TODO: Check
                         if self.b < 0:
                             phi = phi[::-1]
                             xi = xi[::-1]
-
                 else:
                     if x ** 2 + (y - self.bo) ** 2 < self.ro ** 2:
                         # Nightside under occultor
@@ -1018,11 +1031,177 @@ class Numerical(object):
                         # Nightside visible
                         code = FLUX_NIGHT_VIS
 
-        # There's a pathological case with 4 roots we need to code up
+        # There's a pathological case with 3 roots
+        elif len(x) == 3:
+
+            # TODO: Clean these up a bit
+
+            if self.b > 0:
+
+                if (-1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
+
+                    x = np.sort(x)
+                    x = np.array([x[2], x[1], x[0]])
+
+                    phi = np.append(
+                        self.theta
+                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
+                        np.arcsin(
+                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
+                        ),
+                    ) % (2 * np.pi)
+                    for n in range(3):
+                        while phi[n + 1] < phi[n]:
+                            phi[n + 1] += 2 * np.pi
+
+                    xi = np.append(
+                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), np.pi
+                    )
+                    xi = np.array([xi[1], xi[0], xi[3], xi[2]])
+
+                    lam = np.array(
+                        [
+                            np.arcsin(
+                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
+                            ),
+                            np.pi + self.theta,
+                        ]
+                    ) % (2 * np.pi)
+                    if lam[1] < lam[0]:
+                        lam[1] += 2 * np.pi
+
+                else:
+
+                    x = np.sort(x)
+                    x = np.array([x[1], x[0], x[2]])
+
+                    phi = np.append(
+                        self.theta
+                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
+                        np.pi
+                        - np.arcsin(
+                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
+                        ),
+                    ) % (2 * np.pi)
+                    phi[[2, 3]] = phi[[3, 2]]
+                    for n in range(3):
+                        while phi[n + 1] < phi[n]:
+                            phi[n + 1] += 2 * np.pi
+
+                    xi = np.append(
+                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), 0.0
+                    )
+                    xi = np.array([xi[1], xi[0], xi[2], xi[3]])
+
+                    lam = np.array(
+                        [
+                            self.theta,
+                            np.pi
+                            - np.arcsin(
+                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
+                            ),
+                        ]
+                    ) % (2 * np.pi)
+                    if lam[1] < lam[0]:
+                        lam[1] += 2 * np.pi
+
+                code = FLUX_TRIP_DAY_OCC
+
+            else:
+
+                if (-1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
+
+                    x = np.sort(x)
+                    x = np.array([x[1], x[2], x[0]])
+
+                    phi = np.append(
+                        self.theta
+                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
+                        np.pi
+                        - np.arcsin(
+                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
+                        ),
+                    ) % (2 * np.pi)
+                    phi[[2, 3]] = phi[[3, 2]]
+                    for n in range(3):
+                        while phi[n + 1] < phi[n]:
+                            phi[n + 1] += 2 * np.pi
+
+                    xi = np.append(
+                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), np.pi
+                    )
+                    xi = np.array([xi[1], xi[0], xi[2], xi[3]])
+
+                    lam = np.array(
+                        [
+                            np.pi + self.theta,
+                            np.pi
+                            - np.arcsin(
+                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
+                            ),
+                        ]
+                    ) % (2 * np.pi)
+                    if lam[1] < lam[0]:
+                        lam[1] += 2 * np.pi
+
+                else:
+
+                    x = np.sort(x)
+
+                    phi = np.append(
+                        self.theta
+                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
+                        np.arcsin(
+                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
+                        ),
+                    ) % (2 * np.pi)
+                    for n in range(3):
+                        while phi[n + 1] < phi[n]:
+                            phi[n + 1] += 2 * np.pi
+
+                    xi = np.append(
+                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), 0.0
+                    )
+                    xi = np.array([xi[1], xi[0], xi[3], xi[2]])
+
+                    lam = np.array(
+                        [
+                            np.pi + self.theta,
+                            np.pi
+                            - np.arcsin(
+                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
+                            ),
+                        ]
+                    ) % (2 * np.pi)
+                    if lam[1] < lam[0]:
+                        lam[1] += 2 * np.pi
+
+                code = FLUX_TRIP_NIGHT_OCC
+
+        # And a pathological case with 4 roots
+        elif len(x) == 4:
+
+            # Angles
+            lam = np.array([])
+            phi = np.sort(
+                (self.theta + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo))
+                % (2 * np.pi)
+            )
+            xi = np.sort(np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi))
+
+            if self.b > 0:
+
+                code = FLUX_QUAD_NIGHT_VIS
+
+            else:
+
+                # DEBUG: Check this
+                phi = phi[::-1]
+                code = FLUX_QUAD_DAY_VIS
+
         else:
 
-            # TODO: Code this special case up
-            raise NotImplementedError("TODO!")
+            raise NotImplementedError("Unexpected branch.")
 
         return phi, lam, xi, code
 
@@ -1035,7 +1214,7 @@ class Numerical(object):
             phi[1] += 2 * np.pi
         x = self.ro * np.cos(phi[0] + self.tol)
         y = self.bo + self.ro * np.sin(phi[0] + self.tol)
-        if not self.on_dayside(x, y):
+        if (x ** 2 + y ** 2 > 1) or not self.on_dayside(x, y):
             phi = np.array([phi2, phi1]) % (2 * np.pi)
         if phi[1] < phi[0]:
             phi[1] += 2 * np.pi
@@ -1076,6 +1255,28 @@ class Numerical(object):
         return lam
 
 
+def mc_search(seed=0, total=1000, epsrel=0.01, res=999):
+    N = Numerical([1, 1, 1, 1], 0, 0, 0, 0)
+    np.random.seed(seed)
+    for i in tqdm(range(total)):
+        N.bo = 0
+        N.ro = 2
+        while (N.bo <= N.ro - 1) or (N.bo >= 1 + N.ro):
+            if np.random.random() > 0.5:
+                N.ro = np.random.random() * 10
+                N.bo = np.random.random() * 20
+            else:
+                N.ro = np.random.random()
+                N.bo = np.random.random() * 2
+        N.theta = np.random.random() * 2 * np.pi
+        N.b = 1 - 2 * np.random.random()
+
+        flux = N.flux()
+        flux_brute = N.flux_brute(res=res)
+        if np.abs(flux - flux_brute) > epsrel:
+            N.visualize(name="{:04d}".format(i), res=res)
+
+
 # b, theta, bo, ro
 
 SIMPLE = [
@@ -1090,6 +1291,7 @@ SIMPLE = [
 ]
 
 PQT = [
+    # b > 0
     [0.4, np.pi / 3, 0.5, 0.7],
     [0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
     [0.4, np.pi / 2, 0.5, 0.7],
@@ -1097,13 +1299,14 @@ PQT = [
     [0.00001, np.pi / 2, 0.5, 0.7],
     [0, np.pi / 2, 0.5, 0.7],
     [0.4, -np.pi / 2, 0.5, 0.7],
-    #
+    # b < 0
     [-0.4, np.pi / 3, 0.5, 0.7],
     [-0.4, 2 * np.pi - np.pi / 3, 0.5, 0.7],
     [-0.4, np.pi / 2, 0.5, 0.7],
 ]
 
 PT = [
+    # b > 0
     [0.4, np.pi / 6, 0.3, 0.3],
     [0.4, np.pi + np.pi / 6, 0.1, 0.6],
     [0.4, np.pi + np.pi / 3, 0.1, 0.6],
@@ -1113,16 +1316,37 @@ PT = [
     [0.4, -0.1, 2.2, 2.0],
     [0.4, np.pi + np.pi / 6, 0.3, 0.8],
     [0.75, np.pi + 0.1, 4.5, 5.0],
-    #
+    # b < 0
     [-0.95, 0.0, 2.0, 2.5],
     [-0.1, np.pi / 6, 0.6, 0.75],
     [-0.5, np.pi, 0.8, 0.5],
     [-0.1, 0.0, 0.5, 1.0],
 ]
 
-ALL = SIMPLE + PQT + PT
+WTF3 = [
+    [0.5488316824842527, 4.03591586925189, 0.34988513192814663, 0.7753986686719786,],
+    [
+        0.5488316824842527,
+        2 * np.pi - 4.03591586925189,
+        0.34988513192814663,
+        0.7753986686719786,
+    ],
+    [
+        -0.5488316824842527,
+        4.03591586925189 - np.pi,
+        0.34988513192814663,
+        0.7753986686719786,
+    ],
+    [
+        -0.5488316824842527,
+        2 * np.pi - (4.03591586925189 - np.pi),
+        0.34988513192814663,
+        0.7753986686719786,
+    ],
+]
 
-for arg in ALL:
-    N = Numerical([1, 1, 1, 1], *arg)
-    N.visualize()
+# TODO
+WTF4 = []
 
+N = Numerical([1, 0, 0, 0], WTF4[0])
+N.visualize()
