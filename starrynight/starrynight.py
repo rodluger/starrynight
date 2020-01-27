@@ -317,6 +317,8 @@ class Numerical(StarryNight):
 class Analytic(StarryNight):
     """Compute the flux analytically."""
 
+    # TODO: BEWARE of the sign of phi
+
     def I(self, v, kappa1, kappa2):
         """Return the integral I."""
         # TODO: Compute in terms of elliptic integrals
@@ -413,37 +415,70 @@ class Analytic(StarryNight):
             raise ValueError("This case is treated separately.")
 
         elif nu % 2 == 0:
+            """
+            A note about this case. In the original starry code, this integral
+            is always zero because the integrand is antisymmetric about the
+            midpoint. Now, however, the integration limits are different, so 
+            there's no cancellation in general.
 
-            # TODO: Solve this analytically
-            def K(u, v, kappa1, kappa2, delta):
+            This integral is just the first case in equation (D25) of the
+            starry paper. We can write it as the first case in (D32) and (D35), 
+            but note that we pick up a minus sign relative to the expression in 
+            the paper.
+
+            The other thing to note is that `u` in the call to `K(u, v)` is
+            a half-integer, so our Vieta trick (D36) doesn't work out of the box.
+            We can massage the equation to get it to look like (D37) with `k = 1`,
+            which allows us to write it analytically in terms of the `J(v)`
+            integral.
+
+            For reference, here's the numerical equivalent:
+
+                u = (mu + 4) / 4
+                v = nu // 2
                 func = (
-                    lambda phi: -np.sin(phi) ** (2 * u)
+                    lambda phi: np.sin(phi) ** (2 * u)
                     * (1 - np.sin(phi) ** 2) ** u
                     * (delta + np.sin(phi) ** 2) ** v
                 )
-                foo, _ = quad(
+                K, _ = quad(
                     func,
                     0.5 * kappa1,
                     0.5 * kappa2,
                     epsabs=self.epsabs,
                     epsrel=self.epsrel,
                 )
-                return foo
+                res = -2 * (2 * self.ro) ** (l + 2) * K
+
+            """
+
+            def K(u, v, kappa1, kappa2, delta):
+                return sum(
+                    [
+                        self.V(i, u - 1, v, delta)
+                        * self.J(i + u + 0.5, kappa1, kappa2, 1.0)
+                        for i in range(u + v)
+                    ]
+                )
 
             res = (
-                2
+                -2
                 * (2 * self.ro) ** (l + 2)
-                * K((mu + 4) / 4, nu // 2, kappa1, kappa2, delta)
+                * K((mu + 4) // 4, nu // 2, kappa1, kappa2, delta)
             )
 
             return res
 
         else:
 
+            """
+            This case might be tricky to solve analytically.
+            """
+
             # TODO: Solve this analytically
             def L0(u, v, kappa1, kappa2, delta, k):
                 func = (
-                    lambda phi: -(k ** 3)
+                    lambda phi: (k ** 3)
                     * np.sin(phi) ** (2 * u)
                     * (1 - np.sin(phi) ** 2) ** u
                     * (delta + np.sin(phi) ** 2) ** v
@@ -459,7 +494,7 @@ class Analytic(StarryNight):
                 return foo
 
             res = (
-                2
+                -2
                 * (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** 1.5
                 * L0((mu - 1) / 4, (nu - 1) // 2, kappa1, kappa2, delta, k)
