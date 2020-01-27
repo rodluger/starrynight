@@ -1,20 +1,43 @@
-def mc_search(seed=0, total=1000, epsrel=0.01, res=999):
-    N = Numerical([1, 1, 1, 1], 0, 0, 0, 0)
-    np.random.seed(seed)
-    for i in tqdm(range(total)):
-        N.bo = 0
-        N.ro = 2
-        while (N.bo <= N.ro - 1) or (N.bo >= 1 + N.ro):
-            if np.random.random() > 0.5:
-                N.ro = np.random.random() * 10
-                N.bo = np.random.random() * 20
-            else:
-                N.ro = np.random.random()
-                N.bo = np.random.random() * 2
-        N.theta = np.random.random() * 2 * np.pi
-        N.b = 1 - 2 * np.random.random()
+from starrynight import Numerical, Brute
+import numpy as np
+import pytest
 
-        flux = N.flux()
-        flux_brute = N.flux_brute(res=res)
-        if np.abs(flux - flux_brute) > epsrel:
-            N.visualize(name="{:04d}".format(i), res=res)
+# Settings
+seed = 0
+nruns = 100
+res = 999
+atol = 1e-2
+tol = 1e-7
+res = 4999
+
+
+N = Numerical(tol=tol)
+B = Brute(tol=tol, res=res)
+
+
+def get_args():
+    bo = 0
+    ro = 2
+    while (bo <= ro - 1) or (bo >= 1 + ro):
+        if np.random.random() > 0.5:
+            ro = np.random.random() * 10
+            bo = np.random.random() * 20
+        else:
+            ro = np.random.random()
+            bo = np.random.random() * 2
+    theta = np.random.random() * 2 * np.pi
+    b = 1 - 2 * np.random.random()
+    return b, theta, bo, ro
+
+
+np.random.seed(seed)
+args = [get_args() for n in range(nruns)]
+
+
+@pytest.mark.parametrize(
+    "b,theta,bo,ro", args,
+)
+def test_mc(b, theta, bo, ro):
+    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
+    B.b, B.theta, B.bo, B.ro = b, theta, bo, ro
+    assert np.allclose(N.flux(), B.flux(), atol=atol)

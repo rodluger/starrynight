@@ -1,4 +1,5 @@
 from .starrynight import *
+from .viz import visualize
 from .starrynight_version import __version__
 
 __uri__ = "https://github.com/rodluger/starrynight"

@@ -16,6 +16,7 @@ from starry._core.ops.rotation import dotROp
 from starry._core.ops.integration import sTOp
 from starry._core.ops.polybasis import pTOp
 from scipy.integrate import quad
+from scipy.special import binom
 import theano
 import warnings
 
@@ -37,6 +38,7 @@ class StarryNight(object):
         tol=1e-7,
         epsabs=1e-12,
         epsrel=1e-12,
+        res=4999,
     ):
         # Load kwargs
         self.y = np.array(y)
@@ -48,10 +50,7 @@ class StarryNight(object):
         self.tol = tol
         self.epsabs = epsabs
         self.epsrel = epsrel
-
-        # Instantiate a starry map
-        self.map = starry.Map(ydeg=self.ydeg + 1)
-        self.map_refl = starry.Map(ydeg=self.ydeg, reflected=True)
+        self.res = res
 
         # Instantiate the ops
         ops = Ops(self.ydeg + 1, 0, 0, 0)
@@ -88,7 +87,24 @@ class StarryNight(object):
         z = theano.tensor.dvector()
         self.pT = theano.function([x, y, z], pTOp(ops.pT, self.ydeg + 1)(x, y, z),)
 
-    def I(self):
+        # Design matrices
+        xo = theano.tensor.dscalar()
+        yo = theano.tensor.dscalar()
+        ro = theano.tensor.dscalar()
+        map = starry.Map(ydeg=self.ydeg + 1)
+        self.design_matrix = theano.function(
+            [xo, yo, ro], map.design_matrix(xo=xo, yo=yo, ro=ro),
+        )
+
+        xs = theano.tensor.dscalar()
+        ys = theano.tensor.dscalar()
+        zs = theano.tensor.dscalar()
+        map_refl = starry.Map(ydeg=self.ydeg, reflected=True)
+        self.design_matrix_refl = theano.function(
+            [xs, ys, zs], map_refl.design_matrix(xs=xs, ys=ys, zs=zs),
+        )
+
+    def illum(self):
         # Illumination matrix
         y0 = np.sqrt(1 - self.b ** 2)
         x = -y0 * np.sin(self.theta)
@@ -120,8 +136,8 @@ class StarryNight(object):
         return I
 
     def fs(self):
-        y_refl = self.A1Inv.dot(self.I()).dot(self.A1).dot(self.y)
-        A = self.map.design_matrix(xo=0, yo=self.bo, ro=self.ro).eval()[0]
+        y_refl = self.A1Inv.dot(self.illum()).dot(self.A1).dot(self.y)
+        A = self.design_matrix(0.0, self.bo, self.ro)[0]
         return A.dot(y_refl)
 
     def fd(self):
@@ -129,7 +145,7 @@ class StarryNight(object):
         xs = -y0 * np.sin(self.theta)
         ys = y0 * np.cos(self.theta)
         zs = -self.b
-        A = self.map_refl.design_matrix(xs=xs, ys=ys, zs=zs).eval()[0]
+        A = self.design_matrix_refl(xs, ys, zs)[0]
         return A.dot(self.y)
 
     def fn(self):
@@ -137,7 +153,7 @@ class StarryNight(object):
         xs = -y0 * np.sin(self.theta)
         ys = y0 * np.cos(self.theta)
         zs = -self.b
-        A = -self.map_refl.design_matrix(xs=-xs, ys=-ys, zs=-zs).eval()[0]
+        A = -self.design_matrix_refl(-xs, -ys, -zs)[0]
         return A.dot(self.y)
 
     def f(self, phi, lam, xi):
@@ -154,7 +170,7 @@ class StarryNight(object):
                 if len(xi):
                     T[n] = self.T(l, m, xi[0], xi[1])
                 n += 1
-        A = (P + Q + T).dot(self.A2).dot(self.I()).dot(self.A1)
+        A = (P + Q + T).dot(self.A2).dot(self.illum()).dot(self.A1)
         return A.dot(self.y)
 
     def P(self, *args):
@@ -207,8 +223,10 @@ class StarryNight(object):
 
 
 class Brute(StarryNight):
-    def flux(self, res=4999):
-        p = np.linspace(-1, 1, res)
+    """Compute the flux using brute force grid integration."""
+
+    def flux(self):
+        p = np.linspace(-1, 1, self.res)
         xpt, ypt = np.meshgrid(p, p)
         xpt = xpt.flatten()
         ypt = ypt.flatten()
@@ -218,12 +236,14 @@ class Brute(StarryNight):
         xr = xpt * np.cos(self.theta) + ypt * np.sin(self.theta)
         yr = -xpt * np.sin(self.theta) + ypt * np.cos(self.theta)
         cond3 = yr > self.b * np.sqrt(1 - xr ** 2)  # above terminator
-        image = self.pT(xpt, ypt, zpt).dot(self.I()).dot(self.A1).dot(self.y)
-        flux = 4 * np.sum(image[cond1 & cond2 & cond3]) / (res ** 2)
+        image = self.pT(xpt, ypt, zpt).dot(self.illum()).dot(self.A1).dot(self.y)
+        flux = 4 * np.sum(image[cond1 & cond2 & cond3]) / (self.res ** 2)
         return flux
 
 
 class Numerical(StarryNight):
+    """Compute the flux using Green's theorem and numerically solving the primitive integrals."""
+
     def G(self, l, m):
         mu = l - m
         nu = l + m
@@ -293,3 +313,114 @@ class Numerical(StarryNight):
         dy = lambda phi: self.ro * np.cos(phi)
         return self.primitive(l, m, x, y, dx, dy, phi1, phi2)
 
+
+class Analytic(StarryNight):
+    """Compute the flux analytically."""
+
+    def I(self, v, kappa, rho=0):
+        """Return the integral I."""
+        # TODO: Compute in terms of elliptic integrals
+        func = lambda x: np.sin(x) ** (2 * v)
+        res, err = quad(
+            func,
+            -0.5 * kappa + rho,
+            0.5 * kappa,
+            epsabs=self.epsabs,
+            epsrel=self.epsrel,
+        )
+        return res
+
+    def J(self, v, kappa, k, rho=0):
+        """Return the integral J."""
+        # TODO: Compute in terms of elliptic integrals
+        func = lambda x: np.sin(x) ** (2 * v) * (1 - k ** (-2) * np.sin(x) ** 2) ** 1.5
+        res, err = quad(
+            func,
+            -0.5 * kappa + rho,
+            0.5 * kappa,
+            epsabs=self.epsabs,
+            epsrel=self.epsrel,
+        )
+        return res
+
+    def V(self, i, u, v, delta):
+        """Compute the Vieta coefficient A_{i, u, v}."""
+        j1 = max(0, u - i)
+        j2 = min(u + v - i, u)
+        return sum(
+            [
+                float(binom(u, j))
+                * float(binom(v, u + v - i - j))
+                * (-1) ** (u + j)
+                * delta ** (u + v - i - j)
+                for j in range(j1, j2 + 1)
+            ]
+        )
+
+    def K(self, u, v, kappa, delta, rho=0):
+        """Return the integral K, evaluated as a sum over I."""
+        return sum(
+            [
+                self.V(i, u, v, delta) * self.I(i + u, kappa, rho)
+                for i in range(u + v + 1)
+            ]
+        )
+
+    def L(self, u, v, t, kappa, delta, k, rho=0):
+        """Return the integral L, evaluated as a sum over J."""
+        return k ** 3 * sum(
+            [
+                self.V(i, u, v, delta) * self.J(i + u + t, kappa, k, rho)
+                for i in range(u + v + 1)
+            ]
+        )
+
+    def P(self, l, m, rho=0):
+        """Compute the P integral."""
+        mu = l - m
+        nu = l + m
+        if (np.abs(1 - self.ro) < self.bo) and (self.bo < 1 + self.ro):
+            phi = np.arcsin((1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro))
+        else:
+            phi = np.pi / 2
+        kappa = phi + np.pi / 2
+        delta = (self.bo - self.ro) / (2 * self.ro)
+        k = np.sqrt(
+            (1 - self.ro ** 2 - self.bo ** 2 + 2 * self.bo * self.ro)
+            / (4 * self.bo * self.ro)
+        )
+        if (mu / 2) % 2 == 0:
+            return (
+                2
+                * (2 * self.ro) ** (l + 2)
+                * self.K((mu + 4) // 4, nu // 2, kappa, delta, rho)
+            )
+        elif (mu == 1) and (l % 2 == 0):
+            return (
+                (2 * self.ro) ** (l - 1)
+                * (4 * self.bo * self.ro) ** (3.0 / 2.0)
+                * (
+                    self.L((l - 2) // 2, 0, 0, kappa, delta, k, rho)
+                    - 2 * self.L((l - 2) // 2, 0, 1, kappa, delta, k, rho)
+                )
+            )
+        elif (mu == 1) and (l != 1) and (l % 2 != 0):
+            return (
+                (2 * self.ro) ** (l - 1)
+                * (4 * self.bo * self.ro) ** (3.0 / 2.0)
+                * (
+                    self.L((l - 3) // 2, 1, 0, kappa, delta, k, rho)
+                    - 2 * self.L((l - 3) // 2, 1, 1, kappa, delta, k, rho)
+                )
+            )
+        elif ((mu - 1) % 2) == 0 and ((mu - 1) // 2 % 2 == 0) and (l != 1):
+            return (
+                2
+                * (2 * self.ro) ** (l - 1)
+                * (4 * self.bo * self.ro) ** (3.0 / 2.0)
+                * self.L((mu - 1) // 4, (nu - 1) // 2, 0, kappa, delta, k, rho)
+            )
+        elif (mu == 1) and (l == 1):
+            raise ValueError("This case is treated separately.")
+        else:
+            return 0
