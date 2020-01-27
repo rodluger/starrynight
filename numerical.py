@@ -1034,74 +1034,44 @@ class Numerical(object):
         # There's a pathological case with 3 roots
         elif len(x) == 3:
 
-            # TODO: Clean these up a bit
+            # Pre-compute some angles
+            x = np.sort(x)
+            phi_l = np.arcsin(
+                (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
+            )
+            lam_o = np.arcsin((1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo))
 
+            # We need to do this case-by-case
             if self.b > 0:
 
                 if (-1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
 
-                    x = np.sort(x)
                     x = np.array([x[2], x[1], x[0]])
-
-                    phi = np.append(
-                        self.theta
-                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
-                        np.arcsin(
-                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
-                        ),
-                    ) % (2 * np.pi)
+                    phi_t = np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
+                    phi = np.append(self.theta + phi_t, phi_l,) % (2 * np.pi)
                     for n in range(3):
                         while phi[n + 1] < phi[n]:
                             phi[n + 1] += 2 * np.pi
-
-                    xi = np.append(
-                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), np.pi
-                    )
+                    xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
+                    xi = np.append(xi_o, np.pi)
                     xi = np.array([xi[1], xi[0], xi[3], xi[2]])
-
-                    lam = np.array(
-                        [
-                            np.arcsin(
-                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
-                            ),
-                            np.pi + self.theta,
-                        ]
-                    ) % (2 * np.pi)
+                    lam = np.array([lam_o, np.pi + self.theta,]) % (2 * np.pi)
                     if lam[1] < lam[0]:
                         lam[1] += 2 * np.pi
 
                 else:
 
-                    x = np.sort(x)
                     x = np.array([x[1], x[0], x[2]])
-
-                    phi = np.append(
-                        self.theta
-                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
-                        np.pi
-                        - np.arcsin(
-                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
-                        ),
-                    ) % (2 * np.pi)
+                    phi_t = np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
+                    phi = np.append(self.theta + phi_t, np.pi - phi_l,) % (2 * np.pi)
                     phi[[2, 3]] = phi[[3, 2]]
                     for n in range(3):
                         while phi[n + 1] < phi[n]:
                             phi[n + 1] += 2 * np.pi
-
-                    xi = np.append(
-                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), 0.0
-                    )
+                    xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
+                    xi = np.append(xi_o, 0.0)
                     xi = np.array([xi[1], xi[0], xi[2], xi[3]])
-
-                    lam = np.array(
-                        [
-                            self.theta,
-                            np.pi
-                            - np.arcsin(
-                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
-                            ),
-                        ]
-                    ) % (2 * np.pi)
+                    lam = np.array([self.theta, np.pi - lam_o,]) % (2 * np.pi)
                     if lam[1] < lam[0]:
                         lam[1] += 2 * np.pi
 
@@ -1111,69 +1081,31 @@ class Numerical(object):
 
                 if (-1 - xo) ** 2 + yo ** 2 < self.ro ** 2:
 
-                    x = np.sort(x)
                     x = np.array([x[1], x[2], x[0]])
-
-                    phi = np.append(
-                        self.theta
-                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
-                        np.pi
-                        - np.arcsin(
-                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
-                        ),
-                    ) % (2 * np.pi)
+                    phi_t = np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
+                    phi = np.append(self.theta + phi_t, np.pi - phi_l,) % (2 * np.pi)
                     phi[[2, 3]] = phi[[3, 2]]
                     for n in range(3):
                         while phi[n + 1] < phi[n]:
                             phi[n + 1] += 2 * np.pi
-
-                    xi = np.append(
-                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), np.pi
-                    )
+                    xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
+                    xi = np.append(xi_o, np.pi)
                     xi = np.array([xi[1], xi[0], xi[2], xi[3]])
-
-                    lam = np.array(
-                        [
-                            np.pi + self.theta,
-                            np.pi
-                            - np.arcsin(
-                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
-                            ),
-                        ]
-                    ) % (2 * np.pi)
+                    lam = np.array([np.pi + self.theta, np.pi - lam_o,]) % (2 * np.pi)
                     if lam[1] < lam[0]:
                         lam[1] += 2 * np.pi
 
                 else:
 
-                    print("FOO")
-
-                    x = np.sort(x)
-
-                    phi = np.append(
-                        self.theta
-                        + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo),
-                        np.arcsin(
-                            (1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro)
-                        ),
-                    ) % (2 * np.pi)
+                    phi_t = np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo)
+                    phi = np.append(self.theta + phi_t, phi_l,) % (2 * np.pi)
                     for n in range(3):
                         while phi[n + 1] < phi[n]:
                             phi[n + 1] += 2 * np.pi
-
-                    xi = np.append(
-                        np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi), 0.0
-                    )
+                    xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
+                    xi = np.append(xi_o, 0.0)
                     xi = np.array([xi[1], xi[0], xi[3], xi[2]])
-
-                    lam = np.array(
-                        [
-                            np.arcsin(
-                                (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
-                            ),
-                            self.theta,
-                        ]
-                    ) % (2 * np.pi)
+                    lam = np.array([lam_o, self.theta,]) % (2 * np.pi)
                     if lam[1] < lam[0]:
                         lam[1] += 2 * np.pi
 
