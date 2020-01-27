@@ -411,9 +411,61 @@ class Analytic(StarryNight):
             )
         elif (mu == 1) and (l == 1):
             raise ValueError("This case is treated separately.")
+
+        elif nu % 2 == 0:
+
+            # TODO: Solve this analytically
+            def K(u, v, kappa1, kappa2, delta):
+                func = (
+                    lambda phi: -np.sin(phi) ** (2 * u)
+                    * (1 - np.sin(phi) ** 2) ** u
+                    * (delta + np.sin(phi) ** 2) ** v
+                )
+                foo, _ = quad(
+                    func,
+                    0.5 * kappa1,
+                    0.5 * kappa2,
+                    epsabs=self.epsabs,
+                    epsrel=self.epsrel,
+                )
+                return foo
+
+            res = (
+                2
+                * (2 * self.ro) ** (l + 2)
+                * K((mu + 4) / 4, nu // 2, kappa1, kappa2, delta)
+            )
+
+            return res
+
         else:
-            # TODO
-            return 0.0
+
+            # TODO: Solve this analytically
+            def L0(u, v, kappa1, kappa2, delta, k):
+                func = (
+                    lambda phi: -(k ** 3)
+                    * np.sin(phi) ** (2 * u)
+                    * (1 - np.sin(phi) ** 2) ** u
+                    * (delta + np.sin(phi) ** 2) ** v
+                    * (1 - np.sin(phi) ** 2 / k ** 2) ** 1.5
+                )
+                foo, _ = quad(
+                    func,
+                    0.5 * kappa1,
+                    0.5 * kappa2,
+                    epsabs=self.epsabs,
+                    epsrel=self.epsrel,
+                )
+                return foo
+
+            res = (
+                2
+                * (2 * self.ro) ** (l - 1)
+                * (4 * self.bo * self.ro) ** 1.5
+                * L0((mu - 1) / 4, (nu - 1) // 2, kappa1, kappa2, delta, k)
+            )
+
+            return res
 
     def G(self, l, m):
         mu = l - m
