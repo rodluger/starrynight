@@ -1146,6 +1146,8 @@ class Numerical(object):
 
                 else:
 
+                    print("FOO")
+
                     x = np.sort(x)
 
                     phi = np.append(
@@ -1166,11 +1168,10 @@ class Numerical(object):
 
                     lam = np.array(
                         [
-                            np.pi + self.theta,
-                            np.pi
-                            - np.arcsin(
+                            np.arcsin(
                                 (1 - self.ro ** 2 + self.bo ** 2) / (2 * self.bo)
                             ),
+                            self.theta,
                         ]
                     ) % (2 * np.pi)
                     if lam[1] < lam[0]:
@@ -1181,22 +1182,18 @@ class Numerical(object):
         # And a pathological case with 4 roots
         elif len(x) == 4:
 
-            # Angles
             lam = np.array([])
             phi = np.sort(
                 (self.theta + np.arctan2(self.b * np.sqrt(1 - x ** 2) - yo, x - xo))
                 % (2 * np.pi)
             )
+            phi = phi[1], phi[0], phi[3], phi[2]
             xi = np.sort(np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi))
 
             if self.b > 0:
-
                 code = FLUX_QUAD_NIGHT_VIS
-
             else:
-
-                # DEBUG: Check this
-                phi = phi[::-1]
+                xi = xi[1], xi[0], xi[3], xi[2]
                 code = FLUX_QUAD_DAY_VIS
 
         else:
@@ -1323,7 +1320,7 @@ PT = [
     [-0.1, 0.0, 0.5, 1.0],
 ]
 
-WTF3 = [
+TRIP = [
     [0.5488316824842527, 4.03591586925189, 0.34988513192814663, 0.7753986686719786,],
     [
         0.5488316824842527,
@@ -1345,8 +1342,15 @@ WTF3 = [
     ],
 ]
 
-# TODO
-WTF4 = []
+QUAD = [
+    [0.5, np.pi, 0.99, 1.5],
+    [-0.5, 0.0, 0.99, 1.5],
+]
 
-N = Numerical([1, 0, 0, 0], WTF4[0])
-N.visualize()
+# TODO
+EDGE = [[0.5, np.pi, 1.0, 1.5]]
+
+
+for args in TRIP:
+    N = Numerical([1, 0, 0, 0], *args)
+    print("{:5.3f} / {:5.3f}".format(N.flux(), N.flux_brute()))
