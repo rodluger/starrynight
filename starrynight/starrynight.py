@@ -24,7 +24,7 @@ warnings.simplefilter("ignore")
 starry.config.quiet = True
 
 
-__all__ = ["Brute", "Numerical"]
+__all__ = ["Brute", "Numerical", "Analytic"]
 
 
 class StarryNight(object):
@@ -317,29 +317,21 @@ class Numerical(StarryNight):
 class Analytic(StarryNight):
     """Compute the flux analytically."""
 
-    def I(self, v, kappa, rho=0):
+    def I(self, v, kappa1, kappa2):
         """Return the integral I."""
         # TODO: Compute in terms of elliptic integrals
         func = lambda x: np.sin(x) ** (2 * v)
         res, err = quad(
-            func,
-            -0.5 * kappa + rho,
-            0.5 * kappa,
-            epsabs=self.epsabs,
-            epsrel=self.epsrel,
+            func, 0.5 * kappa1, 0.5 * kappa2, epsabs=self.epsabs, epsrel=self.epsrel,
         )
         return res
 
-    def J(self, v, kappa, k, rho=0):
+    def J(self, v, kappa1, kappa2, k):
         """Return the integral J."""
         # TODO: Compute in terms of elliptic integrals
         func = lambda x: np.sin(x) ** (2 * v) * (1 - k ** (-2) * np.sin(x) ** 2) ** 1.5
         res, err = quad(
-            func,
-            -0.5 * kappa + rho,
-            0.5 * kappa,
-            epsabs=self.epsabs,
-            epsrel=self.epsrel,
+            func, 0.5 * kappa1, 0.5 * kappa2, epsabs=self.epsabs, epsrel=self.epsrel,
         )
         return res
 
@@ -357,33 +349,30 @@ class Analytic(StarryNight):
             ]
         )
 
-    def K(self, u, v, kappa, delta, rho=0):
+    def K(self, u, v, kappa1, kappa2, delta):
         """Return the integral K, evaluated as a sum over I."""
         return sum(
             [
-                self.V(i, u, v, delta) * self.I(i + u, kappa, rho)
+                self.V(i, u, v, delta) * self.I(i + u, kappa1, kappa2)
                 for i in range(u + v + 1)
             ]
         )
 
-    def L(self, u, v, t, kappa, delta, k, rho=0):
+    def L(self, u, v, t, kappa1, kappa2, delta, k):
         """Return the integral L, evaluated as a sum over J."""
         return k ** 3 * sum(
             [
-                self.V(i, u, v, delta) * self.J(i + u + t, kappa, k, rho)
+                self.V(i, u, v, delta) * self.J(i + u + t, kappa1, kappa2, k)
                 for i in range(u + v + 1)
             ]
         )
 
-    def P(self, l, m, rho=0):
+    def P(self, l, m, phi1, phi2):
         """Compute the P integral."""
         mu = l - m
         nu = l + m
-        if (np.abs(1 - self.ro) < self.bo) and (self.bo < 1 + self.ro):
-            phi = np.arcsin((1 - self.ro ** 2 - self.bo ** 2) / (2 * self.bo * self.ro))
-        else:
-            phi = np.pi / 2
-        kappa = phi + np.pi / 2
+        kappa1 = phi1 + np.pi / 2
+        kappa2 = phi2 + np.pi / 2
         delta = (self.bo - self.ro) / (2 * self.ro)
         k = np.sqrt(
             (1 - self.ro ** 2 - self.bo ** 2 + 2 * self.bo * self.ro)
@@ -393,15 +382,15 @@ class Analytic(StarryNight):
             return (
                 2
                 * (2 * self.ro) ** (l + 2)
-                * self.K((mu + 4) // 4, nu // 2, kappa, delta, rho)
+                * self.K((mu + 4) // 4, nu // 2, kappa1, kappa2, delta)
             )
         elif (mu == 1) and (l % 2 == 0):
             return (
                 (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** (3.0 / 2.0)
                 * (
-                    self.L((l - 2) // 2, 0, 0, kappa, delta, k, rho)
-                    - 2 * self.L((l - 2) // 2, 0, 1, kappa, delta, k, rho)
+                    self.L((l - 2) // 2, 0, 0, kappa1, kappa2, delta, k)
+                    - 2 * self.L((l - 2) // 2, 0, 1, kappa1, kappa2, delta, k)
                 )
             )
         elif (mu == 1) and (l != 1) and (l % 2 != 0):
@@ -409,8 +398,8 @@ class Analytic(StarryNight):
                 (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** (3.0 / 2.0)
                 * (
-                    self.L((l - 3) // 2, 1, 0, kappa, delta, k, rho)
-                    - 2 * self.L((l - 3) // 2, 1, 1, kappa, delta, k, rho)
+                    self.L((l - 3) // 2, 1, 0, kappa1, kappa2, delta, k)
+                    - 2 * self.L((l - 3) // 2, 1, 1, kappa1, kappa2, delta, k)
                 )
             )
         elif ((mu - 1) % 2) == 0 and ((mu - 1) // 2 % 2 == 0) and (l != 1):
@@ -418,9 +407,56 @@ class Analytic(StarryNight):
                 2
                 * (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** (3.0 / 2.0)
-                * self.L((mu - 1) // 4, (nu - 1) // 2, 0, kappa, delta, k, rho)
+                * self.L((mu - 1) // 4, (nu - 1) // 2, 0, kappa1, kappa2, delta, k)
             )
         elif (mu == 1) and (l == 1):
             raise ValueError("This case is treated separately.")
         else:
-            return 0
+            # TODO
+            return 0.0
+
+    def G(self, l, m):
+        mu = l - m
+        nu = l + m
+
+        # NOTE: The abs prevents NaNs when the argument of the sqrt is
+        # zero but floating point error causes it to be ~ -eps.
+        z = lambda x, y: np.sqrt(np.abs(1 - x ** 2 - y ** 2))
+
+        if nu % 2 == 0:
+            G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
+        elif (l == 1) and (m == 0):
+            G = [
+                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * (-y),
+                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * x,
+            ]
+        elif (mu == 1) and (l % 2 == 0):
+            G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
+        elif (mu == 1) and (l % 2 != 0):
+            G = [lambda x, y: x ** (l - 3) * y * z(x, y) ** 3, lambda x, y: 0]
+        else:
+            G = [
+                lambda x, y: 0,
+                lambda x, y: x ** (0.5 * (mu - 3))
+                * y ** (0.5 * (nu - 1))
+                * z(x, y) ** 3,
+            ]
+        return G
+
+    def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
+        """A general primitive integral computed numerically."""
+        G = self.G(l, m)
+        func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
+            x(theta), y(theta)
+        ) * dy(theta)
+        res, _ = quad(func, theta1, theta2, epsabs=self.epsabs, epsrel=self.epsrel,)
+        return res
+
+    def Pnum(self, l, m, phi1, phi2):
+        """Compute the P integral numerically from its integral definition."""
+        x = lambda phi: self.ro * np.cos(phi)
+        y = lambda phi: self.bo + self.ro * np.sin(phi)
+        dx = lambda phi: -self.ro * np.sin(phi)
+        dy = lambda phi: self.ro * np.cos(phi)
+        return self.primitive(l, m, x, y, dx, dy, phi1, phi2)
+
