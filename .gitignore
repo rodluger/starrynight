@@ -1,2 +1,6 @@
 .vscode
 .DS_Store
+tmp
+starrynight/starrynight_version.py
+*.egg-info
+__pycache__
