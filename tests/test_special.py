@@ -5,7 +5,7 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "z", [0.1, 0.25, 0.5, 0.9],
+    "z", [0.0, 1e-5, 1e-2, 1e-1, 0.25, 0.5, 0.75, 1 - 1e-1, 1 - 1e-2, 1 - 1e-5, 1.0],
 )
 def test_W(z, imax=10):
     W1 = compute_W(imax, z)

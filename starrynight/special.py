@@ -1,4 +1,4 @@
-from scipy.special import hyp2f1
+from scipy.special import hyp2f1, gamma
 import numpy as np
 
 
@@ -10,7 +10,21 @@ def compute_W(imax, z):
 
     recursively and return an array containing the values of this function
     from i = 0 to i = imax.
+
+    TODO: Code up the downward recursion for this. Unstable near z = 0 and z = 1!
+
     """
+
+    # Special cases
+    if z == 0:
+        return np.ones(imax + 1)
+    elif z == 1.0:
+        W = np.zeros(imax + 1)
+        W[0] = 1.0
+        for i in range(1, imax + 1):
+            W[i] = i / (i + 0.5) * W[i - 1]
+        return W
+
     F = np.empty((imax + 2, imax + 2))
 
     # Initial conditions
@@ -18,7 +32,10 @@ def compute_W(imax, z):
     F[0, 2] = 1.0
     F[0, 3] = 1.0
     F[1, 1] = np.sqrt(1 - z)
-    F[1, 2] = 2 * (F[1, 1] * z - F[1, 1] + 1) / (3 * z)
+    if np.abs(z) < 0.005:
+        F[1, 2] = 1 - z / 4 - z ** 2 / 24 - z ** 3 / 64 - z ** 4 / 128
+    else:
+        F[1, 2] = 2 * (F[1, 1] * z - F[1, 1] + 1) / (3 * z)
 
     # Upward in c
     def upc(b, c):
@@ -47,3 +64,6 @@ def compute_W(imax, z):
     # We only care about the k + 1 diagonal
     return np.diagonal(F, 1)
 
+
+# DEBUG
+print(compute_W(10, 0.0))

@@ -510,15 +510,17 @@ class Analytic(StarryNight):
                         res = 0
                         s2 = np.sin(phi) ** 2
                         s2k2 = min(1.0, s2 / k2)
+
+                        # TODO: Move this up; compute for both kappa1 and kappa2
+                        W = compute_W(2 * self.ydeg + 1, s2k2)
+
                         for i in range(u + v + 1):
                             n = i + u
-                            F1 = hyp2f1(-0.5, n + 1, n + 2, s2k2)
-                            F2 = hyp2f1(-0.5, n + 2, n + 3, s2k2)
                             fac = s2 ** (n + 1) / ((n + 1) * (n + 2))
                             res += (
                                 self.V(i, u, v, delta)
                                 * fac
-                                * (k2 * (n + 2) * F1 - (n + 1) * s2 * F2)
+                                * (k2 * (n + 2) * W[n + 1] - (n + 1) * s2 * W[n + 2])
                             )
                         return res
 
