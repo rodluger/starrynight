@@ -375,6 +375,7 @@ class Analytic(StarryNight):
         nu = l + m
         kappa1 = phi1 + np.pi / 2
         kappa2 = phi2 + np.pi / 2
+
         delta = (self.bo - self.ro) / (2 * self.ro)
         k = np.sqrt(
             (1 - self.ro ** 2 - self.bo ** 2 + 2 * self.bo * self.ro)
@@ -412,7 +413,9 @@ class Analytic(StarryNight):
                 * self.L((mu - 1) // 4, (nu - 1) // 2, 0, kappa1, kappa2, delta, k)
             )
         elif (mu == 1) and (l == 1):
-            raise ValueError("This case is treated separately.")
+
+            # TODO: We need to code this case up from Pal (2012)
+            return self.Pnum(l, m, phi1, phi2)
 
         elif nu % 2 == 0:
             """
@@ -431,27 +434,29 @@ class Analytic(StarryNight):
             We can massage the equation to get it to look like (D37) with `k = 1`,
             which allows us to write it analytically in terms of the `J(v)`
             integral.
-
-            For reference, here's the numerical equivalent:
-
-                u = (mu + 4) / 4
-                v = nu // 2
-                func = (
-                    lambda phi: np.sin(phi) ** (2 * u)
-                    * (1 - np.sin(phi) ** 2) ** u
-                    * (delta + np.sin(phi) ** 2) ** v
-                )
-                K, _ = quad(
-                    func,
-                    0.5 * kappa1,
-                    0.5 * kappa2,
-                    epsabs=self.epsabs,
-                    epsrel=self.epsrel,
-                )
-                res = -2 * (2 * self.ro) ** (l + 2) * K
-
             """
 
+            # WORKING
+            u = (mu + 4) / 4
+            v = nu // 2
+            func = (
+                lambda phi: np.sign(np.cos(phi))
+                * np.sin(phi) ** (2 * u)
+                * (1 - np.sin(phi) ** 2) ** u
+                * (delta + np.sin(phi) ** 2) ** v
+            )
+            K, _ = quad(
+                func,
+                0.5 * kappa1,
+                0.5 * kappa2,
+                epsabs=self.epsabs,
+                epsrel=self.epsrel,
+            )
+            res = 2 * (2 * self.ro) ** (l + 2) * K
+            return res
+
+            """
+            # BROKEN
             def K(u, v, kappa1, kappa2, delta):
                 return sum(
                     [
@@ -468,17 +473,21 @@ class Analytic(StarryNight):
             )
 
             return res
+            """
 
         else:
 
             """
-            This case might be tricky to solve analytically.
+            This case is trickier to solve analytically.
+
+            https://www.wolframalpha.com/input/?i=integrate+sin%28x%29%5E%282n%2B1%29+%281+-+sin%28x%29%5E2%29%5E%281%2F2%29+%281+-+sin%28x%29%5E2+%2F+k%5E2%29%5E%283%2F2%29
             """
 
             # TODO: Solve this analytically
             def L0(u, v, kappa1, kappa2, delta, k):
                 func = (
                     lambda phi: (k ** 3)
+                    * np.sign(np.cos(phi))
                     * np.sin(phi) ** (2 * u)
                     * (1 - np.sin(phi) ** 2) ** u
                     * (delta + np.sin(phi) ** 2) ** v
@@ -494,7 +503,7 @@ class Analytic(StarryNight):
                 return foo
 
             res = (
-                -2
+                2
                 * (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** 1.5
                 * L0((mu - 1) / 4, (nu - 1) // 2, kappa1, kappa2, delta, k)
