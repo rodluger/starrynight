@@ -417,99 +417,120 @@ class Analytic(StarryNight):
             # TODO: We need to code this case up from Pal (2012)
             return self.Pnum(l, m, phi1, phi2)
 
-        elif nu % 2 == 0:
-            """
-            A note about this case. In the original starry code, this integral
-            is always zero because the integrand is antisymmetric about the
-            midpoint. Now, however, the integration limits are different, so 
-            there's no cancellation in general.
-
-            This integral is just the first case in equation (D25) of the
-            starry paper. We can write it as the first case in (D32) and (D35), 
-            but note that we pick up a minus sign relative to the expression in 
-            the paper.
-
-            The other thing to note is that `u` in the call to `K(u, v)` is
-            a half-integer, so our Vieta trick (D36) doesn't work out of the box.
-            We can massage the equation to get it to look like (D37) with `k = 1`,
-            which allows us to write it analytically in terms of the `J(v)`
-            integral.
-            """
-
-            # WORKING
-            u = (mu + 4) / 4
-            v = nu // 2
-            func = (
-                lambda phi: np.sign(np.cos(phi))
-                * np.sin(phi) ** (2 * u)
-                * (1 - np.sin(phi) ** 2) ** u
-                * (delta + np.sin(phi) ** 2) ** v
-            )
-            K, _ = quad(
-                func,
-                0.5 * kappa1,
-                0.5 * kappa2,
-                epsabs=self.epsabs,
-                epsrel=self.epsrel,
-            )
-            res = 2 * (2 * self.ro) ** (l + 2) * K
-            return res
-
-            """
-            # BROKEN
-            def K(u, v, kappa1, kappa2, delta):
-                return sum(
-                    [
-                        self.V(i, u - 1, v, delta)
-                        * self.J(i + u + 0.5, kappa1, kappa2, 1.0)
-                        for i in range(u + v)
-                    ]
-                )
-
-            res = (
-                -2
-                * (2 * self.ro) ** (l + 2)
-                * K((mu + 4) // 4, nu // 2, kappa1, kappa2, delta)
-            )
-
-            return res
-            """
-
         else:
 
             """
-            This case is trickier to solve analytically.
+            A note about these cases. In the original starry code, these integrals
+            are always zero because the integrand is antisymmetric about the
+            midpoint. Now, however, the integration limits are different, so 
+            there's no cancellation in general.
 
-            https://www.wolframalpha.com/input/?i=integrate+sin%28x%29%5E%282n%2B1%29+%281+-+sin%28x%29%5E2%29%5E%281%2F2%29+%281+-+sin%28x%29%5E2+%2F+k%5E2%29%5E%283%2F2%29
+            The cases below are just the first and fourth cases in equation (D25) 
+            of the starry paper. We can re-write them as the first and fourth cases 
+            in (D32) and (D35), respectively, but note that we pick up a factor
+            of `sgn(cos(phi))`, since the power of the cosine term in the integrand
+            is odd. Because of this, we have to split the integrals every time
+            the cosine term changes sign, so in general we'll have one to three
+            separate integrals.
+            
+            The other thing to note is that `u` in the call to `K(u, v)` is now
+            a half-integer, so our Vieta trick (D36, D37) doesn't work out of the box.
+            We discuss the modifications we make below.
             """
 
-            # TODO: Solve this analytically
-            def L0(u, v, kappa1, kappa2, delta, k):
-                func = (
-                    lambda phi: (k ** 3)
-                    * np.sign(np.cos(phi))
-                    * np.sin(phi) ** (2 * u)
-                    * (1 - np.sin(phi) ** 2) ** u
-                    * (delta + np.sin(phi) ** 2) ** v
-                    * (1 - np.sin(phi) ** 2 / k ** 2) ** 1.5
-                )
-                foo, _ = quad(
-                    func,
-                    0.5 * kappa1,
-                    0.5 * kappa2,
-                    epsabs=self.epsabs,
-                    epsrel=self.epsrel,
-                )
-                return foo
+            # Compute the limits of integration and the
+            # sign of each sub-integral.
+            if kappa2 < np.pi:
+                lims = [[0.5 * kappa1, 0.5 * kappa2, 1]]
+            elif kappa2 < 3 * np.pi:
+                if kappa1 < np.pi:
+                    lims = [
+                        [0.5 * kappa1, 0.5 * np.pi, 1],
+                        [0.5 * np.pi, 0.5 * kappa2, -1],
+                    ]
+                else:
+                    lims = [[0.5 * kappa1, 0.5 * kappa2, -1]]
+            else:
+                if kappa1 < np.pi:
+                    lims = [
+                        [0.5 * kappa1, 0.5 * np.pi, 1],
+                        [0.5 * np.pi, 1.5 * np.pi, -1],
+                        [1.5 * np.pi, 0.5 * kappa2, 1],
+                    ]
+                elif kappa1 < 3 * np.pi:
+                    lims = [
+                        [0.5 * kappa1, 1.5 * np.pi, -1],
+                        [1.5 * np.pi, 0.5 * kappa2, 1],
+                    ]
+                else:
+                    lims = [[0.5 * kappa1, 0.5 * kappa2, 1]]
 
-            res = (
-                2
-                * (2 * self.ro) ** (l - 1)
-                * (4 * self.bo * self.ro) ** 1.5
-                * L0((mu - 1) / 4, (nu - 1) // 2, kappa1, kappa2, delta, k)
-            )
+            if nu % 2 == 0:
+                """
+                Here we massage the first case of (D35) to get it to look like 
+                (D37) with `k = 1`, which allows us to write it analytically 
+                in terms of the `J(v)` integral.
+                """
 
-            return res
+                def Kprime(u, v, kappa1, kappa2, delta):
+                    return sum(
+                        [
+                            self.V(i, u - 1, v, delta)
+                            * self.J(i + u + 0.5, kappa1, kappa2, 1.0)
+                            for i in range(u + v)
+                        ]
+                    )
+
+                res = sum(
+                    [
+                        2
+                        * (2 * self.ro) ** (l + 2)
+                        * sgn
+                        * Kprime((mu + 4) // 4, nu // 2, 2 * a, 2 * b, delta)
+                        for a, b, sgn in lims
+                    ]
+                )
+
+                return res
+
+            else:
+
+                """
+                This case is trickier to solve analytically.
+
+                https://www.wolframalpha.com/input/?i=integrate+sin%28x%29%5E%282n%2B1%29+%281+-+sin%28x%29%5E2%29%5E%281%2F2%29+%281+-+sin%28x%29%5E2+%2F+k%5E2%29%5E%283%2F2%29
+                """
+
+                # TODO: Solve this analytically
+                def L0(u, v, kappa1, kappa2, delta, k):
+                    func = (
+                        lambda phi: (k ** 3)
+                        * np.sin(phi) ** (2 * u)
+                        * (1 - np.sin(phi) ** 2) ** u
+                        * (delta + np.sin(phi) ** 2) ** v
+                        * (1 - np.sin(phi) ** 2 / k ** 2) ** 1.5
+                    )
+                    foo, _ = quad(
+                        func,
+                        0.5 * kappa1,
+                        0.5 * kappa2,
+                        epsabs=self.epsabs,
+                        epsrel=self.epsrel,
+                    )
+                    return foo
+
+                res = sum(
+                    [
+                        2
+                        * (2 * self.ro) ** (l - 1)
+                        * sgn
+                        * (4 * self.bo * self.ro) ** 1.5
+                        * L0((mu - 1) / 4, (nu - 1) // 2, 2 * a, 2 * b, delta, k)
+                        for a, b, sgn in lims
+                    ]
+                )
+
+                return res
 
     def G(self, l, m):
         mu = l - m
