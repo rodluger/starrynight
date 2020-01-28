@@ -9,6 +9,7 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
+from .special import compute_W
 import numpy as np
 import starry
 from starry._c_ops import Ops
@@ -16,7 +17,7 @@ from starry._core.ops.rotation import dotROp
 from starry._core.ops.integration import sTOp
 from starry._core.ops.polybasis import pTOp
 from scipy.integrate import quad
-from scipy.special import binom
+from scipy.special import binom, hyp2f1
 import theano
 import warnings
 
@@ -317,8 +318,6 @@ class Numerical(StarryNight):
 class Analytic(StarryNight):
     """Compute the flux analytically."""
 
-    # TODO: BEWARE of the sign of phi
-
     def I(self, v, kappa1, kappa2):
         """Return the integral I."""
         # TODO: Compute in terms of elliptic integrals
@@ -357,6 +356,15 @@ class Analytic(StarryNight):
             [
                 self.V(i, u, v, delta) * self.I(i + u, kappa1, kappa2)
                 for i in range(u + v + 1)
+            ]
+        )
+
+    def Kprime(self, u, v, kappa1, kappa2, delta):
+        """Return the integral K', evaluated as a sum over J."""
+        return sum(
+            [
+                self.V(i, u - 1, v, delta) * self.J(i + u + 0.5, kappa1, kappa2, 1.0)
+                for i in range(u + v)
             ]
         )
 
@@ -438,33 +446,6 @@ class Analytic(StarryNight):
             We discuss the modifications we make below.
             """
 
-            # Compute the limits of integration and the
-            # sign of each sub-integral.
-            if kappa2 < np.pi:
-                lims = [[0.5 * kappa1, 0.5 * kappa2, 1]]
-            elif kappa2 < 3 * np.pi:
-                if kappa1 < np.pi:
-                    lims = [
-                        [0.5 * kappa1, 0.5 * np.pi, 1],
-                        [0.5 * np.pi, 0.5 * kappa2, -1],
-                    ]
-                else:
-                    lims = [[0.5 * kappa1, 0.5 * kappa2, -1]]
-            else:
-                if kappa1 < np.pi:
-                    lims = [
-                        [0.5 * kappa1, 0.5 * np.pi, 1],
-                        [0.5 * np.pi, 1.5 * np.pi, -1],
-                        [1.5 * np.pi, 0.5 * kappa2, 1],
-                    ]
-                elif kappa1 < 3 * np.pi:
-                    lims = [
-                        [0.5 * kappa1, 1.5 * np.pi, -1],
-                        [1.5 * np.pi, 0.5 * kappa2, 1],
-                    ]
-                else:
-                    lims = [[0.5 * kappa1, 0.5 * kappa2, 1]]
-
             if nu % 2 == 0:
                 """
                 Here we massage the first case of (D35) to get it to look like 
@@ -472,65 +453,83 @@ class Analytic(StarryNight):
                 in terms of the `J(v)` integral.
                 """
 
-                def Kprime(u, v, kappa1, kappa2, delta):
-                    return sum(
-                        [
-                            self.V(i, u - 1, v, delta)
-                            * self.J(i + u + 0.5, kappa1, kappa2, 1.0)
-                            for i in range(u + v)
+                # Compute the limits of integration and the
+                # sign of each sub-integral.
+                if kappa2 < np.pi:
+                    lims = [[0.5 * kappa1, 0.5 * kappa2, 1]]
+                elif kappa2 < 3 * np.pi:
+                    if kappa1 < np.pi:
+                        lims = [
+                            [0.5 * kappa1, 0.5 * np.pi, 1],
+                            [0.5 * np.pi, 0.5 * kappa2, -1],
                         ]
-                    )
+                    else:
+                        lims = [[0.5 * kappa1, 0.5 * kappa2, -1]]
+                else:
+                    if kappa1 < np.pi:
+                        lims = [
+                            [0.5 * kappa1, 0.5 * np.pi, 1],
+                            [0.5 * np.pi, 1.5 * np.pi, -1],
+                            [1.5 * np.pi, 0.5 * kappa2, 1],
+                        ]
+                    elif kappa1 < 3 * np.pi:
+                        lims = [
+                            [0.5 * kappa1, 1.5 * np.pi, -1],
+                            [1.5 * np.pi, 0.5 * kappa2, 1],
+                        ]
+                    else:
+                        lims = [[0.5 * kappa1, 0.5 * kappa2, 1]]
 
-                res = sum(
+                return sum(
                     [
                         2
                         * (2 * self.ro) ** (l + 2)
                         * sgn
-                        * Kprime((mu + 4) // 4, nu // 2, 2 * a, 2 * b, delta)
+                        * self.Kprime((mu + 4) // 4, nu // 2, 2 * a, 2 * b, delta)
                         for a, b, sgn in lims
                     ]
                 )
-
-                return res
 
             else:
-
                 """
-                This case is trickier to solve analytically.
+                This case is trickier to solve analytically. We need to
+                go back to the basics here, since we can't use the `k=1` trick.
+                Fortunately, Wolfram tells us that these are just differences
+                of hypergeometric functions, and the signs have all been
+                taken care of.
 
-                https://www.wolframalpha.com/input/?i=integrate+sin%28x%29%5E%282n%2B1%29+%281+-+sin%28x%29%5E2%29%5E%281%2F2%29+%281+-+sin%28x%29%5E2+%2F+k%5E2%29%5E%283%2F2%29
+                https://www.wolframalpha.com/input/?i=integrate+sin%28x%29%5E%282n
+                %2B1%29+cos%28x%29+%281+-+sin%28x%29%5E2+%2F+k%5E2%29%5E%283%2F2%29
                 """
 
-                # TODO: Solve this analytically
-                def L0(u, v, kappa1, kappa2, delta, k):
-                    func = (
-                        lambda phi: (k ** 3)
-                        * np.sin(phi) ** (2 * u)
-                        * (1 - np.sin(phi) ** 2) ** u
-                        * (delta + np.sin(phi) ** 2) ** v
-                        * (1 - np.sin(phi) ** 2 / k ** 2) ** 1.5
-                    )
-                    foo, _ = quad(
-                        func,
-                        0.5 * kappa1,
-                        0.5 * kappa2,
-                        epsabs=self.epsabs,
-                        epsrel=self.epsrel,
-                    )
-                    return foo
+                #
+                def Lprime(u, v, kappa1, kappa2, delta, k):
+                    k2 = k ** 2
 
-                res = sum(
-                    [
-                        2
-                        * (2 * self.ro) ** (l - 1)
-                        * sgn
-                        * (4 * self.bo * self.ro) ** 1.5
-                        * L0((mu - 1) / 4, (nu - 1) // 2, 2 * a, 2 * b, delta, k)
-                        for a, b, sgn in lims
-                    ]
+                    def anti(phi):
+                        res = 0
+                        s2 = np.sin(phi) ** 2
+                        s2k2 = min(1.0, s2 / k2)
+                        for i in range(u + v + 1):
+                            n = i + u
+                            F1 = hyp2f1(-0.5, n + 1, n + 2, s2k2)
+                            F2 = hyp2f1(-0.5, n + 2, n + 3, s2k2)
+                            fac = s2 ** (n + 1) / ((n + 1) * (n + 2))
+                            res += (
+                                self.V(i, u, v, delta)
+                                * fac
+                                * (k2 * (n + 2) * F1 - (n + 1) * s2 * F2)
+                            )
+                        return res
+
+                    return 0.5 * k * (anti(0.5 * kappa2) - anti(0.5 * kappa1))
+
+                return (
+                    2
+                    * (2 * self.ro) ** (l - 1)
+                    * (4 * self.bo * self.ro) ** 1.5
+                    * Lprime((mu - 1) // 4, (nu - 1) // 2, kappa1, kappa2, delta, k)
                 )
-
-                return res
 
     def G(self, l, m):
         mu = l - m

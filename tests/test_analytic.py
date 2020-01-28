@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 
-ydeg = 3
+ydeg = 5
 A = Analytic(y=np.zeros((ydeg + 1) ** 2), tol=1e-7)
 
 
@@ -61,6 +61,7 @@ args = [
     "b,theta,bo,ro", args,
 )
 def test_P(b, theta, bo, ro):
+    A.b, A.theta, A.bo, A.ro = b, theta, bo, ro
     phi, _, _, _ = get_angles(b, theta, bo, ro)
     phi1, phi2 = phi[:2]
     for l in range(ydeg + 2):
@@ -72,6 +73,7 @@ def test_P(b, theta, bo, ro):
 
 if __name__ == "__main__":
     b, theta, bo, ro = args[0]
+    A.b, A.theta, A.bo, A.ro = b, theta, bo, ro
     phi, _, _, _ = get_angles(b, theta, bo, ro)
     phi1, phi2 = phi[:2]
     for l in range(ydeg + 2):
