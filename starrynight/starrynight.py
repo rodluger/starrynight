@@ -509,19 +509,20 @@ class Analytic(StarryNight):
                     def anti(phi):
                         res = 0
                         s2 = np.sin(phi) ** 2
-                        s2k2 = min(1.0, s2 / k2)
+                        z = min(1.0, s2 / k2)
+                        z32 = (1 - z) ** 1.5
 
-                        # TODO: Move this up; compute for both kappa1 and kappa2
-                        W = compute_W(2 * self.ydeg + 1, s2k2)
+                        # TODO: Do this outside this scope (can be reused)
+                        # This will greatly speed things up!
+                        W = compute_W(2 * self.ydeg + 1, z)
 
                         for i in range(u + v + 1):
                             n = i + u
-                            fac = s2 ** (n + 1) / ((n + 1) * (n + 2))
-                            res += (
-                                self.V(i, u, v, delta)
-                                * fac
-                                * (k2 * (n + 2) * W[n + 1] - (n + 1) * s2 * W[n + 2])
-                            )
+                            fac = k2 * s2 ** (n + 1) / (n + 1)
+                            frac = (n + 1) / (n + 2.5)
+                            term = (1 - frac) * W[n + 1] + frac * z32
+                            res += self.V(i, u, v, delta) * fac * term
+
                         return res
 
                     return 0.5 * k * (anti(0.5 * kappa2) - anti(0.5 * kappa1))
