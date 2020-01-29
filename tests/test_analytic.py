@@ -1,11 +1,14 @@
 from starrynight import Numerical, Analytic
 from starrynight.geometry import get_angles
+from starrynight.linear import pal
+from scipy.integrate import quad
 import numpy as np
 import pytest
 
 
 ydeg = 5
 A = Analytic(y=np.zeros((ydeg + 1) ** 2), tol=1e-7)
+N = Numerical(y=np.zeros((ydeg + 1) ** 2), tol=1e-7)
 
 
 args = [
@@ -54,6 +57,8 @@ args = [
     [0.5, np.pi, 0.99, 1.5],
     [-0.5, 0.0, 0.99, 1.5],
     [0.5, np.pi, 1.0, 1.5],
+    [0.5, 2 * np.pi - np.pi / 4, 0.4, 0.4],
+    [0.5, 2 * np.pi - np.pi / 4, 0.3, 0.3],
 ]
 
 
@@ -61,27 +66,25 @@ args = [
     "b,theta,bo,ro", args,
 )
 def test_P(b, theta, bo, ro):
+    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
     A.b, A.theta, A.bo, A.ro = b, theta, bo, ro
     phi, _, _, _ = get_angles(b, theta, bo, ro)
     phi1, phi2 = phi[:2]
     for l in range(ydeg + 2):
         for m in range(-l, l + 1):
             P1 = A.P(l, m, phi1, phi2)
-            P2 = A.Pnum(l, m, phi1, phi2)
+            P2 = N.P(l, m, phi1, phi2)
             assert np.allclose(P1, P2)
 
 
-if __name__ == "__main__":
-    b, theta, bo, ro = args[0]
+@pytest.mark.parametrize(
+    "b,theta,bo,ro", args,
+)
+def test_linear(b, theta, bo, ro):
+    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
     A.b, A.theta, A.bo, A.ro = b, theta, bo, ro
     phi, _, _, _ = get_angles(b, theta, bo, ro)
     phi1, phi2 = phi[:2]
-    for l in range(ydeg + 2):
-        for m in range(-l, l + 1):
-            P1 = A.P(l, m, phi1, phi2)
-            P2 = A.Pnum(l, m, phi1, phi2)
-            print(
-                "{:2d},{:2d}: {:13.10f} / {:13.10f} / {}".format(
-                    l, m, P1, P2, np.allclose(P1, P2)
-                )
-            )
+    P1 = N.P(1, 0, phi1, phi2)
+    P2 = pal(bo, ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
+    assert np.allclose(P1, P2)

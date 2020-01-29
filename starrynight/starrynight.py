@@ -10,6 +10,7 @@ TODO: Singularities
 from .utils import *
 from .geometry import get_angles
 from .special import compute_W
+from .linear import pal
 import numpy as np
 import starry
 from starry._c_ops import Ops
@@ -17,7 +18,7 @@ from starry._core.ops.rotation import dotROp
 from starry._core.ops.integration import sTOp
 from starry._core.ops.polybasis import pTOp
 from scipy.integrate import quad
-from scipy.special import binom, hyp2f1
+from scipy.special import binom
 import theano
 import warnings
 
@@ -377,6 +378,30 @@ class Analytic(StarryNight):
             ]
         )
 
+    def Lprime(self, u, v, kappa1, kappa2, delta, k):
+        k2 = k ** 2
+
+        def anti(phi):
+            res = 0
+            s2 = np.sin(phi) ** 2
+            z = min(1.0, s2 / k2)
+            z32 = (1 - z) ** 1.5
+
+            # TODO: Do this outside this scope (can be reused)
+            # This will greatly speed things up!
+            W = compute_W(2 * self.ydeg + 1, z)
+
+            for i in range(u + v + 1):
+                n = i + u
+                fac = k2 * s2 ** (n + 1) / (n + 1)
+                frac = (n + 1) / (n + 2.5)
+                term = (1 - frac) * W[n + 1] + frac * z32
+                res += self.V(i, u, v, delta) * fac * term
+
+            return res
+
+        return 0.5 * k * (anti(0.5 * kappa2) - anti(0.5 * kappa1))
+
     def P(self, l, m, phi1, phi2):
         """Compute the P integral."""
         mu = l - m
@@ -390,12 +415,14 @@ class Analytic(StarryNight):
             / (4 * self.bo * self.ro)
         )
         if (mu / 2) % 2 == 0:
+            # Same as in starry
             return (
                 2
                 * (2 * self.ro) ** (l + 2)
                 * self.K((mu + 4) // 4, nu // 2, kappa1, kappa2, delta)
             )
         elif (mu == 1) and (l % 2 == 0):
+            # Same as in starry
             return (
                 (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** (3.0 / 2.0)
@@ -405,6 +432,7 @@ class Analytic(StarryNight):
                 )
             )
         elif (mu == 1) and (l != 1) and (l % 2 != 0):
+            # Same as in starry
             return (
                 (2 * self.ro) ** (l - 1)
                 * (4 * self.bo * self.ro) ** (3.0 / 2.0)
@@ -414,6 +442,7 @@ class Analytic(StarryNight):
                 )
             )
         elif ((mu - 1) % 2) == 0 and ((mu - 1) // 2 % 2 == 0) and (l != 1):
+            # Same as in starry
             return (
                 2
                 * (2 * self.ro) ** (l - 1)
@@ -422,11 +451,12 @@ class Analytic(StarryNight):
             )
         elif (mu == 1) and (l == 1):
 
-            # TODO: We need to code this case up from Pal (2012)
-            return self.Pnum(l, m, phi1, phi2)
+            # Special case from Pal (2012)
+            # Note that there's a difference of pi/2 between the angle Pal
+            # calls `phi` and our `phi`, so we account for that here.
+            return pal(self.bo, self.ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
 
         else:
-
             """
             A note about these cases. In the original starry code, these integrals
             are always zero because the integrand is antisymmetric about the
@@ -497,85 +527,12 @@ class Analytic(StarryNight):
                 Fortunately, Wolfram tells us that these are just differences
                 of hypergeometric functions, and the signs have all been
                 taken care of.
-
-                https://www.wolframalpha.com/input/?i=integrate+sin%28x%29%5E%282n
-                %2B1%29+cos%28x%29+%281+-+sin%28x%29%5E2+%2F+k%5E2%29%5E%283%2F2%29
                 """
-
-                #
-                def Lprime(u, v, kappa1, kappa2, delta, k):
-                    k2 = k ** 2
-
-                    def anti(phi):
-                        res = 0
-                        s2 = np.sin(phi) ** 2
-                        z = min(1.0, s2 / k2)
-                        z32 = (1 - z) ** 1.5
-
-                        # TODO: Do this outside this scope (can be reused)
-                        # This will greatly speed things up!
-                        W = compute_W(2 * self.ydeg + 1, z)
-
-                        for i in range(u + v + 1):
-                            n = i + u
-                            fac = k2 * s2 ** (n + 1) / (n + 1)
-                            frac = (n + 1) / (n + 2.5)
-                            term = (1 - frac) * W[n + 1] + frac * z32
-                            res += self.V(i, u, v, delta) * fac * term
-
-                        return res
-
-                    return 0.5 * k * (anti(0.5 * kappa2) - anti(0.5 * kappa1))
-
                 return (
                     2
                     * (2 * self.ro) ** (l - 1)
                     * (4 * self.bo * self.ro) ** 1.5
-                    * Lprime((mu - 1) // 4, (nu - 1) // 2, kappa1, kappa2, delta, k)
+                    * self.Lprime(
+                        (mu - 1) // 4, (nu - 1) // 2, kappa1, kappa2, delta, k
+                    )
                 )
-
-    def G(self, l, m):
-        mu = l - m
-        nu = l + m
-
-        # NOTE: The abs prevents NaNs when the argument of the sqrt is
-        # zero but floating point error causes it to be ~ -eps.
-        z = lambda x, y: np.sqrt(np.abs(1 - x ** 2 - y ** 2))
-
-        if nu % 2 == 0:
-            G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
-        elif (l == 1) and (m == 0):
-            G = [
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * (-y),
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * x,
-            ]
-        elif (mu == 1) and (l % 2 == 0):
-            G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
-        elif (mu == 1) and (l % 2 != 0):
-            G = [lambda x, y: x ** (l - 3) * y * z(x, y) ** 3, lambda x, y: 0]
-        else:
-            G = [
-                lambda x, y: 0,
-                lambda x, y: x ** (0.5 * (mu - 3))
-                * y ** (0.5 * (nu - 1))
-                * z(x, y) ** 3,
-            ]
-        return G
-
-    def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
-        """A general primitive integral computed numerically."""
-        G = self.G(l, m)
-        func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
-            x(theta), y(theta)
-        ) * dy(theta)
-        res, _ = quad(func, theta1, theta2, epsabs=self.epsabs, epsrel=self.epsrel,)
-        return res
-
-    def Pnum(self, l, m, phi1, phi2):
-        """Compute the P integral numerically from its integral definition."""
-        x = lambda phi: self.ro * np.cos(phi)
-        y = lambda phi: self.bo + self.ro * np.sin(phi)
-        dx = lambda phi: -self.ro * np.sin(phi)
-        dy = lambda phi: self.ro * np.cos(phi)
-        return self.primitive(l, m, x, y, dx, dy, phi1, phi2)
-

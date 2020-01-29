@@ -1,7 +1,6 @@
 from starrynight.special import compute_W
 import numpy as np
 from scipy.special import hyp2f1
-import pytest
 
 
 def test_W():

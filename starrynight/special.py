@@ -1,4 +1,4 @@
-from scipy.special import hyp2f1, poch, factorial
+from scipy.special import hyp2f1
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,6 +21,7 @@ def compute_W(imax, z):
 
         # Recurse downward. We need to evaluate 2F1 once,
         # but it's unconditionally stable at all z.
+        # TODO: Code up `hyp2f1`
         W[imax] = hyp2f1(-0.5, imax, imax + 1, z)
         for b in range(imax - 1, -1, -1):
             W[b] = z * (b + 1.5) / (b + 1) * W[b + 1] + term
