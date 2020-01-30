@@ -1,4 +1,5 @@
-from starrynight import Numerical, Analytic
+from starrynight import StarryNight
+from starrynight.numerical import Numerical
 from starrynight.geometry import get_angles
 from starrynight.linear import pal
 from scipy.integrate import quad
@@ -7,8 +8,8 @@ import pytest
 
 
 ydeg = 5
-A = Analytic(y=np.zeros((ydeg + 1) ** 2), tol=1e-7)
-N = Numerical(y=np.zeros((ydeg + 1) ** 2), tol=1e-7)
+S = StarryNight(ydeg, tol=1e-7)
+N = Numerical(ydeg, tol=1e-7)
 
 
 args = [
@@ -66,14 +67,12 @@ args = [
     "b,theta,bo,ro", args,
 )
 def test_P(b, theta, bo, ro):
-    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
-    A.b, A.theta, A.bo, A.ro = b, theta, bo, ro
-    phi, _, _, _ = get_angles(b, theta, bo, ro)
-    phi1, phi2 = phi[:2]
+    N.precompute(b, theta, bo, ro)
+    S.precompute(b, theta, bo, ro)
     for l in range(ydeg + 2):
         for m in range(-l, l + 1):
-            P1 = A.P(l, m, phi1, phi2)
-            P2 = N.P(l, m, phi1, phi2)
+            P1 = S.P(l, m)
+            P2 = N.P(l, m)
             assert np.allclose(P1, P2)
 
 
@@ -81,10 +80,13 @@ def test_P(b, theta, bo, ro):
     "b,theta,bo,ro", args,
 )
 def test_linear(b, theta, bo, ro):
-    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
-    A.b, A.theta, A.bo, A.ro = b, theta, bo, ro
-    phi, _, _, _ = get_angles(b, theta, bo, ro)
-    phi1, phi2 = phi[:2]
-    P1 = N.P(1, 0, phi1, phi2)
-    P2 = pal(bo, ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
+    N.precompute(b, theta, bo, ro)
+    P1 = N.P(1, 0)
+    P2 = sum(
+        [
+            pal(bo, ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
+            for phi1, phi2 in N.phi
+            if not np.isnan(phi1)
+        ]
+    )
     assert np.allclose(P1, P2)

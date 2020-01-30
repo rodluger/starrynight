@@ -1,16 +1,18 @@
-from starrynight import Numerical, Brute
+from starrynight.numerical import Numerical, Brute
 import numpy as np
 import pytest
 
 
-N = Numerical(tol=1e-7)
-B = Brute(tol=1e-7, res=4999)
+ydeg = 1
+y = [1, 1, 1, 1]
+N = Numerical(ydeg, tol=1e-7)
+B = Brute(ydeg, tol=1e-7, res=4999)
 
 
 def run(b, theta, bo, ro):
-    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
-    B.b, B.theta, B.bo, B.ro = b, theta, bo, ro
-    assert np.allclose(N.flux(), B.flux(), atol=0.002)
+    assert np.allclose(
+        N.flux(y, b, theta, bo, ro), B.flux(y, b, theta, bo, ro), atol=0.002
+    )
 
 
 @pytest.mark.parametrize(

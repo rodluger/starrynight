@@ -67,12 +67,22 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
     if bo <= ro - 1:
 
         # Complete occultation
-        return np.array([]), np.array([]), np.array([]), FLUX_ZERO
+        return (
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            FLUX_ZERO,
+        )
 
     elif bo >= 1 + ro:
 
         # No occultation
-        return np.array([]), np.array([]), np.array([]), FLUX_SIMPLE_REFL
+        return (
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            FLUX_SIMPLE_REFL,
+        )
 
     # TODO: Use Sturm's theorem here to save time?
 
@@ -221,7 +231,12 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
                 # The occultor is only blocking the night side
                 code = FLUX_SIMPLE_REFL
 
-        return np.array([]), np.array([]), np.array([]), code
+        return (
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            np.array([[np.nan, np.nan], [np.nan, np.nan]]),
+            code,
+        )
 
     # P-Q-T
     if len(x) == 1:
@@ -287,11 +302,15 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         # In all cases, we're computing the dayside occulted flux
         code = FLUX_DAY_OCC
 
+        # There is only one pair of angles in this case
+        phi = np.array([phi, [np.nan, np.nan]])
+        lam = np.array([lam, [np.nan, np.nan]])
+        xi = np.array([xi, [np.nan, np.nan]])
+
     # P-T
     elif len(x) == 2:
 
         # Angles are easy
-        lam = np.array([])
         phi = np.sort(
             (theta + np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)) % (2 * np.pi)
         )
@@ -378,6 +397,12 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
                     # Nightside visible
                     code = FLUX_NIGHT_VIS
 
+        # There is only one pair of angles in this case
+        # and we don't need to integrate along the limb
+        phi = np.array([phi, [np.nan, np.nan]])
+        lam = np.array([[np.nan, np.nan], [np.nan, np.nan]])
+        xi = np.array([xi, [np.nan, np.nan]])
+
     # There's a pathological case with 3 roots
     elif len(x) == 3:
 
@@ -456,10 +481,14 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
 
             code = FLUX_TRIP_NIGHT_OCC
 
+        # Reshape angles into pairs
+        phi = np.array([phi[:2], phi[2:]])
+        lam = np.array([[np.nan, np.nan], lam])
+        xi = np.array([xi[:2], xi[2:]])
+
     # And a pathological case with 4 roots
     elif len(x) == 4:
 
-        lam = np.array([])
         phi = np.sort(
             (theta + np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)) % (2 * np.pi)
         )
@@ -471,6 +500,11 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         else:
             xi = xi[1], xi[0], xi[3], xi[2]
             code = FLUX_QUAD_DAY_VIS
+
+        # Reshape angles into pairs
+        phi = np.array([phi[:2], phi[2:]])
+        lam = np.array([[np.nan, np.nan], [np.nan, np.nan]])
+        xi = np.array([xi[:2], xi[2:]])
 
     else:
 
