@@ -160,10 +160,15 @@ class StarryNight(object):
         # Hypergeometric sequence
         self.W = np.array(
             [
-                compute_W(
-                    2 * self.ydeg + 1, min(1.0, np.sin(0.5 * kappa) ** 2 / self.k2)
-                )
-                for kappa in self.kappa.flatten()
+                [
+                    compute_W(
+                        2 * self.ydeg + 1, min(1.0, np.sin(0.5 * kappa1) ** 2 / self.k2)
+                    ),
+                    compute_W(
+                        2 * self.ydeg + 1, min(1.0, np.sin(0.5 * kappa2) ** 2 / self.k2)
+                    ),
+                ]
+                for kappa1, kappa2 in self.kappa
             ]
         )
 
@@ -209,8 +214,6 @@ class StarryNight(object):
         func = lambda x: np.sin(x) ** (2 * v)
         res = 0
         for kappa1, kappa2 in self.kappa:
-            if np.isnan(kappa1):
-                continue
             r, _ = quad(func, 0.5 * kappa1, 0.5 * kappa2, epsabs=1e-12, epsrel=1e-12,)
             res += r
         return res
@@ -224,8 +227,6 @@ class StarryNight(object):
         )
         res = 0
         for kappa1, kappa2 in self.kappa:
-            if np.isnan(kappa1):
-                continue
             r, _ = quad(func, 0.5 * kappa1, 0.5 * kappa2, epsabs=1e-12, epsrel=1e-12,)
             res += r
         return res
@@ -238,7 +239,7 @@ class StarryNight(object):
 
     def Kprime(self, u, v):
         """Return the integral K', evaluated as a sum over J."""
-        # TODO: Pre-compute J.
+        # TODO: I don't like this integral. Recompute it.
         k = self.k
         self.k = 1.0
         res = sum(
@@ -257,32 +258,24 @@ class StarryNight(object):
 
         res = 0
 
-        for kappa1, kappa2 in self.kappa:
-            if np.isnan(kappa1):
-                continue
+        for (kappa1, kappa2), (W1, W2) in zip(self.kappa, self.W):
 
-            def anti(phi):
-                res = 0
-                s2 = np.sin(phi) ** 2
-                z = min(1.0, s2 / self.k2)
-                z32 = (1 - z) ** 1.5
+            s2_1 = np.sin(0.5 * kappa1) ** 2
+            z32_1 = (1 - min(1.0, s2_1 / self.k2)) ** 1.5
+            s2_2 = np.sin(0.5 * kappa2) ** 2
+            z32_2 = (1 - min(1.0, s2_2 / self.k2)) ** 1.5
+            for i in range(u + v + 1):
+                n = i + u
+                frac = (n + 1) / (n + 2.5)
+                fac1 = self.k2 * s2_1 ** (n + 1)
+                term1 = (1 - frac) * W1[n + 1] + frac * z32_1
+                fac2 = self.k2 * s2_2 ** (n + 1)
+                term2 = (1 - frac) * W2[n + 1] + frac * z32_2
+                res += (
+                    Vieta(i, u, v, self.delta) / (n + 1) * (fac2 * term2 - fac1 * term1)
+                )
 
-                # TODO: Do this outside this scope (can be reused)
-                # This will greatly speed things up!
-                W = compute_W(2 * self.ydeg + 1, z)
-
-                for i in range(u + v + 1):
-                    n = i + u
-                    fac = self.k2 * s2 ** (n + 1) / (n + 1)
-                    frac = (n + 1) / (n + 2.5)
-                    term = (1 - frac) * W[n + 1] + frac * z32
-                    res += Vieta(i, u, v, self.delta) * fac * term
-
-                return res
-
-            res += 0.5 * self.k * (anti(0.5 * kappa2) - anti(0.5 * kappa1))
-
-        return res
+        return res * 0.5 * self.k
 
     def P(self, l, m):
         """Compute the P integral."""
@@ -331,7 +324,6 @@ class StarryNight(object):
                 [
                     pal(self.bo, self.ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
                     for phi1, phi2 in self.phi
-                    if not np.isnan(phi1)
                 ]
             )
 
@@ -363,13 +355,7 @@ class StarryNight(object):
                 """
 
                 # TODO: I don't like this case. Re-compute it.
-                return sum(
-                    [
-                        self.Pnum(l, m, phi1, phi2)
-                        for phi1, phi2 in self.phi
-                        if not np.isnan(phi1)
-                    ]
-                )
+                return self.Pnum(l, m)
 
                 """
                 # Compute the limits of integration and the
@@ -469,10 +455,13 @@ class StarryNight(object):
         res, _ = quad(func, theta1, theta2, epsabs=1e-12, epsrel=1e-12,)
         return res
 
-    def Pnum(self, l, m, phi1, phi2):
+    def Pnum(self, l, m):
         """Compute the P integral numerically from its integral definition."""
-        x = lambda phi: self.ro * np.cos(phi)
-        y = lambda phi: self.bo + self.ro * np.sin(phi)
-        dx = lambda phi: -self.ro * np.sin(phi)
-        dy = lambda phi: self.ro * np.cos(phi)
-        return self.primitive(l, m, x, y, dx, dy, phi1, phi2)
+        res = 0
+        for phi1, phi2 in self.phi:
+            x = lambda phi: self.ro * np.cos(phi)
+            y = lambda phi: self.bo + self.ro * np.sin(phi)
+            dx = lambda phi: -self.ro * np.sin(phi)
+            dy = lambda phi: self.ro * np.cos(phi)
+            res += self.primitive(l, m, x, y, dx, dy, phi1, phi2)
+        return res
