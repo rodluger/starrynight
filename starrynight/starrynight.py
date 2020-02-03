@@ -9,7 +9,7 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .special import compute_W, compute_Hprime
+from .special import compute_W, compute_U
 from .linear import pal
 from .vieta import Vieta
 import numpy as np
@@ -171,11 +171,13 @@ class StarryNight(object):
                 for kappa1, kappa2 in self.kappa
             ]
         )
-        self.Hprime = np.array(
+
+        self.U = np.sum(
             [
-                compute_Hprime(2 * self.ydeg + 5, kappa1, kappa2)
+                compute_U(2 * self.ydeg + 5, kappa1, kappa2)
                 for kappa1, kappa2 in self.kappa
-            ]
+            ],
+            axis=0,
         )
 
     def design_matrix(self, b, theta, bo, ro):
@@ -255,17 +257,17 @@ class StarryNight(object):
 
         for (kappa1, kappa2), (W1, W2) in zip(self.kappa, self.W):
 
-            s12 = np.sin(0.5 * kappa1) ** 2
-            c13 = (1 - min(1.0, s12 / self.k2)) ** 1.5
-            s22 = np.sin(0.5 * kappa2) ** 2
-            c23 = (1 - min(1.0, s22 / self.k2)) ** 1.5
+            s2_1 = np.sin(0.5 * kappa1) ** 2
+            z32_1 = (1 - min(1.0, s2_1 / self.k2)) ** 1.5
+            s2_2 = np.sin(0.5 * kappa2) ** 2
+            z32_2 = (1 - min(1.0, s2_2 / self.k2)) ** 1.5
             for i in range(u + v + 1):
                 n = i + u
                 frac = (n + 1) / (n + 2.5)
-                term1 = (1 - frac) * W1[n + 1] + frac * c13
-                term2 = (1 - frac) * W2[n + 1] + frac * c23
+                term1 = (1 - frac) * W1[n + 1] + frac * z32_1
+                term2 = (1 - frac) * W2[n + 1] + frac * z32_2
                 res += (Vieta(i, u, v, self.delta) / (n + 1)) * (
-                    s22 ** (n + 1) * term2 - s12 ** (n + 1) * term1
+                    s2_2 ** (n + 1) * term2 - s2_1 ** (n + 1) * term1
                 )
 
         return res * 0.5 * self.k ** 3
@@ -343,7 +345,7 @@ class StarryNight(object):
                 u = int((mu + 4.0) // 4)
                 v = int(nu / 2)
                 for i in range(u + v + 1):
-                    res += Vieta(i, u, v, self.delta) * self.Hprime[2 * (u + i) + 1]
+                    res += Vieta(i, u, v, self.delta) * self.U[2 * (u + i) + 1]
                 return 2 * (2 * self.ro) ** (l + 2) * res
 
             else:
