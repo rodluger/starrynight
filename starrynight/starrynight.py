@@ -338,7 +338,6 @@ class StarryNight(object):
                 term = np.zeros(u + v + 1)
 
                 for (kappa1, kappa2), (W1, W2) in zip(self.kappa, self.W):
-
                     s12 = np.sin(0.5 * kappa1) ** 2
                     c13 = (1 - min(1.0, s12 / self.k2)) ** 1.5
                     s22 = np.sin(0.5 * kappa2) ** 2
