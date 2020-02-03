@@ -251,27 +251,6 @@ class StarryNight(object):
             [Vieta(i, u, v, self.delta) * self.J(i + u + t) for i in range(u + v + 1)]
         )
 
-    def Lprime(self, u, v):
-        # TODO: We can recurse a bit here
-        res = 0
-
-        for (kappa1, kappa2), (W1, W2) in zip(self.kappa, self.W):
-
-            s2_1 = np.sin(0.5 * kappa1) ** 2
-            z32_1 = (1 - min(1.0, s2_1 / self.k2)) ** 1.5
-            s2_2 = np.sin(0.5 * kappa2) ** 2
-            z32_2 = (1 - min(1.0, s2_2 / self.k2)) ** 1.5
-            for i in range(u + v + 1):
-                n = i + u
-                frac = (n + 1) / (n + 2.5)
-                term1 = (1 - frac) * W1[n + 1] + frac * z32_1
-                term2 = (1 - frac) * W2[n + 1] + frac * z32_2
-                res += (Vieta(i, u, v, self.delta) / (n + 1)) * (
-                    s2_2 ** (n + 1) * term2 - s2_1 ** (n + 1) * term1
-                )
-
-        return res * 0.5 * self.k ** 3
-
     def P(self, l, m):
         """Compute the P integral."""
         mu = l - m
@@ -350,11 +329,36 @@ class StarryNight(object):
 
             else:
 
+                # TODO: We can recurse a bit here
+
+                res = 0
+                u = (mu - 1) // 4
+                v = (nu - 1) // 2
+
+                term = np.zeros(u + v + 1)
+
+                for (kappa1, kappa2), (W1, W2) in zip(self.kappa, self.W):
+
+                    s12 = np.sin(0.5 * kappa1) ** 2
+                    c13 = (1 - min(1.0, s12 / self.k2)) ** 1.5
+                    s22 = np.sin(0.5 * kappa2) ** 2
+                    c23 = (1 - min(1.0, s22 / self.k2)) ** 1.5
+                    for i in range(u + v + 1):
+                        n = i + u
+                        f1 = 3.0 / ((2 * n + 5) * (n + 1))
+                        f2 = 2.0 / (2 * n + 5)
+                        term1 = f1 * W1[n + 1] + f2 * c13
+                        term2 = f1 * W2[n + 1] + f2 * c23
+                        term[i] += s22 ** (n + 1) * term2 - s12 ** (n + 1) * term1
+
+                for i in range(u + v + 1):
+                    res += Vieta(i, u, v, self.delta) * term[i]
+
                 return (
-                    2
-                    * (2 * self.ro) ** (l - 1)
+                    (2 * self.ro) ** (l - 1)
                     * (4 * self.bo * self.ro) ** 1.5
-                    * self.Lprime((mu - 1) // 4, (nu - 1) // 2)
+                    * self.k ** 3
+                    * res
                 )
 
     def Q(self, *args):
