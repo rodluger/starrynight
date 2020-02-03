@@ -35,3 +35,26 @@ def compute_W(imax, z):
         for b in range(1, imax + 1):
             W[b] = b / (z * (b + 0.5)) * (W[b - 1] - term)
         return W
+
+
+def compute_Hprime(vmax, kappa1, kappa2):
+    """
+    Compute the integral of
+
+        cos(x) sin^v(x)
+
+    from 0.5 * kappa1 to 0.5 * kappa2 recursively and return an array 
+    containing the values of this function from v = 0 to v = vmax.
+
+    """
+    H = np.empty(vmax + 1)
+    s2 = np.sin(0.5 * kappa2)
+    s1 = np.sin(0.5 * kappa1)
+    H[0] = s2 - s1
+    term2 = s2 ** 2
+    term1 = s1 ** 2
+    for v in range(1, vmax + 1):
+        H[v] = (term2 - term1) / (v + 1)
+        term2 *= s2
+        term1 *= s1
+    return H

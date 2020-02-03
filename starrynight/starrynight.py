@@ -9,7 +9,7 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .special import compute_W
+from .special import compute_W, compute_Hprime
 from .linear import pal
 from .vieta import Vieta
 import numpy as np
@@ -157,7 +157,7 @@ class StarryNight(object):
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
 
-        # Hypergeometric sequence
+        # Pre-compute the primitive integrals
         self.W = np.array(
             [
                 [
@@ -168,6 +168,12 @@ class StarryNight(object):
                         2 * self.ydeg + 1, min(1.0, np.sin(0.5 * kappa2) ** 2 / self.k2)
                     ),
                 ]
+                for kappa1, kappa2 in self.kappa
+            ]
+        )
+        self.Hprime = np.array(
+            [
+                compute_Hprime(2 * self.ydeg + 5, kappa1, kappa2)
                 for kappa1, kappa2 in self.kappa
             ]
         )
@@ -210,7 +216,7 @@ class StarryNight(object):
 
     def I(self, v):
         """Return the integral I."""
-        # TODO: Compute in terms of elliptic integrals
+        # TODO: Compute recursively
         func = lambda x: np.sin(x) ** (2 * v)
         res = 0
         for kappa1, kappa2 in self.kappa:
@@ -220,7 +226,7 @@ class StarryNight(object):
 
     def J(self, v):
         """Return the integral J."""
-        # TODO: Compute in terms of elliptic integrals
+        # TODO: Compute recursively
         func = (
             lambda x: np.sin(x) ** (2 * v)
             * (1 - self.k ** (-2) * np.sin(x) ** 2) ** 1.5
@@ -237,17 +243,6 @@ class StarryNight(object):
             [Vieta(i, u, v, self.delta) * self.I(i + u) for i in range(u + v + 1)]
         )
 
-    def Kprime(self, u, v):
-        """Return the integral K', evaluated as a sum over J."""
-        # TODO: I don't like this integral. Recompute it.
-        k = self.k
-        self.k = 1.0
-        res = sum(
-            [Vieta(i, u - 1, v, self.delta) * self.J(i + u + 0.5) for i in range(u + v)]
-        )
-        self.k = k
-        return res
-
     def L(self, u, v, t):
         """Return the integral L, evaluated as a sum over J."""
         return self.k ** 3 * sum(
@@ -255,27 +250,25 @@ class StarryNight(object):
         )
 
     def Lprime(self, u, v):
-
+        # TODO: We can recurse a bit here
         res = 0
 
         for (kappa1, kappa2), (W1, W2) in zip(self.kappa, self.W):
 
-            s2_1 = np.sin(0.5 * kappa1) ** 2
-            z32_1 = (1 - min(1.0, s2_1 / self.k2)) ** 1.5
-            s2_2 = np.sin(0.5 * kappa2) ** 2
-            z32_2 = (1 - min(1.0, s2_2 / self.k2)) ** 1.5
+            s12 = np.sin(0.5 * kappa1) ** 2
+            c13 = (1 - min(1.0, s12 / self.k2)) ** 1.5
+            s22 = np.sin(0.5 * kappa2) ** 2
+            c23 = (1 - min(1.0, s22 / self.k2)) ** 1.5
             for i in range(u + v + 1):
                 n = i + u
                 frac = (n + 1) / (n + 2.5)
-                fac1 = self.k2 * s2_1 ** (n + 1)
-                term1 = (1 - frac) * W1[n + 1] + frac * z32_1
-                fac2 = self.k2 * s2_2 ** (n + 1)
-                term2 = (1 - frac) * W2[n + 1] + frac * z32_2
-                res += (
-                    Vieta(i, u, v, self.delta) / (n + 1) * (fac2 * term2 - fac1 * term1)
+                term1 = (1 - frac) * W1[n + 1] + frac * c13
+                term2 = (1 - frac) * W2[n + 1] + frac * c23
+                res += (Vieta(i, u, v, self.delta) / (n + 1)) * (
+                    s22 ** (n + 1) * term2 - s12 ** (n + 1) * term1
                 )
 
-        return res * 0.5 * self.k
+        return res * 0.5 * self.k ** 3
 
     def P(self, l, m):
         """Compute the P integral."""
@@ -338,72 +331,22 @@ class StarryNight(object):
             of the starry paper. We can re-write them as the first and fourth cases 
             in (D32) and (D35), respectively, but note that we pick up a factor
             of `sgn(cos(phi))`, since the power of the cosine term in the integrand
-            is odd. Because of this, we have to split the integrals every time
-            the cosine term changes sign, so in general we'll have one to three
-            separate integrals.
+            is odd.
             
             The other thing to note is that `u` in the call to `K(u, v)` is now
             a half-integer, so our Vieta trick (D36, D37) doesn't work out of the box.
-            We discuss the modifications we make below.
             """
 
             if nu % 2 == 0:
-                """
-                Here we massage the first case of (D35) to get it to look like 
-                (D37) with `k = 1`, which allows us to write it analytically 
-                in terms of the `J(v)` integral.
-                """
 
-                # TODO: I don't like this case. Re-compute it.
-                return self.Pnum(l, m)
-
-                """
-                # Compute the limits of integration and the
-                # sign of each sub-integral.
-                if self.kappa2 < np.pi:
-                    lims = [[0.5 * self.kappa1, 0.5 * self.kappa2, 1]]
-                elif self.kappa2 < 3 * np.pi:
-                    if self.kappa1 < np.pi:
-                        lims = [
-                            [0.5 * self.kappa1, 0.5 * np.pi, 1],
-                            [0.5 * np.pi, 0.5 * self.kappa2, -1],
-                        ]
-                    else:
-                        lims = [[0.5 * self.kappa1, 0.5 * self.kappa2, -1]]
-                else:
-                    if self.kappa1 < np.pi:
-                        lims = [
-                            [0.5 * self.kappa1, 0.5 * np.pi, 1],
-                            [0.5 * np.pi, 1.5 * np.pi, -1],
-                            [1.5 * np.pi, 0.5 * self.kappa2, 1],
-                        ]
-                    elif self.kappa1 < 3 * np.pi:
-                        lims = [
-                            [0.5 * self.kappa1, 1.5 * np.pi, -1],
-                            [1.5 * np.pi, 0.5 * self.kappa2, 1],
-                        ]
-                    else:
-                        lims = [[0.5 * self.kappa1, 0.5 * self.kappa2, 1]]
-
-                return sum(
-                    [
-                        2
-                        * (2 * self.ro) ** (l + 2)
-                        * sgn
-                        * self.Kprime((mu + 4) // 4, nu // 2, 2 * a, 2 * b)
-                        for a, b, sgn in lims
-                    ]
-                )
-                """
+                res = 0
+                u = int((mu + 4.0) // 4)
+                v = int(nu / 2)
+                for i in range(u + v + 1):
+                    res += Vieta(i, u, v, self.delta) * self.Hprime[2 * (u + i) + 1]
+                return 2 * (2 * self.ro) ** (l + 2) * res
 
             else:
-                """
-                This case is trickier to solve analytically. We need to
-                go back to the basics here, since we can't use the `k=1` trick.
-                Fortunately, Wolfram tells us that these are just differences
-                of hypergeometric functions, and the signs have all been
-                taken care of.
-                """
 
                 return (
                     2
@@ -417,51 +360,3 @@ class StarryNight(object):
 
     def T(self, *args):
         raise NotImplementedError("TODO.")
-
-    def G(self, l, m):
-        mu = l - m
-        nu = l + m
-
-        # NOTE: The abs prevents NaNs when the argument of the sqrt is
-        # zero but floating point error causes it to be ~ -eps.
-        z = lambda x, y: np.sqrt(np.abs(1 - x ** 2 - y ** 2))
-
-        if nu % 2 == 0:
-            G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
-        elif (l == 1) and (m == 0):
-            G = [
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * (-y),
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * x,
-            ]
-        elif (mu == 1) and (l % 2 == 0):
-            G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
-        elif (mu == 1) and (l % 2 != 0):
-            G = [lambda x, y: x ** (l - 3) * y * z(x, y) ** 3, lambda x, y: 0]
-        else:
-            G = [
-                lambda x, y: 0,
-                lambda x, y: x ** (0.5 * (mu - 3))
-                * y ** (0.5 * (nu - 1))
-                * z(x, y) ** 3,
-            ]
-        return G
-
-    def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
-        """A general primitive integral computed numerically."""
-        G = self.G(l, m)
-        func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
-            x(theta), y(theta)
-        ) * dy(theta)
-        res, _ = quad(func, theta1, theta2, epsabs=1e-12, epsrel=1e-12,)
-        return res
-
-    def Pnum(self, l, m):
-        """Compute the P integral numerically from its integral definition."""
-        res = 0
-        for phi1, phi2 in self.phi:
-            x = lambda phi: self.ro * np.cos(phi)
-            y = lambda phi: self.bo + self.ro * np.sin(phi)
-            dx = lambda phi: -self.ro * np.sin(phi)
-            dy = lambda phi: self.ro * np.cos(phi)
-            res += self.primitive(l, m, x, y, dx, dy, phi1, phi2)
-        return res

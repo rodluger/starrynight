@@ -1,4 +1,4 @@
-from starrynight import Numerical, Brute
+from starrynight.numerical import Numerical, Brute
 import numpy as np
 import pytest
 
@@ -9,10 +9,11 @@ res = 999
 atol = 1e-2
 tol = 1e-7
 res = 4999
+ydeg = 1
+y = [1, 1, 1, 1]
 
-
-N = Numerical(tol=tol)
-B = Brute(tol=tol, res=res)
+N = Numerical(ydeg, tol=tol)
+B = Brute(ydeg, tol=tol, res=res)
 
 
 def get_args():
@@ -38,6 +39,6 @@ args = [get_args() for n in range(nruns)]
     "b,theta,bo,ro", args,
 )
 def test_mc(b, theta, bo, ro):
-    N.b, N.theta, N.bo, N.ro = b, theta, bo, ro
-    B.b, B.theta, B.bo, B.ro = b, theta, bo, ro
-    assert np.allclose(N.flux(), B.flux(), atol=atol)
+    assert np.allclose(
+        N.flux(y, b, theta, bo, ro), B.flux(y, b, theta, bo, ro), atol=atol
+    )
