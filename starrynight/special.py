@@ -100,7 +100,10 @@ def compute_W(nmax, k2, kappa1, kappa2):
             D = 3.0 / ((2 * b + 5) * (b + 1))
             C = 2.0 / (2 * b + 5)
             Cnp1 = 2.0 / (2 * b + 7) * s12
-            B = c13 * s12 ** (b + 1) * (D + C - A * Cnp1)
+
+            ACnp1 = (2 + 5 / (b + 1)) * (1 - c12) / (2 * b + 7)
+
+            B = c13 * s12 ** (b + 1) * (D + C - ACnp1)
 
             W1[b] = A * W1[b + 1] + B
 
