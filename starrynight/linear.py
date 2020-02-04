@@ -25,6 +25,7 @@ def pal_indef(bo, ro, phi):
     w = (1 - q2) / (1 - d2)
 
     # Elliptic integrals
+    # TODO: Compute in terms of E, F, and Pi
     rf = carlson_rf(w, sx * sx, 1.0)
     rd = carlson_rd(w, sx * sx, 1.0)
     if ro != bo:

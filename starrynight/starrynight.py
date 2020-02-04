@@ -9,8 +9,8 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .primitive import compute_W, compute_U, compute_I, compute_J
-from .linear import pal
+from .primitive_old import compute_W, compute_U, compute_I, compute_J
+from .primitive import Primitive
 from .vieta import Vieta
 import numpy as np
 import starry
@@ -155,40 +155,21 @@ class StarryNight(object):
         self.kappa = self.phi + np.pi / 2
         self.fourbr15 = (4 * self.bo * self.ro) ** 1.5
         self.k3fourbr15 = self.k ** 3 * self.fourbr15
-        self.tworo = (2 * self.ro) ** np.arange(self.ydeg + 4)
+        self.tworo = np.empty(self.ydeg + 4)
+        self.tworo[0] = 1.0
+        for i in range(1, self.ydeg + 4):
+            self.tworo[i] = self.tworo[i - 1] * 2 * self.ro
 
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
 
         # Pre-compute the primitive integrals
-        self.W = np.sum(
-            [
-                compute_W(self.ydeg, self.k2, kappa1, kappa2)
-                for kappa1, kappa2 in self.kappa
-            ],
-            axis=0,
-        )
-
-        self.U = np.sum(
-            [
-                compute_U(2 * self.ydeg + 5, kappa1, kappa2)
-                for kappa1, kappa2 in self.kappa
-            ],
-            axis=0,
-        )
-
-        self.I = np.sum(
-            [compute_I(self.ydeg + 3, kappa1, kappa2) for kappa1, kappa2 in self.kappa],
-            axis=0,
-        )
-
-        self.J = np.sum(
-            [
-                compute_J(self.ydeg + 1, self.k, kappa1, kappa2)
-                for kappa1, kappa2 in self.kappa
-            ],
-            axis=0,
-        )
+        P = Primitive(self.ydeg, self.bo, self.ro, self.k2, self.kappa)
+        self.W = P.W
+        self.I = P.I
+        self.U = P.U
+        self.J = P.J
+        self.s2 = P.s2
 
     def design_matrix(self, b, theta, bo, ro):
 
@@ -278,15 +259,8 @@ class StarryNight(object):
 
         elif (mu == 1) and (l == 1):
 
-            # Special case from Pal (2012)
-            # Note that there's a difference of pi/2 between the angle Pal
-            # calls `phi` and our `phi`, so we account for that here.
-            return sum(
-                [
-                    pal(self.bo, self.ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
-                    for phi1, phi2 in self.phi
-                ]
-            )
+            # Same as in starry, but using expression from Pal (2012)
+            return self.s2
 
         else:
             """
