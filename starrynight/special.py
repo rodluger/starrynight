@@ -75,15 +75,16 @@ def compute_W(nmax, k2, kappa1, kappa2):
 
     if np.abs(1 - z) < 0.5:
 
-        W1[nmax] = hyp2f1(-0.5, nmax, nmax + 1, 1 - z)
+        W1[nmax] = s12 ** (nmax) * hyp2f1(-0.5, nmax, nmax + 1, 1 - z)
         for b in range(nmax - 1, -1, -1):
-            W1[b] = (1 - z) * (b + 1.5) / (b + 1) * W1[b + 1] + term
+            W1[b] = (1 - z) * (b + 1.5) / (b + 1) / s12 * W1[b + 1] + s12 ** b * term
 
     else:
 
         W1[0] = 1.0
         for b in range(1, nmax + 1):
-            W1[b] = b / ((1 - z) * (b + 0.5)) * (W1[b - 1] - term)
+            fac = b / ((1 - z) * (b + 0.5))
+            W1[b] = s12 * fac * W1[b - 1] - fac * s12 ** b * term
 
     z = c22
     term = z ** 1.5
@@ -91,21 +92,22 @@ def compute_W(nmax, k2, kappa1, kappa2):
 
     if np.abs(1 - z) < 0.5:
 
-        W2[nmax] = hyp2f1(-0.5, nmax, nmax + 1, 1 - z)
+        W2[nmax] = s22 ** (nmax) * hyp2f1(-0.5, nmax, nmax + 1, 1 - z)
         for b in range(nmax - 1, -1, -1):
-            W2[b] = (1 - z) * (b + 1.5) / (b + 1) * W2[b + 1] + term
+            W2[b] = (1 - z) * (b + 1.5) / (b + 1) / s22 * W2[b + 1] + s22 ** b * term
 
     else:
 
         W2[0] = 1.0
         for b in range(1, nmax + 1):
-            W2[b] = b / ((1 - z) * (b + 0.5)) * (W2[b - 1] - term)
+            fac = b / ((1 - z) * (b + 0.5))
+            W2[b] = s22 * fac * W2[b - 1] - fac * s22 ** b * term
 
     for n in range(nmax):
         f1 = 3.0 / ((2 * n + 5) * (n + 1))
         f2 = 2.0 / (2 * n + 5)
-        term1 = f1 * s12 ** (n + 1) * W1[n + 1] + f2 * s12 ** (n + 1) * c13
-        term2 = f1 * s22 ** (n + 1) * W2[n + 1] + f2 * s22 ** (n + 1) * c23
+        term1 = f1 * W1[n + 1] + f2 * s12 ** (n + 1) * c13
+        term2 = f1 * W2[n + 1] + f2 * s22 ** (n + 1) * c23
         W[n] = term2 - term1
     return W
 
