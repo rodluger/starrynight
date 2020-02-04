@@ -79,12 +79,20 @@ def compute_W(nmax, k2, kappa1, kappa2):
         for b in range(nmax - 1, -1, -1):
             W1[b] = (1 - z) * (b + 1.5) / (b + 1) / s12 * W1[b + 1] + s12 ** b * term
 
+        n = np.arange(nmax + 1)
+        W1 *= 3.0 / ((2 * n + 3) * n)
+        W1 = W1[1:]
+
     else:
 
         W1[0] = 1.0
         for b in range(1, nmax + 1):
             fac = b / ((1 - z) * (b + 0.5))
             W1[b] = s12 * fac * W1[b - 1] - fac * s12 ** b * term
+
+        n = np.arange(nmax + 1)
+        W1 *= 3.0 / ((2 * n + 3) * n)
+        W1 = W1[1:]
 
     z = c22
     term = z ** 1.5
@@ -96,6 +104,10 @@ def compute_W(nmax, k2, kappa1, kappa2):
         for b in range(nmax - 1, -1, -1):
             W2[b] = (1 - z) * (b + 1.5) / (b + 1) / s22 * W2[b + 1] + s22 ** b * term
 
+        n = np.arange(nmax + 1)
+        W2 *= 3.0 / ((2 * n + 3) * n)
+        W2 = W2[1:]
+
     else:
 
         W2[0] = 1.0
@@ -103,11 +115,14 @@ def compute_W(nmax, k2, kappa1, kappa2):
             fac = b / ((1 - z) * (b + 0.5))
             W2[b] = s22 * fac * W2[b - 1] - fac * s22 ** b * term
 
+        n = np.arange(nmax + 1)
+        W2 *= 3.0 / ((2 * n + 3) * n)
+        W2 = W2[1:]
+
     for n in range(nmax):
-        f1 = 3.0 / ((2 * n + 5) * (n + 1))
         f2 = 2.0 / (2 * n + 5)
-        term1 = f1 * W1[n + 1] + f2 * s12 ** (n + 1) * c13
-        term2 = f1 * W2[n + 1] + f2 * s22 ** (n + 1) * c23
+        term1 = W1[n] + f2 * s12 ** (n + 1) * c13
+        term2 = W2[n] + f2 * s22 ** (n + 1) * c23
         W[n] = term2 - term1
     return W
 
