@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import quad
-from .ellip import carlson_rf, carlson_rd, carlson_rj
+from .special import carlson_rf, carlson_rd, carlson_rj
 
 
 def pal_indef(bo, ro, phi):

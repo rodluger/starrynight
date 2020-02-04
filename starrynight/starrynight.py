@@ -9,7 +9,7 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .special import compute_W, compute_U
+from .primitive import compute_W, compute_U, compute_I, compute_J
 from .linear import pal
 from .vieta import Vieta
 import numpy as np
@@ -153,6 +153,9 @@ class StarryNight(object):
         )
         self.k = np.sqrt(self.k2)
         self.kappa = self.phi + np.pi / 2
+        self.fourbr15 = (4 * self.bo * self.ro) ** 1.5
+        self.k3fourbr15 = self.k ** 3 * self.fourbr15
+        self.tworo = (2 * self.ro) ** np.arange(self.ydeg + 4)
 
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
@@ -169,6 +172,19 @@ class StarryNight(object):
         self.U = np.sum(
             [
                 compute_U(2 * self.ydeg + 5, kappa1, kappa2)
+                for kappa1, kappa2 in self.kappa
+            ],
+            axis=0,
+        )
+
+        self.I = np.sum(
+            [compute_I(self.ydeg + 3, kappa1, kappa2) for kappa1, kappa2 in self.kappa],
+            axis=0,
+        )
+
+        self.J = np.sum(
+            [
+                compute_J(self.ydeg + 1, self.k, kappa1, kappa2)
                 for kappa1, kappa2 in self.kappa
             ],
             axis=0,
@@ -210,39 +226,16 @@ class StarryNight(object):
     def flux(self, y, b, theta, bo, ro):
         return self.design_matrix(b, theta, bo, ro).dot(y)
 
-    def I(self, v):
-        """Return the integral I."""
-        # TODO: Compute recursively
-        func = lambda x: np.sin(x) ** (2 * v)
-        res = 0
-        for kappa1, kappa2 in self.kappa:
-            r, _ = quad(func, 0.5 * kappa1, 0.5 * kappa2, epsabs=1e-12, epsrel=1e-12,)
-            res += r
-        return res
-
-    def J(self, v):
-        """Return the integral J."""
-        # TODO: Compute recursively
-        func = (
-            lambda x: np.sin(x) ** (2 * v)
-            * (1 - self.k ** (-2) * np.sin(x) ** 2) ** 1.5
-        )
-        res = 0
-        for kappa1, kappa2 in self.kappa:
-            r, _ = quad(func, 0.5 * kappa1, 0.5 * kappa2, epsabs=1e-12, epsrel=1e-12,)
-            res += r
-        return res
-
     def K(self, u, v):
         """Return the integral K, evaluated as a sum over I."""
         return sum(
-            [Vieta(i, u, v, self.delta) * self.I(i + u) for i in range(u + v + 1)]
+            [Vieta(i, u, v, self.delta) * self.I[i + u] for i in range(u + v + 1)]
         )
 
     def L(self, u, v, t):
         """Return the integral L, evaluated as a sum over J."""
         return self.k ** 3 * sum(
-            [Vieta(i, u, v, self.delta) * self.J(i + u + t) for i in range(u + v + 1)]
+            [Vieta(i, u, v, self.delta) * self.J[i + u + t] for i in range(u + v + 1)]
         )
 
     def P(self, l, m):
@@ -253,14 +246,14 @@ class StarryNight(object):
         if (mu / 2) % 2 == 0:
 
             # Same as in starry
-            return 2 * (2 * self.ro) ** (l + 2) * self.K((mu + 4) // 4, nu // 2)
+            return 2 * self.tworo[l + 2] * self.K((mu + 4) // 4, nu // 2)
 
         elif (mu == 1) and (l % 2 == 0):
 
             # Same as in starry
             return (
-                (2 * self.ro) ** (l - 1)
-                * (4 * self.bo * self.ro) ** (3.0 / 2.0)
+                self.tworo[l - 1]
+                * self.fourbr15
                 * (self.L((l - 2) // 2, 0, 0) - 2 * self.L((l - 2) // 2, 0, 1))
             )
 
@@ -268,8 +261,8 @@ class StarryNight(object):
 
             # Same as in starry
             return (
-                (2 * self.ro) ** (l - 1)
-                * (4 * self.bo * self.ro) ** (3.0 / 2.0)
+                self.tworo[l - 1]
+                * self.fourbr15
                 * (self.L((l - 3) // 2, 1, 0) - 2 * self.L((l - 3) // 2, 1, 1))
             )
 
@@ -278,8 +271,8 @@ class StarryNight(object):
             # Same as in starry
             return (
                 2
-                * (2 * self.ro) ** (l - 1)
-                * (4 * self.bo * self.ro) ** (3.0 / 2.0)
+                * self.tworo[l - 1]
+                * self.fourbr15
                 * self.L((mu - 1) // 4, (nu - 1) // 2, 0)
             )
 
@@ -319,7 +312,7 @@ class StarryNight(object):
                 v = int(nu / 2)
                 for i in range(u + v + 1):
                     res += Vieta(i, u, v, self.delta) * self.U[2 * (u + i) + 1]
-                return 2 * (2 * self.ro) ** (l + 2) * res
+                return 2 * self.tworo[l + 2] * res
 
             else:
 
@@ -328,12 +321,7 @@ class StarryNight(object):
                 v = (nu - 1) // 2
                 for i in range(u + v + 1):
                     res += Vieta(i, u, v, self.delta) * self.W[i + u]
-                return (
-                    (2 * self.ro) ** (l - 1)
-                    * (4 * self.bo * self.ro) ** 1.5
-                    * self.k ** 3
-                    * res
-                )
+                return self.tworo[l - 1] * self.k3fourbr15 * res
 
     def Q(self, *args):
         raise NotImplementedError("TODO.")
