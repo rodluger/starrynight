@@ -478,7 +478,7 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         phi = np.sort(
             (theta + np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)) % (2 * np.pi)
         )
-        phi = phi[1], phi[0], phi[3], phi[2]
+        phi = np.array([phi[1], phi[0], phi[3], phi[2]])
         xi = np.sort(np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi))
 
         if b > 0:
@@ -490,11 +490,6 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
     else:
 
         raise NotImplementedError("Unexpected branch.")
-
-    # Reshape into pairs
-    phi = np.reshape(phi, (-1, 2))
-    lam = np.reshape(lam, (-1, 2))
-    xi = np.reshape(xi, (-1, 2))
 
     return phi, lam, xi, code
 

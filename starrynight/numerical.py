@@ -94,7 +94,7 @@ class Numerical(StarryNight):
     def Q(self, l, m):
         """Compute the Q integral numerically from its integral definition."""
         res = 0
-        for lam1, lam2 in self.lam:
+        for lam1, lam2 in self.lam.reshape(-1, 2):
             x = lambda lam: np.cos(lam)
             y = lambda lam: np.sin(lam)
             dx = lambda lam: -np.sin(lam)
@@ -105,7 +105,7 @@ class Numerical(StarryNight):
     def T(self, l, m):
         """Compute the T integral numerically from its integral definition."""
         res = 0
-        for xi1, xi2 in self.xi:
+        for xi1, xi2 in self.xi.reshape(-1, 2):
             x = lambda xi: np.cos(self.theta) * np.cos(xi) - self.b * np.sin(
                 self.theta
             ) * np.sin(xi)
@@ -124,7 +124,7 @@ class Numerical(StarryNight):
     def P(self, l, m):
         """Compute the P integral numerically from its integral definition."""
         res = 0
-        for phi1, phi2 in self.phi:
+        for phi1, phi2 in self.phi.reshape(-1, 2):
             x = lambda phi: self.ro * np.cos(phi)
             y = lambda phi: self.bo + self.ro * np.sin(phi)
             dx = lambda phi: -self.ro * np.sin(phi)

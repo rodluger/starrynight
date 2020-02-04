@@ -1,5 +1,5 @@
 from .special import hyp2f1, E, F, J
-from .linear import pal
+from .utils import pairdiff
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -15,10 +15,10 @@ def compute_U(vmax, s1):
 
     """
     U = np.empty(vmax + 1)
-    U[0] = s1[1] - s1[0]
+    U[0] = pairdiff(s1)
     term = s1 ** 2
     for v in range(1, vmax + 1):
-        U[v] = (term[1] - term[0]) / (v + 1)
+        U[v] = pairdiff(term) / (v + 1)
         term *= s1
     return U
 
@@ -27,19 +27,19 @@ def compute_I(nmax, kappa, s1, c1):
 
     # Lower boundary
     I = np.empty(nmax + 1)
-    I[0] = 0.5 * (kappa[1] - kappa[0])
+    I[0] = 0.5 * pairdiff(kappa)
 
     # Recurse upward
     s2 = s1 ** 2
     term = s1 * c1
     for v in range(1, nmax + 1):
-        I[v] = (1.0 / (2 * v)) * ((2 * v - 1) * I[v - 1] - (term[1] - term[0]))
+        I[v] = (1.0 / (2 * v)) * ((2 * v - 1) * I[v - 1] - pairdiff(term))
         term *= s2
 
     return I
 
 
-def compute_W_indef(nmax, s2, q2, q3):
+def _compute_W_indef(nmax, s2, q2, q3):
     """
     Compute the expression
 
@@ -54,9 +54,11 @@ def compute_W_indef(nmax, s2, q2, q3):
     recursion (always stable).
 
     """
-    W = np.zeros(nmax + 1)
+    W = np.empty(nmax + 1)
+
     if np.abs(1 - q2) < 0.5:
 
+        # Setup
         invs2 = 1 / s2
         z = (1 - q2) * invs2
         s2nmax = s2 ** nmax
@@ -77,9 +79,9 @@ def compute_W_indef(nmax, s2, q2, q3):
             B = x * f
             W[b] = A * W[b + 1] + B
             x *= invs2
-
     else:
 
+        # Setup
         z = s2 / (1 - q2)
         x = -2 * q3 * (z - s2) * s2
 
@@ -97,6 +99,12 @@ def compute_W_indef(nmax, s2, q2, q3):
     return W
 
 
+def compute_W(nmax, s2, q2, q3):
+    return pairdiff(
+        np.array([_compute_W_indef(nmax, s2[i], q2[i], q3[i]) for i in range(len(s2))])
+    )
+
+
 def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
     """
     Return the array J[0 .. nmax], computed recursively using
@@ -107,9 +115,9 @@ def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
     """
     # Boundary conditions
     z = s1 * c1 * np.sqrt(q2)
-    resid = km2 * (z[1] - z[0])
+    resid = km2 * pairdiff(z)
     f0 = (1 / 3) * (2 * (2 - km2) * dE + (km2 - 1) * dF + resid)
-    fN = J(nmax, k2, kappa[0], kappa[1])
+    fN = J(nmax, k2, kappa)
 
     # Set up the tridiagonal problem
     a = np.empty(nmax - 1)
@@ -121,7 +129,7 @@ def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
         amp = 1.0 / (2 * v + 3)
         a[i] = -2 * (v + (v - 1) * k2 + 1) * amp
         b[i] = (2 * v - 3) * k2 * amp
-        c[i] = (term[1] - term[0]) * amp
+        c[i] = pairdiff(term) * amp
         term *= s2
 
     # Add the boundary conditions
@@ -134,43 +142,3 @@ def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
     # Solve
     soln = np.linalg.solve(A, c)
     return np.concatenate(([f0], soln, [fN]))
-
-
-class Primitive(object):
-    def __init__(self, ydeg, bo, ro, k2, kappas):
-
-        km2 = 1.0 / k2
-        self.s2 = 0.0
-
-        for i, kappa in enumerate(kappas):
-
-            x = 0.5 * kappa
-            s1 = np.sin(x)
-            s2 = s1 ** 2
-            c1 = np.cos(x)
-            c2 = c1 ** 2
-            q2 = 1 - np.minimum(1.0, s2 / k2)
-            q3 = q2 ** 1.5
-
-            dE = E(x[1], km2) - E(x[0], km2)
-            dF = F(x[1], km2) - F(x[0], km2)
-
-            if i == 0:
-                self.U = compute_U(2 * ydeg + 5, s1)
-                self.I = compute_I(ydeg + 3, kappa, s1, c1)
-                self.W = compute_W_indef(ydeg, s2[1], q2[1], q3[1]) - compute_W_indef(
-                    ydeg, s2[0], q2[0], q3[0]
-                )
-                self.J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE, dF)
-            else:
-                self.U += compute_U(2 * ydeg + 5, s1)
-                self.I += compute_I(ydeg + 3, kappa, s1, c1)
-                self.W += compute_W_indef(ydeg, s2[1], q2[1], q3[1]) - compute_W_indef(
-                    ydeg, s2[0], q2[0], q3[0]
-                )
-                self.J += compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE, dF)
-
-            # Note that there's a difference of pi/2 between the angle Pal
-            # calls `phi` and our `phi`, so we account for that here.
-            self.s2 += pal(bo, ro, kappa[0] - np.pi, kappa[1] - np.pi)
-

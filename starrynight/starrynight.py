@@ -9,9 +9,10 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .primitive_old import compute_W, compute_U, compute_I, compute_J
-from .primitive import Primitive
+from .primitive import compute_W, compute_U, compute_I, compute_J
 from .vieta import Vieta
+from .linear import pal
+from .special import E, F
 import numpy as np
 import starry
 from starry._c_ops import Ops
@@ -152,6 +153,7 @@ class StarryNight(object):
             4 * self.bo * self.ro
         )
         self.k = np.sqrt(self.k2)
+        self.km2 = 1.0 / self.k2
         self.kappa = self.phi + np.pi / 2
         self.fourbr15 = (4 * self.bo * self.ro) ** 1.5
         self.k3fourbr15 = self.k ** 3 * self.fourbr15
@@ -164,12 +166,29 @@ class StarryNight(object):
         self.IA1 = self.illum().dot(self.A1)
 
         # Pre-compute the primitive integrals
-        P = Primitive(self.ydeg, self.bo, self.ro, self.k2, self.kappa)
-        self.W = P.W
-        self.I = P.I
-        self.U = P.U
-        self.J = P.J
-        self.s2 = P.s2
+        x = 0.5 * self.kappa
+        s1 = np.sin(x)
+        s2 = s1 ** 2
+        c1 = np.cos(x)
+        q2 = 1 - np.minimum(1.0, s2 / self.k2)
+        q3 = q2 ** 1.5
+        self.dE = pairdiff(E(x, self.km2))
+        self.dF = pairdiff(F(x, self.km2))
+        self.U = compute_U(2 * self.ydeg + 5, s1)
+        self.I = compute_I(self.ydeg + 3, self.kappa, s1, c1)
+        self.J = compute_J(
+            self.ydeg + 1,
+            self.k2,
+            self.km2,
+            self.kappa,
+            s1,
+            s2,
+            c1,
+            q2,
+            self.dE,
+            self.dF,
+        )
+        self.W = compute_W(self.ydeg, s2, q2, q3)
 
     def design_matrix(self, b, theta, bo, ro):
 
@@ -260,7 +279,13 @@ class StarryNight(object):
         elif (mu == 1) and (l == 1):
 
             # Same as in starry, but using expression from Pal (2012)
-            return self.s2
+            # Note there's a difference of pi/2 between Pal's `phi` and ours
+            s2 = 0.0
+            for i in range(0, len(self.kappa), 2):
+                s2 += pal(
+                    self.bo, self.ro, self.kappa[i] - np.pi, self.kappa[i + 1] - np.pi
+                )
+            return s2
 
         else:
             """

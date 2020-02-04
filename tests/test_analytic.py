@@ -85,7 +85,7 @@ def test_linear(b, theta, bo, ro):
     P2 = sum(
         [
             pal(bo, ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
-            for phi1, phi2 in N.phi
+            for phi1, phi2 in N.phi.reshape(-1, 2)
             if not np.isnan(phi1)
         ]
     )

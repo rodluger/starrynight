@@ -11,3 +11,7 @@ FLUX_TRIP_DAY_OCC = 8
 FLUX_TRIP_NIGHT_OCC = 9
 FLUX_QUAD_DAY_VIS = 10
 FLUX_QUAD_NIGHT_VIS = 11
+
+
+def pairdiff(x):
+    return sum(-x[::2] + x[1::2])
