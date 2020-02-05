@@ -11,7 +11,7 @@ from .utils import *
 from .geometry import get_angles
 from .primitive import compute_W, compute_U, compute_I, compute_J
 from .vieta import Vieta
-from .linear import pal
+from .linear import pal, term
 from .special import E, F
 import numpy as np
 import starry
@@ -42,12 +42,12 @@ class StarryNight(object):
         self.A1 = np.array(self.ops.A1.todense())[:N, :N]
         self.A1Inv = np.array(self.ops.A1Inv.todense())
 
-        # Z-rotation matrix
+        # Z-rotation matrix (ydeg + 2)
         theta = theano.tensor.dscalar()
         self.Rz = theano.function(
             [theta],
             dotROp(self.ops.dotR)(
-                np.eye((self.ydeg + 1) ** 2),
+                np.eye((self.ydeg + 2) ** 2),
                 np.array(0.0),
                 np.array(0.0),
                 np.array(1.0),
@@ -325,5 +325,67 @@ class StarryNight(object):
     def Q(self, *args):
         raise NotImplementedError("TODO.")
 
-    def T(self, *args):
-        raise NotImplementedError("TODO.")
+    # - - - - - - #
+
+    def G(self, l, m):
+        mu = l - m
+        nu = l + m
+
+        z = lambda x, y: np.sqrt(max(0, 1 - x ** 2 - y ** 2))
+
+        if nu % 2 == 0:
+            G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
+        elif (l == 1) and (m == 0):
+            G = [
+                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * (-y),
+                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * x,
+            ]
+        elif (mu == 1) and (l % 2 == 0):
+            G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
+        elif (mu == 1) and (l % 2 != 0):
+            G = [lambda x, y: x ** (l - 3) * y * z(x, y) ** 3, lambda x, y: 0]
+        else:
+            G = [
+                lambda x, y: 0,
+                lambda x, y: x ** (0.5 * (mu - 3))
+                * y ** (0.5 * (nu - 1))
+                * z(x, y) ** 3,
+            ]
+        return G
+
+    def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
+        """A general primitive integral computed numerically."""
+        G = self.G(l, m)
+        func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
+            x(theta), y(theta)
+        ) * dy(theta)
+        res, _ = quad(func, theta1, theta2, epsabs=1e-12, epsrel=1e-12,)
+        return res
+
+    def T(self, l, m):
+        """Compute the T integral."""
+
+        if l == 1 and m == 0:
+
+            return term(self.b, self.xi)
+
+        else:
+
+            # TODO: Figure out these cases
+
+            res = 0
+            for xi1, xi2 in self.xi.reshape(-1, 2):
+                x = lambda xi: np.cos(self.theta) * np.cos(xi) - self.b * np.sin(
+                    self.theta
+                ) * np.sin(xi)
+                y = lambda xi: np.sin(self.theta) * np.cos(xi) + self.b * np.cos(
+                    self.theta
+                ) * np.sin(xi)
+                dx = lambda xi: -np.cos(self.theta) * np.sin(xi) - self.b * np.sin(
+                    self.theta
+                ) * np.cos(xi)
+                dy = lambda xi: -np.sin(self.theta) * np.sin(xi) + self.b * np.cos(
+                    self.theta
+                ) * np.cos(xi)
+                res += self.primitive(l, m, x, y, dx, dy, xi1, xi2)
+            return res

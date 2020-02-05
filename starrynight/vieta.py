@@ -5,6 +5,7 @@ __all__ = ["Vieta"]
 
 def Vieta(i, u, v, delta):
     """Compute the Vieta coefficient A_{i, u, v}."""
+    # TODO: Do recursively
     j1 = max(0, u - i)
     j2 = min(u + v - i, u)
     return sum(

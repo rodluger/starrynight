@@ -484,7 +484,7 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         if b > 0:
             code = FLUX_QUAD_NIGHT_VIS
         else:
-            xi = xi[1], xi[0], xi[3], xi[2]
+            xi = np.array([xi[1], xi[0], xi[3], xi[2]])
             code = FLUX_QUAD_DAY_VIS
 
     else:

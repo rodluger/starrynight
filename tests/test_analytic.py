@@ -90,3 +90,16 @@ def test_linear(b, theta, bo, ro):
         ]
     )
     assert np.allclose(P1, P2)
+
+
+@pytest.mark.parametrize(
+    "b,theta,bo,ro", args,
+)
+def test_T(b, theta, bo, ro):
+    N.precompute(b, theta, bo, ro)
+    S.precompute(b, theta, bo, ro)
+    for l in range(ydeg + 2):
+        for m in range(-l, l + 1):
+            T1 = S.T(l, m)
+            T2 = N.T(l, m)
+            assert np.allclose(T1, T2)

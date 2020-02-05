@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import quad
 from .special import carlson_rf, carlson_rd, carlson_rj
+from .utils import pairdiff
 
 
 def pal_indef(bo, ro, phi):
@@ -25,7 +26,7 @@ def pal_indef(bo, ro, phi):
     w = (1 - q2) / (1 - d2)
 
     # Elliptic integrals
-    # TODO: Compute in terms of E, F, and Pi
+    # TODO: Compute in terms of E, F, and Pi?
     rf = carlson_rf(w, sx * sx, 1.0)
     rd = carlson_rd(w, sx * sx, 1.0)
     if ro != bo:
@@ -96,3 +97,45 @@ def pal(bo, ro, phi1, phi2):
         dx -= dc
 
     return ret
+
+
+def term_indef(b, xi):
+    """
+    Note: requires b >= 0.
+    
+    """
+    s = np.sin(xi)
+    c = np.cos(xi)
+    t = s / c
+    sgn = np.sign(s)
+    bc = np.sqrt(1 - b ** 2)
+    bbc = b * bc
+
+    # Special cases
+    if xi == 0:
+        return -(np.arctan((2 * b ** 2 - 1) / (2 * bbc)) + bbc) / 3
+    elif xi == 0.5 * np.pi:
+        return (0.5 * np.pi - np.arctan(b / bc)) / 3
+    elif xi == np.pi:
+        return (0.5 * np.pi + bbc) / 3
+    elif xi == 1.5 * np.pi:
+        return (0.5 * np.pi + np.arctan(b / bc) + 2 * bbc) / 3
+
+    # Figure out the offset
+    if xi < 0.5 * np.pi:
+        delta = 0
+    elif xi < np.pi:
+        delta = np.pi
+    elif xi < 1.5 * np.pi:
+        delta = 2 * bbc
+    else:
+        delta = np.pi + 2 * bbc
+    return (
+        np.arctan(b * t)
+        - sgn * (np.arctan(((s / (1 + c)) ** 2 + 2 * b ** 2 - 1) / (2 * bbc)) + bbc * c)
+        + delta
+    ) / 3
+
+
+def term(b, xi):
+    return pairdiff([np.sign(b) * term_indef(np.abs(b), x) for x in xi])

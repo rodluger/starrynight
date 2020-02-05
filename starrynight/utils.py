@@ -1,3 +1,5 @@
+import numpy as np
+
 # Integration codes
 FLUX_ZERO = 0
 FLUX_DAY_OCC = 1
@@ -14,4 +16,4 @@ FLUX_QUAD_NIGHT_VIS = 11
 
 
 def pairdiff(x):
-    return sum(-x[::2] + x[1::2])
+    return sum(-np.array(x)[::2] + np.array(x)[1::2])
