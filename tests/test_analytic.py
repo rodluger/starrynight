@@ -69,27 +69,7 @@ args = [
 def test_P(b, theta, bo, ro):
     N.precompute(b, theta, bo, ro)
     S.precompute(b, theta, bo, ro)
-    for l in range(ydeg + 2):
-        for m in range(-l, l + 1):
-            P1 = S.P(l, m)
-            P2 = N.P(l, m)
-            assert np.allclose(P1, P2)
-
-
-@pytest.mark.parametrize(
-    "b,theta,bo,ro", args,
-)
-def test_linear(b, theta, bo, ro):
-    N.precompute(b, theta, bo, ro)
-    P1 = N.P(1, 0)
-    P2 = sum(
-        [
-            pal(bo, ro, phi1 - np.pi / 2, phi2 - np.pi / 2)
-            for phi1, phi2 in N.phi.reshape(-1, 2)
-            if not np.isnan(phi1)
-        ]
-    )
-    assert np.allclose(P1, P2)
+    assert np.allclose(N.P, S.P)
 
 
 @pytest.mark.parametrize(
@@ -98,8 +78,4 @@ def test_linear(b, theta, bo, ro):
 def test_T(b, theta, bo, ro):
     N.precompute(b, theta, bo, ro)
     S.precompute(b, theta, bo, ro)
-    for l in range(ydeg + 2):
-        for m in range(-l, l + 1):
-            T1 = S.T(l, m)
-            T2 = N.T(l, m)
-            assert np.allclose(T1, T2)
+    assert np.allclose(N.T, S.T)

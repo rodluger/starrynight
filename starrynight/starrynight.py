@@ -9,9 +9,9 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .primitive import compute_W, compute_U, compute_I, compute_J
+from .primitive import compute_W, compute_U, compute_I, compute_J, compute_T
 from .vieta import Vieta
-from .linear import pal, term
+from .linear import pal
 from .special import E, F
 import numpy as np
 import starry
@@ -42,7 +42,7 @@ class StarryNight(object):
         self.A1 = np.array(self.ops.A1.todense())[:N, :N]
         self.A1Inv = np.array(self.ops.A1Inv.todense())
 
-        # Z-rotation matrix (ydeg + 2)
+        # Z-rotation matrix (for degree ydeg + 1)
         theta = theano.tensor.dscalar()
         self.Rz = theano.function(
             [theta],
@@ -123,17 +123,7 @@ class StarryNight(object):
         return -self.Xr(-xs, -ys, -zs)
 
     def X(self):
-        P = np.zeros((self.ydeg + 2) ** 2)
-        Q = np.zeros((self.ydeg + 2) ** 2)
-        T = np.zeros((self.ydeg + 2) ** 2)
-        n = 0
-        for l in range(self.ydeg + 2):
-            for m in range(-l, l + 1):
-                P[n] = self.P(l, m)
-                Q[n] = self.Q(l, m)
-                T[n] = self.T(l, m)
-                n += 1
-        return (P + Q + T).dot(self.A2).dot(self.IA1)
+        return (self.P + self.Q + self.T).dot(self.A2).dot(self.IA1)
 
     def precompute(self, b, theta, bo, ro):
         # Ingest
@@ -146,6 +136,9 @@ class StarryNight(object):
         self.phi, self.lam, self.xi, self.code = get_angles(
             self.b, self.theta, self.bo, self.ro, tol=self.tol
         )
+
+        # Illumination matrix
+        self.IA1 = self.illum().dot(self.A1)
 
         # Basic variables
         self.delta = (self.bo - self.ro) / (2 * self.ro)
@@ -162,10 +155,7 @@ class StarryNight(object):
         for i in range(1, self.ydeg + 4):
             self.tworo[i] = self.tworo[i - 1] * 2 * self.ro
 
-        # Illumination matrix
-        self.IA1 = self.illum().dot(self.A1)
-
-        # Pre-compute the primitive integrals
+        # Pre-compute the helper integrals
         x = 0.5 * self.kappa
         s1 = np.sin(x)
         s2 = s1 ** 2
@@ -189,6 +179,19 @@ class StarryNight(object):
             self.dF,
         )
         self.W = compute_W(self.ydeg, s2, q2, q3)
+
+        # Compute the three primitive integrals
+        self.P = np.zeros((self.ydeg + 2) ** 2)
+        self.Q = np.zeros((self.ydeg + 2) ** 2)
+        n = 0
+        for l in range(self.ydeg + 2):
+            for m in range(-l, l + 1):
+                self.P[n] = self.Plm(l, m)
+                self.Q[n] = self.Qlm(l, m)
+                n += 1
+
+        # We compute this one recursively in one go!
+        self.T = compute_T(self.ydeg + 1, self.b, self.theta, self.xi)
 
     def design_matrix(self, b, theta, bo, ro):
 
@@ -226,19 +229,19 @@ class StarryNight(object):
     def flux(self, y, b, theta, bo, ro):
         return self.design_matrix(b, theta, bo, ro).dot(y)
 
-    def K(self, u, v):
+    def Kuv(self, u, v):
         """Return the integral K, evaluated as a sum over I."""
         return sum(
             [Vieta(i, u, v, self.delta) * self.I[i + u] for i in range(u + v + 1)]
         )
 
-    def L(self, u, v, t):
+    def Luvt(self, u, v, t):
         """Return the integral L, evaluated as a sum over J."""
         return self.k ** 3 * sum(
             [Vieta(i, u, v, self.delta) * self.J[i + u + t] for i in range(u + v + 1)]
         )
 
-    def P(self, l, m):
+    def Plm(self, l, m):
         """Compute the P integral."""
         mu = l - m
         nu = l + m
@@ -246,7 +249,7 @@ class StarryNight(object):
         if (mu / 2) % 2 == 0:
 
             # Same as in starry
-            return 2 * self.tworo[l + 2] * self.K((mu + 4) // 4, nu // 2)
+            return 2 * self.tworo[l + 2] * self.Kuv((mu + 4) // 4, nu // 2)
 
         elif (mu == 1) and (l % 2 == 0):
 
@@ -254,7 +257,7 @@ class StarryNight(object):
             return (
                 self.tworo[l - 1]
                 * self.fourbr15
-                * (self.L((l - 2) // 2, 0, 0) - 2 * self.L((l - 2) // 2, 0, 1))
+                * (self.Luvt((l - 2) // 2, 0, 0) - 2 * self.Luvt((l - 2) // 2, 0, 1))
             )
 
         elif (mu == 1) and (l != 1) and (l % 2 != 0):
@@ -263,7 +266,7 @@ class StarryNight(object):
             return (
                 self.tworo[l - 1]
                 * self.fourbr15
-                * (self.L((l - 3) // 2, 1, 0) - 2 * self.L((l - 3) // 2, 1, 1))
+                * (self.Luvt((l - 3) // 2, 1, 0) - 2 * self.Luvt((l - 3) // 2, 1, 1))
             )
 
         elif ((mu - 1) % 2) == 0 and ((mu - 1) // 2 % 2 == 0) and (l != 1):
@@ -273,7 +276,7 @@ class StarryNight(object):
                 2
                 * self.tworo[l - 1]
                 * self.fourbr15
-                * self.L((mu - 1) // 4, (nu - 1) // 2, 0)
+                * self.Luvt((mu - 1) // 4, (nu - 1) // 2, 0)
             )
 
         elif (mu == 1) and (l == 1):
@@ -322,12 +325,20 @@ class StarryNight(object):
                     res += Vieta(i, u, v, self.delta) * self.W[i + u]
                 return self.tworo[l - 1] * self.k3fourbr15 * res
 
-    def Q(self, *args):
-        raise NotImplementedError("TODO.")
+    # - - - - - -  temporary - - - - - - #
 
-    # - - - - - - #
+    def Qlm(self, l, m):
+        # TODO: Implement this guy
+        res = 0
+        for lam1, lam2 in self.lam.reshape(-1, 2):
+            x = lambda lam: np.cos(lam)
+            y = lambda lam: np.sin(lam)
+            dx = lambda lam: -np.sin(lam)
+            dy = lambda lam: np.cos(lam)
+            res += self.primitive(l, m, x, y, dx, dy, lam1, lam2)
+        return res
 
-    def G(self, l, m):
+    def Glm(self, l, m):
         mu = l - m
         nu = l + m
 
@@ -355,37 +366,9 @@ class StarryNight(object):
 
     def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
         """A general primitive integral computed numerically."""
-        G = self.G(l, m)
+        G = self.Glm(l, m)
         func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
             x(theta), y(theta)
         ) * dy(theta)
         res, _ = quad(func, theta1, theta2, epsabs=1e-12, epsrel=1e-12,)
         return res
-
-    def T(self, l, m):
-        """Compute the T integral."""
-
-        if l == 1 and m == 0:
-
-            return term(self.b, self.xi)
-
-        else:
-
-            # TODO: Figure out these cases
-
-            res = 0
-            for xi1, xi2 in self.xi.reshape(-1, 2):
-                x = lambda xi: np.cos(self.theta) * np.cos(xi) - self.b * np.sin(
-                    self.theta
-                ) * np.sin(xi)
-                y = lambda xi: np.sin(self.theta) * np.cos(xi) + self.b * np.cos(
-                    self.theta
-                ) * np.sin(xi)
-                dx = lambda xi: -np.cos(self.theta) * np.sin(xi) - self.b * np.sin(
-                    self.theta
-                ) * np.cos(xi)
-                dy = lambda xi: -np.sin(self.theta) * np.sin(xi) + self.b * np.cos(
-                    self.theta
-                ) * np.cos(xi)
-                res += self.primitive(l, m, x, y, dx, dy, xi1, xi2)
-            return res

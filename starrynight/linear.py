@@ -130,6 +130,8 @@ def term_indef(b, xi):
         delta = 2 * bbc
     else:
         delta = np.pi + 2 * bbc
+
+    # We're done
     return (
         np.arctan(b * t)
         - sgn * (np.arctan(((s / (1 + c)) ** 2 + 2 * b ** 2 - 1) / (2 * bbc)) + bbc * c)

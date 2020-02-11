@@ -1,4 +1,5 @@
 from .starrynight import StarryNight
+from .geometry import get_angles
 import numpy as np
 from starry._core.ops.polybasis import pTOp
 from scipy.integrate import quad
@@ -25,6 +26,16 @@ class Brute(StarryNight):
         y = theano.tensor.dvector()
         z = theano.tensor.dvector()
         self.pT = theano.function([x, y, z], pTOp(self.ops.pT, self.ydeg + 1)(x, y, z),)
+
+    def precompute(self, b, theta, bo, ro):
+        # Ingest
+        self.b = b
+        self.theta = theta
+        self.bo = bo
+        self.ro = ro
+
+        # Illumination matrix
+        self.IA1 = self.illum().dot(self.A1)
 
     def design_matrix(self, b, theta, bo, ro):
 
@@ -54,7 +65,34 @@ class Numerical(StarryNight):
         self.epsrel = epsrel
         super().__init__(*args, **kwargs)
 
-    def G(self, l, m):
+    def precompute(self, b, theta, bo, ro):
+        # Ingest
+        self.b = b
+        self.theta = theta
+        self.bo = bo
+        self.ro = ro
+
+        # Get integration code & limits
+        self.phi, self.lam, self.xi, self.code = get_angles(
+            self.b, self.theta, self.bo, self.ro, tol=self.tol
+        )
+
+        # Illumination matrix
+        self.IA1 = self.illum().dot(self.A1)
+
+        # Compute the three primitive integrals
+        self.P = np.zeros((self.ydeg + 2) ** 2)
+        self.Q = np.zeros((self.ydeg + 2) ** 2)
+        self.T = np.zeros((self.ydeg + 2) ** 2)
+        n = 0
+        for l in range(self.ydeg + 2):
+            for m in range(-l, l + 1):
+                self.P[n] = self.Plm(l, m)
+                self.Q[n] = self.Qlm(l, m)
+                self.T[n] = self.Tlm(l, m)
+                n += 1
+
+    def Glm(self, l, m):
         mu = l - m
         nu = l + m
 
@@ -84,14 +122,14 @@ class Numerical(StarryNight):
 
     def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
         """A general primitive integral computed numerically."""
-        G = self.G(l, m)
+        G = self.Glm(l, m)
         func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
             x(theta), y(theta)
         ) * dy(theta)
         res, _ = quad(func, theta1, theta2, epsabs=self.epsabs, epsrel=self.epsrel,)
         return res
 
-    def Q(self, l, m):
+    def Qlm(self, l, m):
         """Compute the Q integral numerically from its integral definition."""
         res = 0
         for lam1, lam2 in self.lam.reshape(-1, 2):
@@ -102,7 +140,7 @@ class Numerical(StarryNight):
             res += self.primitive(l, m, x, y, dx, dy, lam1, lam2)
         return res
 
-    def T(self, l, m):
+    def Tlm(self, l, m):
         """Compute the T integral numerically from its integral definition."""
         res = 0
         for xi1, xi2 in self.xi.reshape(-1, 2):
@@ -121,7 +159,7 @@ class Numerical(StarryNight):
             res += self.primitive(l, m, x, y, dx, dy, xi1, xi2)
         return res
 
-    def P(self, l, m):
+    def Plm(self, l, m):
         """Compute the P integral numerically from its integral definition."""
         res = 0
         for phi1, phi2 in self.phi.reshape(-1, 2):
