@@ -8,8 +8,8 @@ from matplotlib.patches import Arc
 def visualize(b, theta, bo, ro, tol=1e-7, res=4999):
 
     # Find angles of intersection
-    phi, lam, xi, _ = get_angles(b, theta, bo, ro, tol=tol)
-    phi = phi.reshape(-1, 2)
+    kappa, lam, xi, _ = get_angles(b, theta, bo, ro, tol=tol)
+    phi = (kappa - np.pi / 2).reshape(-1, 2)
     lam = lam.reshape(-1, 2)
     xi = xi.reshape(-1, 2)
 
