@@ -1,7 +1,12 @@
 from .special import hyp2f1, E, F, J
 from .utils import pairdiff
+from .vieta import Vieta
+from .linear import pal
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+__ALL__ = ["compute_P", "compute_Q", "comput_T"]
 
 
 def compute_U(vmax, s1):
@@ -144,7 +149,51 @@ def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
     return np.concatenate(([f0], soln, [fN]))
 
 
-def T2_indef(b, xi):
+def K(I, delta, u, v):
+    """Return the integral K, evaluated as a sum over I."""
+    return sum([Vieta(i, u, v, delta) * I[i + u] for i in range(u + v + 1)])
+
+
+def L(J, k, delta, u, v, t):
+    """Return the integral L, evaluated as a sum over J."""
+    return k ** 3 * sum(
+        [Vieta(i, u, v, delta) * J[i + u + t] for i in range(u + v + 1)]
+    )
+
+
+def compute_H(uvmax, xi):
+
+    c = np.cos(xi)
+    s = np.sin(xi)
+    cs = c * s
+    cc = c ** 2
+    ss = s ** 2
+
+    H = np.empty((uvmax + 1, uvmax + 1))
+    T = np.empty((uvmax + 1, uvmax + 1, len(xi)))
+    H[0, 0] = pairdiff(xi)
+    T[0, 0] = 1
+    H[1, 0] = pairdiff(s)
+    T[1, 0] = c
+    H[0, 1] = -pairdiff(c)
+    T[0, 1] = s
+    H[1, 1] = -0.5 * pairdiff(cc)
+    T[1, 1] = cs
+
+    for u in range(2):
+        for v in range(2, uvmax + 1 - u):
+            H[u, v] = (-pairdiff(T[u, v - 2] * cs) + (v - 1) * H[u, v - 2]) / (u + v)
+            T[u, v] = T[u, v - 2] * ss
+
+    for u in range(2, uvmax + 1):
+        for v in range(uvmax + 1 - u):
+            H[u, v] = (pairdiff(T[u - 2, v] * cs) + (u - 1) * H[u - 2, v]) / (u + v)
+            T[u, v] = T[u - 2, v] * cc
+
+    return H
+
+
+def _compute_T2_indef(b, xi):
     """
     Note: requires b >= 0.
     
@@ -184,63 +233,159 @@ def T2_indef(b, xi):
     ) / 3
 
 
-class compute_H(object):
-    def __init__(self, N, xi):
+def compute_P(ydeg, bo, ro, kappa):
+    """Compute the P integral."""
 
-        c = np.cos(xi)
-        s = np.sin(xi)
-        self.cs = c * s
-        self.cc = c ** 2
-        self.ss = s ** 2
+    # Basic variables
+    delta = (bo - ro) / (2 * ro)
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+    k = np.sqrt(k2)
+    km2 = 1.0 / k2
+    fourbr15 = (4 * bo * ro) ** 1.5
+    k3fourbr15 = k ** 3 * fourbr15
+    tworo = np.empty(ydeg + 4)
+    tworo[0] = 1.0
+    for i in range(1, ydeg + 4):
+        tworo[i] = tworo[i - 1] * 2 * ro
 
-        self.H = np.zeros((N + 1, N + 1))
-        self.T = np.zeros((N + 1, N + 1, len(xi)))
+    # Pre-compute the helper integrals
+    x = 0.5 * kappa
+    s1 = np.sin(x)
+    s2 = s1 ** 2
+    c1 = np.cos(x)
+    q2 = 1 - np.minimum(1.0, s2 / k2)
+    q3 = q2 ** 1.5
+    dE = pairdiff(E(x, km2))
+    dF = pairdiff(F(x, km2))
+    U = compute_U(2 * ydeg + 5, s1)
+    I = compute_I(ydeg + 3, kappa, s1, c1)
+    J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE, dF,)
+    W = compute_W(ydeg, s2, q2, q3)
 
-        self.H[0, 0] = pairdiff(xi)
-        self.T[0, 0] = 1
+    P = np.zeros((ydeg + 1) ** 2)
 
-        self.H[1, 0] = pairdiff(s)
-        self.T[1, 0] = c
+    n = 0
+    for l in range(ydeg + 1):
+        for m in range(-l, l + 1):
 
-        self.H[0, 1] = -pairdiff(c)
-        self.T[0, 1] = s
+            mu = l - m
+            nu = l + m
 
-        self.H[1, 1] = -0.5 * pairdiff(self.cc)
-        self.T[1, 1] = self.cs
+            if (mu / 2) % 2 == 0:
 
-        self.computed = np.zeros((N + 1, N + 1), dtype=bool)
-        self.computed[:2, :2] = True
+                # Same as in starry
+                P[n] = 2 * tworo[l + 2] * K(I, delta, (mu + 4) // 4, nu // 2)
 
-        for u in range(N + 1):
-            for v in range(N + 1 - u):
-                self.H[u, v], self.T[u, v] = self.compute(u, v)
+            elif mu == 1:
 
-    def compute(self, u, v):
-        if self.computed[u, v]:
-            return self.H[u, v], np.array(self.T[u, v])
+                if l == 1:
 
-        if u >= 2:
+                    # Same as in starry, but using expression from Pal (2012)
+                    # Note there's a difference of pi/2 between Pal's `phi` and ours
+                    for i in range(0, len(kappa), 2):
+                        P[2] += pal(bo, ro, kappa[i] - np.pi, kappa[i + 1] - np.pi,)
 
-            H, T = self.compute(u - 2, v)
-            term1 = pairdiff(T * self.cs)
-            T *= self.cc
-            term2 = (u - 1) * H
+                elif l % 2 == 0:
 
-        else:
+                    # Same as in starry
+                    P[n] = (
+                        tworo[l - 1]
+                        * fourbr15
+                        * (
+                            L(J, k, delta, (l - 2) // 2, 0, 0)
+                            - 2 * L(J, k, delta, (l - 2) // 2, 0, 1)
+                        )
+                    )
 
-            H, T = self.compute(u, v - 2)
-            term1 = -pairdiff(T * self.cs)
-            T *= self.ss
-            term2 = (v - 1) * H
+                else:
 
-        self.computed[u, v] = True
-        return (term1 + term2) / (u + v), T
+                    # Same as in starry
+                    P[n] = (
+                        tworo[l - 1]
+                        * fourbr15
+                        * (
+                            L(J, k, delta, (l - 3) // 2, 1, 0)
+                            - 2 * L(J, k, delta, (l - 3) // 2, 1, 1)
+                        )
+                    )
+
+            elif (mu - 1) / 2 % 2 == 0:
+
+                # Same as in starry
+                P[n] = (
+                    2
+                    * tworo[l - 1]
+                    * fourbr15
+                    * L(J, k, delta, (mu - 1) // 4, (nu - 1) // 2, 0)
+                )
+
+            else:
+
+                """
+                A note about these cases. In the original starry code, these integrals
+                are always zero because the integrand is antisymmetric about the
+                midpoint. Now, however, the integration limits are different, so 
+                there's no cancellation in general.
+
+                The cases below are just the first and fourth cases in equation (D25) 
+                of the starry paper. We can re-write them as the first and fourth cases 
+                in (D32) and (D35), respectively, but note that we pick up a factor
+                of `sgn(cos(phi))`, since the power of the cosine term in the integrand
+                is odd.
+                
+                The other thing to note is that `u` in the call to `K(u, v)` is now
+                a half-integer, so our Vieta trick (D36, D37) doesn't work out of the box.
+                """
+
+                if nu % 2 == 0:
+
+                    res = 0
+                    u = int((mu + 4.0) // 4)
+                    v = int(nu / 2)
+                    for i in range(u + v + 1):
+                        res += Vieta(i, u, v, delta) * U[2 * (u + i) + 1]
+                    P[n] = 2 * tworo[l + 2] * res
+
+                else:
+
+                    res = 0
+                    u = (mu - 1) // 4
+                    v = (nu - 1) // 2
+                    for i in range(u + v + 1):
+                        res += Vieta(i, u, v, delta) * W[i + u]
+                    P[n] = tworo[l - 1] * k3fourbr15 * res
+
+            n += 1
+
+    return P
+
+
+def compute_Q(ydeg, lam):
+
+    # Pre-compute H
+    H = compute_H(ydeg + 2, lam)
+
+    # Note that the linear term is special
+    Q = np.zeros((ydeg + 1) ** 2)
+    Q[2] = pairdiff(lam) / 3
+
+    # Easy!
+    n = 0
+    for l in range(ydeg + 1):
+        for m in range(-l, l + 1):
+            mu = l - m
+            nu = l + m
+            if nu % 2 == 0:
+                Q[n] = H[(mu + 4) // 2, nu // 2]
+            n += 1
+
+    return Q
 
 
 def compute_T(ydeg, b, theta, xi):
 
     # Pre-compute H
-    H = compute_H(ydeg + 2, xi).H
+    H = compute_H(ydeg + 2, xi)
 
     # Vars
     ct = np.cos(theta)
@@ -255,7 +400,7 @@ def compute_T(ydeg, b, theta, xi):
     T = np.zeros((ydeg + 1) ** 2)
 
     # Case 2 (special)
-    T[2] = pairdiff([np.sign(b) * T2_indef(np.abs(b), x) for x in xi])
+    T[2] = pairdiff([np.sign(b) * _compute_T2_indef(np.abs(b), x) for x in xi])
 
     # Cases 1 and 5
     jmax = 0

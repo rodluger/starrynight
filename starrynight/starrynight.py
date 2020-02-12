@@ -9,10 +9,7 @@ TODO: Singularities
 """
 from .utils import *
 from .geometry import get_angles
-from .primitive import compute_W, compute_U, compute_I, compute_J, compute_T
-from .vieta import Vieta
-from .linear import pal
-from .special import E, F
+from .primitive import compute_P, compute_T, compute_Q
 import numpy as np
 import starry
 from starry._c_ops import Ops
@@ -133,64 +130,16 @@ class StarryNight(object):
         self.ro = ro
 
         # Get integration code & limits
-        self.phi, self.lam, self.xi, self.code = get_angles(
+        self.kappa, self.lam, self.xi, self.code = get_angles(
             self.b, self.theta, self.bo, self.ro, tol=self.tol
         )
 
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
 
-        # Basic variables
-        self.delta = (self.bo - self.ro) / (2 * self.ro)
-        self.k2 = (1 - self.ro ** 2 - self.bo ** 2 + 2 * self.bo * self.ro) / (
-            4 * self.bo * self.ro
-        )
-        self.k = np.sqrt(self.k2)
-        self.km2 = 1.0 / self.k2
-        self.kappa = self.phi + np.pi / 2
-        self.fourbr15 = (4 * self.bo * self.ro) ** 1.5
-        self.k3fourbr15 = self.k ** 3 * self.fourbr15
-        self.tworo = np.empty(self.ydeg + 4)
-        self.tworo[0] = 1.0
-        for i in range(1, self.ydeg + 4):
-            self.tworo[i] = self.tworo[i - 1] * 2 * self.ro
-
-        # Pre-compute the helper integrals
-        x = 0.5 * self.kappa
-        s1 = np.sin(x)
-        s2 = s1 ** 2
-        c1 = np.cos(x)
-        q2 = 1 - np.minimum(1.0, s2 / self.k2)
-        q3 = q2 ** 1.5
-        self.dE = pairdiff(E(x, self.km2))
-        self.dF = pairdiff(F(x, self.km2))
-        self.U = compute_U(2 * self.ydeg + 5, s1)
-        self.I = compute_I(self.ydeg + 3, self.kappa, s1, c1)
-        self.J = compute_J(
-            self.ydeg + 1,
-            self.k2,
-            self.km2,
-            self.kappa,
-            s1,
-            s2,
-            c1,
-            q2,
-            self.dE,
-            self.dF,
-        )
-        self.W = compute_W(self.ydeg, s2, q2, q3)
-
         # Compute the three primitive integrals
-        self.P = np.zeros((self.ydeg + 2) ** 2)
-        self.Q = np.zeros((self.ydeg + 2) ** 2)
-        n = 0
-        for l in range(self.ydeg + 2):
-            for m in range(-l, l + 1):
-                self.P[n] = self.Plm(l, m)
-                self.Q[n] = self.Qlm(l, m)
-                n += 1
-
-        # We compute this one recursively in one go!
+        self.P = compute_P(self.ydeg + 1, self.bo, self.ro, self.kappa)
+        self.Q = compute_Q(self.ydeg + 1, self.lam)
         self.T = compute_T(self.ydeg + 1, self.b, self.theta, self.xi)
 
     def design_matrix(self, b, theta, bo, ro):
@@ -229,146 +178,3 @@ class StarryNight(object):
     def flux(self, y, b, theta, bo, ro):
         return self.design_matrix(b, theta, bo, ro).dot(y)
 
-    def Kuv(self, u, v):
-        """Return the integral K, evaluated as a sum over I."""
-        return sum(
-            [Vieta(i, u, v, self.delta) * self.I[i + u] for i in range(u + v + 1)]
-        )
-
-    def Luvt(self, u, v, t):
-        """Return the integral L, evaluated as a sum over J."""
-        return self.k ** 3 * sum(
-            [Vieta(i, u, v, self.delta) * self.J[i + u + t] for i in range(u + v + 1)]
-        )
-
-    def Plm(self, l, m):
-        """Compute the P integral."""
-        mu = l - m
-        nu = l + m
-
-        if (mu / 2) % 2 == 0:
-
-            # Same as in starry
-            return 2 * self.tworo[l + 2] * self.Kuv((mu + 4) // 4, nu // 2)
-
-        elif (mu == 1) and (l % 2 == 0):
-
-            # Same as in starry
-            return (
-                self.tworo[l - 1]
-                * self.fourbr15
-                * (self.Luvt((l - 2) // 2, 0, 0) - 2 * self.Luvt((l - 2) // 2, 0, 1))
-            )
-
-        elif (mu == 1) and (l != 1) and (l % 2 != 0):
-
-            # Same as in starry
-            return (
-                self.tworo[l - 1]
-                * self.fourbr15
-                * (self.Luvt((l - 3) // 2, 1, 0) - 2 * self.Luvt((l - 3) // 2, 1, 1))
-            )
-
-        elif ((mu - 1) % 2) == 0 and ((mu - 1) // 2 % 2 == 0) and (l != 1):
-
-            # Same as in starry
-            return (
-                2
-                * self.tworo[l - 1]
-                * self.fourbr15
-                * self.Luvt((mu - 1) // 4, (nu - 1) // 2, 0)
-            )
-
-        elif (mu == 1) and (l == 1):
-
-            # Same as in starry, but using expression from Pal (2012)
-            # Note there's a difference of pi/2 between Pal's `phi` and ours
-            s2 = 0.0
-            for i in range(0, len(self.kappa), 2):
-                s2 += pal(
-                    self.bo, self.ro, self.kappa[i] - np.pi, self.kappa[i + 1] - np.pi
-                )
-            return s2
-
-        else:
-            """
-            A note about these cases. In the original starry code, these integrals
-            are always zero because the integrand is antisymmetric about the
-            midpoint. Now, however, the integration limits are different, so 
-            there's no cancellation in general.
-
-            The cases below are just the first and fourth cases in equation (D25) 
-            of the starry paper. We can re-write them as the first and fourth cases 
-            in (D32) and (D35), respectively, but note that we pick up a factor
-            of `sgn(cos(phi))`, since the power of the cosine term in the integrand
-            is odd.
-            
-            The other thing to note is that `u` in the call to `K(u, v)` is now
-            a half-integer, so our Vieta trick (D36, D37) doesn't work out of the box.
-            """
-
-            if nu % 2 == 0:
-
-                res = 0
-                u = int((mu + 4.0) // 4)
-                v = int(nu / 2)
-                for i in range(u + v + 1):
-                    res += Vieta(i, u, v, self.delta) * self.U[2 * (u + i) + 1]
-                return 2 * self.tworo[l + 2] * res
-
-            else:
-
-                res = 0
-                u = (mu - 1) // 4
-                v = (nu - 1) // 2
-                for i in range(u + v + 1):
-                    res += Vieta(i, u, v, self.delta) * self.W[i + u]
-                return self.tworo[l - 1] * self.k3fourbr15 * res
-
-    # - - - - - -  temporary - - - - - - #
-
-    def Qlm(self, l, m):
-        # TODO: Implement this guy
-        res = 0
-        for lam1, lam2 in self.lam.reshape(-1, 2):
-            x = lambda lam: np.cos(lam)
-            y = lambda lam: np.sin(lam)
-            dx = lambda lam: -np.sin(lam)
-            dy = lambda lam: np.cos(lam)
-            res += self.primitive(l, m, x, y, dx, dy, lam1, lam2)
-        return res
-
-    def Glm(self, l, m):
-        mu = l - m
-        nu = l + m
-
-        z = lambda x, y: np.sqrt(max(0, 1 - x ** 2 - y ** 2))
-
-        if nu % 2 == 0:
-            G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
-        elif (l == 1) and (m == 0):
-            G = [
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * (-y),
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * x,
-            ]
-        elif (mu == 1) and (l % 2 == 0):
-            G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
-        elif (mu == 1) and (l % 2 != 0):
-            G = [lambda x, y: x ** (l - 3) * y * z(x, y) ** 3, lambda x, y: 0]
-        else:
-            G = [
-                lambda x, y: 0,
-                lambda x, y: x ** (0.5 * (mu - 3))
-                * y ** (0.5 * (nu - 1))
-                * z(x, y) ** 3,
-            ]
-        return G
-
-    def primitive(self, l, m, x, y, dx, dy, theta1, theta2):
-        """A general primitive integral computed numerically."""
-        G = self.Glm(l, m)
-        func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
-            x(theta), y(theta)
-        ) * dy(theta)
-        res, _ = quad(func, theta1, theta2, epsabs=1e-12, epsrel=1e-12,)
-        return res

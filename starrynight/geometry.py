@@ -491,5 +491,6 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
 
         raise NotImplementedError("Unexpected branch.")
 
-    return np.array(phi), np.array(lam), np.array(xi), code
+    # Note that in starry, we use kappa = phi + pi / 2
+    return np.array(phi) + np.pi / 2, np.array(lam), np.array(xi), code
 

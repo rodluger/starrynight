@@ -1,9 +1,8 @@
-from .starrynight import StarryNight
-from .geometry import get_angles
+from starrynight import StarryNight
+from starrynight.geometry import get_angles
 import numpy as np
 from starry._core.ops.polybasis import pTOp
 from scipy.integrate import quad
-from scipy.special import binom
 import theano
 
 
@@ -73,9 +72,10 @@ class Numerical(StarryNight):
         self.ro = ro
 
         # Get integration code & limits
-        self.phi, self.lam, self.xi, self.code = get_angles(
+        self.kappa, self.lam, self.xi, self.code = get_angles(
             self.b, self.theta, self.bo, self.ro, tol=self.tol
         )
+        self.phi = self.kappa - np.pi / 2
 
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
