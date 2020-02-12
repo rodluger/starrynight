@@ -28,10 +28,7 @@ class Brute(StarryNight):
 
     def precompute(self, b, theta, bo, ro):
         # Ingest
-        self.b = b
-        self.theta = theta
-        self.bo = bo
-        self.ro = ro
+        self.ingest(b, theta, bo, ro)
 
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
@@ -66,14 +63,17 @@ class Numerical(StarryNight):
 
     def precompute(self, b, theta, bo, ro):
         # Ingest
-        self.b = b
-        self.theta = theta
-        self.bo = bo
-        self.ro = ro
+        self.ingest(b, theta, bo, ro)
 
         # Get integration code & limits
         self.kappa, self.lam, self.xi, self.code = get_angles(
-            self.b, self.theta, self.bo, self.ro, tol=self.tol
+            self.b,
+            self.theta,
+            self.costheta,
+            self.sintheta,
+            self.bo,
+            self.ro,
+            tol=self.tol,
         )
         self.phi = self.kappa - np.pi / 2
 

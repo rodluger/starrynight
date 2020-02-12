@@ -7,8 +7,8 @@ import pytest
 
 # Params
 ydeg = 5
-S = StarryNight(ydeg, tol=1e-7)
-N = Numerical(ydeg, tol=1e-7)
+S = StarryNight(ydeg)
+N = Numerical(ydeg)
 args = CASE[1] + CASE[2] + CASE[3] + CASE[4] + CASE[5]
 
 

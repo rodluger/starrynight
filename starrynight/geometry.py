@@ -2,18 +2,18 @@ import numpy as np
 from .utils import *
 
 
-def on_dayside(b, theta, x, y):
+def on_dayside(b, theta, costheta, sintheta, x, y):
     """Return True if a point is on the dayside."""
     if x ** 2 + y ** 2 > 1:
         raise ValueError("Point not on the unit disk.")
-    xr = x * np.cos(theta) + y * np.sin(theta)
-    yr = -x * np.sin(theta) + y * np.cos(theta)
+    xr = x * costheta + y * sintheta
+    yr = -x * sintheta + y * costheta
     term = 1 - xr ** 2
     yt = b * np.sqrt(term)
     return yr >= yt
 
 
-def sort_phi(b, theta, bo, ro, phi, tol=1e-7):
+def sort_phi(b, theta, costheta, sintheta, bo, ro, phi, tol=1e-7):
     # Sort a pair of `phi` angles according to the order
     # of the integration limits.
     phi1, phi2 = phi
@@ -22,22 +22,22 @@ def sort_phi(b, theta, bo, ro, phi, tol=1e-7):
         phi[1] += 2 * np.pi
     x = ro * np.cos(phi[0] + tol)
     y = bo + ro * np.sin(phi[0] + tol)
-    if (x ** 2 + y ** 2 > 1) or not on_dayside(b, theta, x, y):
+    if (x ** 2 + y ** 2 > 1) or not on_dayside(b, theta, costheta, sintheta, x, y):
         phi = np.array([phi2, phi1]) % (2 * np.pi)
     if phi[1] < phi[0]:
         phi[1] += 2 * np.pi
     return phi
 
 
-def sort_xi(b, theta, bo, ro, xi, tol=1e-7):
+def sort_xi(b, theta, costheta, sintheta, bo, ro, xi, tol=1e-7):
     # Sort a pair of `xi` angles according to the order
     # of the integration limits.
     xi1, xi2 = xi
     xi = np.array([xi1, xi2]) % (2 * np.pi)
     if xi[0] < xi[1]:
         xi[0] += 2 * np.pi
-    x = np.cos(theta) * np.cos(xi[1] + tol) - b * np.sin(theta) * np.sin(xi[1] + tol)
-    y = np.sin(theta) * np.cos(xi[1] + tol) + b * np.cos(theta) * np.sin(xi[1] + tol)
+    x = costheta * np.cos(xi[1] + tol) - b * sintheta * np.sin(xi[1] + tol)
+    y = sintheta * np.cos(xi[1] + tol) + b * costheta * np.sin(xi[1] + tol)
     if x ** 2 + (y - bo) ** 2 > ro ** 2:
         xi = np.array([xi2, xi1]) % (2 * np.pi)
     if xi[0] < xi[1]:
@@ -45,7 +45,7 @@ def sort_xi(b, theta, bo, ro, xi, tol=1e-7):
     return xi
 
 
-def sort_lam(b, theta, bo, ro, lam, tol=1e-7):
+def sort_lam(b, theta, costheta, sintheta, bo, ro, lam, tol=1e-7):
     # Sort a pair of `lam` angles according to the order
     # of the integration limits.
     lam1, lam2 = lam
@@ -61,7 +61,7 @@ def sort_lam(b, theta, bo, ro, lam, tol=1e-7):
     return lam
 
 
-def get_angles(b, theta, bo, ro, tol=1e-7):
+def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
 
     # Trivial cases
     if bo <= ro - 1:
@@ -84,13 +84,11 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             FLUX_SIMPLE_REFL,
         )
 
-    # TODO: Use Sturm's theorem here to save time?
-
     # We'll solve for occultor-terminator intersections
     # in the frame where the semi-major axis of the
     # terminator ellipse is aligned with the x axis
-    xo = bo * np.sin(theta)
-    yo = bo * np.cos(theta)
+    xo = bo * sintheta
+    yo = bo * costheta
 
     # Special case: b = 0
     if np.abs(b) < tol:
@@ -101,9 +99,12 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             x = np.append(x, xo + term)
         if np.abs(xo - term) < 1:
             x = np.append(x, xo - term)
+        x = np.array(list(set(x)))
 
     # Need to solve a quartic
     else:
+
+        # TODO: We need to do a better job of polishing these roots!
 
         A = (1 - b ** 2) ** 2
         B = -4 * xo * (1 - b ** 2)
@@ -135,12 +136,16 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             ]
         )
 
-    # Get rid of any multiplicity
-    x = np.array(list(set(x)))
+        # Get rid of any multiplicity
+        xnew = []
+        for i, _ in enumerate(x):
+            if np.all(np.abs(x[i] - x[:i]) > tol):
+                xnew += [x[i]]
+        x = np.array(xnew)
 
     # Check that the number of roots is correct
-    x_l = np.cos(theta)
-    y_l = np.sin(theta)
+    x_l = costheta
+    y_l = sintheta
     l1 = x_l ** 2 + (y_l - bo) ** 2 < ro ** 2
     l2 = x_l ** 2 + (-y_l - bo) ** 2 < ro ** 2
     if (l1 and not l2) or (l2 and not l1):
@@ -183,7 +188,7 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             x = (1 - tol) * np.cos(lam)
             y = (1 - tol) * np.sin(lam)
 
-            if on_dayside(b, theta, x, y):
+            if on_dayside(b, theta, costheta, sintheta, x, y):
 
                 # This point is guaranteed to be on the night side
                 # We're going to check if it's under the occultor or not
@@ -221,7 +226,7 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         else:
 
             # The occultor does not intersect the limb or the terminator
-            if on_dayside(b, theta, 0, bo):
+            if on_dayside(b, theta, costheta, sintheta, 0, bo):
 
                 # The occultor is only blocking daylight
                 code = FLUX_SIMPLE_OCC_REFL
@@ -251,6 +256,8 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         if not on_dayside(
             b,
             theta,
+            costheta,
+            sintheta,
             (1 - tol) * ro * np.cos(phi_o),
             (1 - tol) * (bo + ro * np.sin(phi_o)),
         ):
@@ -260,7 +267,9 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         phi_t = theta + np.arctan2(b * np.sqrt(1 - x[0] ** 2) - yo, x[0] - xo)
 
         # Now ensure phi *only* spans the dayside.
-        phi = sort_phi(b, theta, bo, ro, np.array([phi_o, phi_t]), tol=tol)
+        phi = sort_phi(
+            b, theta, costheta, sintheta, bo, ro, np.array([phi_o, phi_t]), tol=tol
+        )
 
         # LAMBDA
         # ------
@@ -270,7 +279,12 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         # There are always two points; always pick the one
         # that's on the dayside for definiteness
         if not on_dayside(
-            b, theta, (1 - tol) * np.cos(lam_o), (1 - tol) * np.sin(lam_o)
+            b,
+            theta,
+            costheta,
+            sintheta,
+            (1 - tol) * np.cos(lam_o),
+            (1 - tol) * np.sin(lam_o),
         ):
             lam_o = np.pi - lam_o
 
@@ -282,7 +296,9 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             lam_t = np.pi + theta
 
         # Now ensure lam *only* spans the inside of the occultor.
-        lam = sort_lam(b, theta, bo, ro, np.array([lam_o, lam_t]), tol=tol)
+        lam = sort_lam(
+            b, theta, costheta, sintheta, bo, ro, np.array([lam_o, lam_t]), tol=tol
+        )
 
         # XI
         # --
@@ -297,7 +313,9 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             xi_l = np.pi
 
         # Now ensure xi *only* spans the inside of the occultor.
-        xi = sort_xi(b, theta, bo, ro, np.array([xi_l, xi_o]), tol=tol)
+        xi = sort_xi(
+            b, theta, costheta, sintheta, bo, ro, np.array([xi_l, xi_o]), tol=tol
+        )
 
         # In all cases, we're computing the dayside occulted flux
         code = FLUX_DAY_OCC
@@ -316,8 +334,8 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
         if bo <= 1 - ro:
 
             # No intersections with the limb (easy)
-            phi = sort_phi(b, theta, bo, ro, phi, tol=tol)
-            xi = sort_xi(b, theta, bo, ro, xi, tol=tol)
+            phi = sort_phi(b, theta, costheta, sintheta, bo, ro, phi, tol=tol)
+            xi = sort_xi(b, costheta, sintheta, theta, bo, ro, xi, tol=tol)
             code = FLUX_DAY_OCC
 
         else:
@@ -330,16 +348,16 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             # We're going to choose xi[0] to be the rightmost point in
             # this frame, so that the integration is counter-clockwise along
             # the terminator to xi[1].
-            x = np.cos(theta) * np.cos(xi) - b * np.sin(theta) * np.sin(xi)
-            y = np.sin(theta) * np.cos(xi) + b * np.cos(theta) * np.sin(xi)
-            xr = x * np.cos(theta) + y * np.sin(theta)
+            x = costheta * np.cos(xi) - b * sintheta * np.sin(xi)
+            y = sintheta * np.cos(xi) + b * costheta * np.sin(xi)
+            xr = x * costheta + y * sintheta
             if xr[1] > xr[0]:
                 xi = xi[::-1]
 
             # 2. Now we need the point corresponding to xi[1] to be the same as the
             # point corresponding to phi[0] in order for the path to be continuous
-            x_xi1 = np.cos(theta) * np.cos(xi[1]) - b * np.sin(theta) * np.sin(xi[1])
-            y_xi1 = np.sin(theta) * np.cos(xi[1]) + b * np.cos(theta) * np.sin(xi[1])
+            x_xi1 = costheta * np.cos(xi[1]) - b * sintheta * np.sin(xi[1])
+            y_xi1 = sintheta * np.cos(xi[1]) + b * costheta * np.sin(xi[1])
             x_phi = ro * np.cos(phi)
             y_phi = bo + ro * np.sin(phi)
             if np.argmin((x_xi1 - x_phi) ** 2 + (y_xi1 - y_phi) ** 2) == 1:
@@ -348,7 +366,7 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             # 3. Compare the *curvature* of the two sides of the
             # integration area. The curvatures are similar (i.e., same sign)
             # when cos(theta) < 0, in which case we must integrate *clockwise* along P.
-            if np.cos(theta) < 0:
+            if costheta < 0:
                 # Integrate *clockwise* along P
                 if phi[0] < phi[1]:
                     phi[0] += 2 * np.pi
@@ -362,14 +380,14 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
             # coordinates to determine what kind of region we are
             # bounding.
             xi_mean = np.mean(xi)
-            x_xi = np.cos(theta) * np.cos(xi_mean) - b * np.sin(theta) * np.sin(xi_mean)
-            y_xi = np.sin(theta) * np.cos(xi_mean) + b * np.cos(theta) * np.sin(xi_mean)
+            x_xi = costheta * np.cos(xi_mean) - b * sintheta * np.sin(xi_mean)
+            y_xi = sintheta * np.cos(xi_mean) + b * costheta * np.sin(xi_mean)
             phi_mean = np.mean(phi)
             x_phi = ro * np.cos(phi_mean)
             y_phi = bo + ro * np.sin(phi_mean)
             x = 0.5 * (x_xi + x_phi)
             y = 0.5 * (y_xi + y_phi)
-            if on_dayside(b, theta, x, y):
+            if on_dayside(b, theta, costheta, sintheta, x, y):
                 if x ** 2 + (y - bo) ** 2 < ro ** 2:
                     # Dayside under occultor
                     code = FLUX_DAY_OCC
@@ -490,6 +508,10 @@ def get_angles(b, theta, bo, ro, tol=1e-7):
     else:
 
         raise NotImplementedError("Unexpected branch.")
+
+    # DEBUG
+    if np.isnan(np.sum(phi)):
+        breakpoint()
 
     # Note that in starry, we use kappa = phi + pi / 2
     return np.array(phi) + np.pi / 2, np.array(lam), np.array(xi), code

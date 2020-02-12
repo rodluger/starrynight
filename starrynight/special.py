@@ -1,6 +1,6 @@
 from mpmath import elliprf, elliprd, elliprj
 from mpmath import ellipf, ellipe
-from scipy.special import hyp2f1
+from scipy.special import hyp2f1 as scipy_hyp2f1
 from scipy.integrate import quad
 import numpy as np
 
@@ -37,3 +37,7 @@ def J(N, k2, kappa):
             func, 0.5 * kappa[i], 0.5 * kappa[i + 1], epsabs=1e-12, epsrel=1e-12,
         )[0]
     return res
+
+
+def hyp2f1(a, b, c, z):
+    return scipy_hyp2f1(a, b, c, z)

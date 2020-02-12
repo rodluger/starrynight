@@ -382,7 +382,7 @@ def compute_Q(ydeg, lam):
     return Q
 
 
-def compute_T(ydeg, b, theta, xi, tol=1e-9):
+def compute_T(ydeg, b, theta, xi, tol=1e-12):
 
     # Pre-compute H
     H = compute_H(ydeg + 2, xi)
@@ -402,82 +402,66 @@ def compute_T(ydeg, b, theta, xi, tol=1e-9):
     # Case 2 (special)
     T[2] = pairdiff([np.sign(b) * _compute_T2_indef(np.abs(b), x) for x in xi])
 
-    # Special limits: theta = 0, pi/2, pi, 3pi/2
+    # Special limit: sin(theta) = 0
     if np.abs(st) < tol:
 
+        sgnct = np.sign(ct)
         n = 0
         for l in range(ydeg + 1):
             for m in range(-l, l + 1):
                 mu = l - m
                 nu = l + m
                 if nu % 2 == 0:
-                    T[n] = (
-                        np.sign(ct) ** l
-                        * b ** (1 + nu // 2)
-                        * H[(mu + 4) // 2, nu // 2]
-                    )
+                    T[n] = sgnct ** l * b ** (1 + nu // 2) * H[(mu + 4) // 2, nu // 2]
                 else:
                     if mu == 1:
                         if (l % 2) == 0:
-                            T[n] = -np.sign(ct) * b32 * H[l - 2, 4]
+                            T[n] = -sgnct * b32 * H[l - 2, 4]
                         elif l > 1:
                             T[n] = -b * b32 * H[l - 3, 5]
                     else:
-                        T[n] = np.sign(ct) ** (l - 1) * (
+                        T[n] = sgnct ** (l - 1) * (
                             b32 * b ** ((nu + 1) // 2) * H[(mu - 1) // 2, (nu + 5) // 2]
                         )
                 n += 1
 
         return T
 
+    # Special limit: cos(theta) = 0
     elif np.abs(ct) < tol:
 
+        sgnst = np.sign(st)
         n = 0
         for l in range(ydeg + 1):
             for m in range(-l, l + 1):
                 mu = l - m
                 nu = l + m
                 if nu % 2 == 0:
-                    T[n] = (
-                        np.sign(ct) ** l
-                        * b ** ((mu + 2) // 2)
-                        * H[nu // 2, (mu + 4) // 2]
-                    )
-
-                    if np.sign(st) == 1:
+                    T[n] = b ** ((mu + 2) // 2) * H[nu // 2, (mu + 4) // 2]
+                    if sgnst == 1:
                         T[n] *= (-1) ** (mu // 2)
                     else:
                         T[n] *= (-1) ** (nu // 2)
-
                 else:
                     if mu == 1:
                         if (l % 2) == 0:
-
                             T[n] = (
-                                (-np.sign(st)) ** (l - 1)
-                                * b ** (l - 1)
-                                * b32
-                                * H[1, l + 1]
+                                (-sgnst) ** (l - 1) * b ** (l - 1) * b32 * H[1, l + 1]
                             )
-
                         elif l > 1:
-
                             T[n] = b ** (l - 2) * b32 * H[2, l]
-                            if np.sign(st) == 1:
+                            if sgnst == 1:
                                 T[n] *= (-1) ** l
                             else:
                                 T[n] *= -1
                     else:
-
                         T[n] = (
                             b32 * b ** ((mu - 3) // 2) * H[(nu - 1) // 2, (mu + 5) // 2]
                         )
-
-                        if np.sign(st) == 1:
-                            T[n] *= -((-1) ** ((mu - 3) // 2))
+                        if sgnst == 1:
+                            T[n] *= (-1) ** ((mu - 1) // 2)
                         else:
                             T[n] *= (-1) ** ((nu - 1) // 2)
-
                 n += 1
 
         return T

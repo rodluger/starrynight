@@ -1,12 +1,3 @@
-"""
-TODO: Singularities
-
-    - bo = 0
-    - bo = 0 and theta = 90 (only one root)
-    - bo <~ 0.1 and theta = 90 (root finding fails I think)
-    - check all edge cases
-
-"""
 from .utils import *
 from .geometry import get_angles
 from .primitive import compute_P, compute_T, compute_Q
@@ -122,25 +113,42 @@ class StarryNight(object):
     def X(self):
         return (self.P + self.Q + self.T).dot(self.A2).dot(self.IA1)
 
-    def precompute(self, b, theta, bo, ro):
-        # Ingest
+    def ingest(self, b, theta, bo, ro):
         self.b = b
-        self.theta = theta
+        self.theta = theta % (2 * np.pi)
+        self.costheta = np.cos(self.theta)
+        self.sintheta = np.sin(self.theta)
         self.bo = bo
         self.ro = ro
 
+    def precompute(self, b, theta, bo, ro):
+        # Ingest
+        self.ingest(b, theta, bo, ro)
+
         # Get integration code & limits
         self.kappa, self.lam, self.xi, self.code = get_angles(
-            self.b, self.theta, self.bo, self.ro, tol=self.tol
+            self.b,
+            self.theta,
+            self.costheta,
+            self.sintheta,
+            self.bo,
+            self.ro,
+            tol=self.tol,
         )
 
         # Illumination matrix
         self.IA1 = self.illum().dot(self.A1)
 
-        # Compute the three primitive integrals
-        self.P = compute_P(self.ydeg + 1, self.bo, self.ro, self.kappa)
-        self.Q = compute_Q(self.ydeg + 1, self.lam)
-        self.T = compute_T(self.ydeg + 1, self.b, self.theta, self.xi)
+        # Compute the three primitive integrals if necessary
+        if self.code not in [
+            FLUX_ZERO,
+            FLUX_SIMPLE_OCC,
+            FLUX_SIMPLE_REFL,
+            FLUX_SIMPLE_OCC_REFL,
+        ]:
+            self.P = compute_P(self.ydeg + 1, self.bo, self.ro, self.kappa)
+            self.Q = compute_Q(self.ydeg + 1, self.lam)
+            self.T = compute_T(self.ydeg + 1, self.b, self.theta, self.xi)
 
     def design_matrix(self, b, theta, bo, ro):
 

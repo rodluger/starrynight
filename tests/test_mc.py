@@ -1,4 +1,4 @@
-from starrynight.numerical import Numerical, Brute
+from numerical import Numerical, Brute
 import numpy as np
 import pytest
 
