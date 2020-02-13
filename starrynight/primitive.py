@@ -255,12 +255,30 @@ def compute_P(ydeg, bo, ro, kappa):
     c1 = np.cos(x)
     q2 = 1 - np.minimum(1.0, s2 / k2)
     q3 = q2 ** 1.5
-    dE_val = dE(x, km2)
-    dF_val = dF(x, km2)
+
     U = compute_U(2 * ydeg + 5, s1)
     I = compute_I(ydeg + 3, kappa, s1, c1)
-    J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
     W = compute_W(ydeg, s2, q2, q3)
+
+    if k2 == 1:
+
+        # TODO: This is a special case in which the J integral reduces
+        # to H[3, 2v]. However, the cosine term changes signs over the
+        # interval, so we need to subdivide the integral into regions
+        # where cosine has constant sign.
+        #
+        #   H = compute_H(3 + 2 * ydeg + 2, 0.5 * kappa)
+        #   J = np.array([H[3, 2 * v] for v in range(ydeg + 2)])
+        #
+        dF_val = dF(x, 1 - 1e-12)
+        dE_val = dE(x, 1 - 1e-12)
+        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
+
+    else:
+
+        dF_val = dF(x, km2)
+        dE_val = dE(x, km2)
+        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
 
     P = np.zeros((ydeg + 1) ** 2)
 
