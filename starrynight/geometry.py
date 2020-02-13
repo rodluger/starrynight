@@ -104,8 +104,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
     # Need to solve a quartic
     else:
 
-        # TODO: We need to do a better job of polishing these roots!
-
+        # Get the roots (eigenvalue problem)
         A = (1 - b ** 2) ** 2
         B = -4 * xo * (1 - b ** 2)
         C = -2 * (
@@ -121,10 +120,92 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
             - 2 * b ** 2 * (ro ** 2 - xo ** 2 + yo ** 2)
             + (ro ** 2 - xo ** 2 - yo ** 2) ** 2
         )
+        roots = np.roots([A, B, C, D, E]) + 0j
 
-        # Get all real roots `x` that satisfy `sgn(y(x)) = sgn(b)`.
-        x = np.roots([A, B, C, D, E])
+        # Polish the roots using Newton's method on the *original*
+        # function, which is more stable than the quartic expression.
+        htol = 1e-2
+        mtol = 1e-10
+        ttol = 1e-15
+        maxiter = 50
+        x = []
+        for n in range(len(roots)):
+
+            # We're looking for the intersection of the function
+            #
+            #     y1 = b * sqrt(1 - x^2)
+            #
+            # and the function
+            #
+            #     y2 = yo +/- sqrt(ro^2 - (x - xo^2))
+            #
+            # Let's figure out which of the two cases (+/-) this
+            # root is a solution to. We're then going to polish
+            # the root by minimizing the function
+            #
+            #     f = y1 - y2
+            #
+            A = np.sqrt(1 - roots[n] ** 2)
+            B = np.sqrt(ro ** 2 - (roots[n] - xo) ** 2)
+            absfp = np.abs(b * A - yo + B)
+            absfm = np.abs(b * A - yo - B)
+            if np.argmin([absfp, absfm]) == 0:
+                s = 1
+                absf = absfp
+            else:
+                s = -1
+                absf = absfm
+
+            # Some roots may instead correspond to
+            #
+            #     y = -b * sqrt(1 - x^2)
+            #
+            # which is the wrong half of the terminator ellipse.
+            # Let's only move forward if |f| is decently small.
+            if absf < htol:
+
+                # Apply Newton's method to polish the root
+                minf = np.inf
+                for k in range(maxiter):
+                    A = np.sqrt(1 - roots[n] ** 2)
+                    B = np.sqrt(ro ** 2 - (roots[n] - xo) ** 2)
+                    f = b * A + s * B - yo
+                    absf = np.abs(f)
+                    if absf < minf:
+                        minf = absf
+                        minx = roots[n]
+                        if minf <= ttol:
+                            break
+                    df = -(b / A + s * (roots[n] - xo) / B)
+                    roots[n] -= f / df
+
+                # Only keep the root if the solver actually converged
+                if minf < mtol:
+
+                    # Only keep the root if it's real
+                    if np.abs(minx.imag) < ttol and np.abs(minx.real) <= 1:
+
+                        # Discard the (tiny) imaginary part
+                        minx = minx.real
+
+                        # Check that we haven't included this root already
+                        good = True
+                        for xk in x:
+                            if np.abs(xk - minx) < ttol:
+                                good = False
+                                break
+                        if good:
+                            x += [minx]
+
+        x = np.array(x)
+
+        """
+        ### OLD METHOD
+
+        # Keep only real roots
         x = np.array([xi.real for xi in x if np.abs(xi.imag) < tol])
+
+        # Keep roots that satisfy `sgn(y(x)) = sgn(b)`.
         x = np.array(
             [
                 xi
@@ -143,38 +224,39 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
                 xnew += [x[i]]
         x = np.array(xnew)
 
-    # Check that the number of roots is correct
-    x_l = costheta
-    y_l = sintheta
-    l1 = x_l ** 2 + (y_l - bo) ** 2 < ro ** 2
-    l2 = x_l ** 2 + (-y_l - bo) ** 2 < ro ** 2
-    if (l1 and not l2) or (l2 and not l1):
-        if len(x) == 1:
-            # All good
-            pass
-        else:
-            # There should be one root!
-            if len(x) == 0:
-                raise RuntimeError(
-                    "Unable to find the root. Try decreasing the tolerance."
-                )
-            elif len(x) == 2:
-                # We likely have a rogue root that was included
-                # because of the tolerance.
-                # Pick the one with the smallest error
-                x = np.array(
-                    [
-                        x[
-                            np.argmin(
-                                np.abs(
-                                    (x - xo) ** 2
-                                    + (b * np.sqrt(1 - x ** 2) - yo) ** 2
-                                    - ro ** 2
+        # Check that the number of roots is correct
+        x_l = costheta
+        y_l = sintheta
+        l1 = x_l ** 2 + (y_l - bo) ** 2 < ro ** 2
+        l2 = x_l ** 2 + (-y_l - bo) ** 2 < ro ** 2
+        if (l1 and not l2) or (l2 and not l1):
+            if len(x) == 1:
+                # All good
+                pass
+            else:
+                # There should be one root!
+                if len(x) == 0:
+                    raise RuntimeError(
+                        "Unable to find the root. Try decreasing the tolerance."
+                    )
+                elif len(x) == 2:
+                    # We likely have a rogue root that was included
+                    # because of the tolerance.
+                    # Pick the one with the smallest error
+                    x = np.array(
+                        [
+                            x[
+                                np.argmin(
+                                    np.abs(
+                                        (x - xo) ** 2
+                                        + (b * np.sqrt(1 - x ** 2) - yo) ** 2
+                                        - ro ** 2
+                                    )
                                 )
-                            )
+                            ]
                         ]
-                    ]
-                )
+                    )
+        """
 
     # P-Q
     if len(x) == 0:
