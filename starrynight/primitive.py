@@ -1,4 +1,4 @@
-from .special import hyp2f1, E, F, J
+from .special import hyp2f1, dE, dF, J
 from .utils import pairdiff
 from .vieta import Vieta
 from .linear import pal
@@ -255,11 +255,11 @@ def compute_P(ydeg, bo, ro, kappa):
     c1 = np.cos(x)
     q2 = 1 - np.minimum(1.0, s2 / k2)
     q3 = q2 ** 1.5
-    dE = pairdiff(E(x, km2))
-    dF = pairdiff(F(x, km2))
+    dE_val = dE(x, km2)
+    dF_val = dF(x, km2)
     U = compute_U(2 * ydeg + 5, s1)
     I = compute_I(ydeg + 3, kappa, s1, c1)
-    J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE, dF,)
+    J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
     W = compute_W(ydeg, s2, q2, q3)
 
     P = np.zeros((ydeg + 1) ** 2)
