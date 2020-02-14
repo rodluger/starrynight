@@ -19,6 +19,8 @@ def test_P(b, theta, bo, ro):
     N.precompute(b, theta, bo, ro)
     S.precompute(b, theta, bo, ro)
     compare(N.P, S.P)
+    del N.P
+    del S.P
 
 
 @pytest.mark.parametrize(
@@ -28,6 +30,8 @@ def test_T(b, theta, bo, ro):
     N.precompute(b, theta, bo, ro)
     S.precompute(b, theta, bo, ro)
     compare(N.T, S.T)
+    del N.T
+    del S.T
 
 
 @pytest.mark.parametrize(
@@ -37,3 +41,5 @@ def test_Q(b, theta, bo, ro):
     N.precompute(b, theta, bo, ro)
     S.precompute(b, theta, bo, ro)
     compare(N.Q, S.Q)
+    del N.Q
+    del S.Q

@@ -176,7 +176,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
                         minx = roots[n]
                         if minf <= STARRY_ROOT_TOL_HIGH:
                             break
-                    df = -(b / A + s * (roots[n] - xo) / B)
+                    df = -(b * roots[n] / A + s * (roots[n] - xo) / B)
                     roots[n] -= f / df
 
                 # Only keep the root if the solver actually converged

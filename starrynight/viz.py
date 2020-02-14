@@ -8,8 +8,9 @@ from matplotlib.patches import Arc
 def visualize(b, theta, bo, ro, res=4999):
 
     # Find angles of intersection
-    kappa, lam, xi, _ = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
+    kappa, lam, xi, code = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
     phi = kappa - np.pi / 2
+    print(code)
 
     # Equation of half-ellipse
     x = np.linspace(-1, 1, 1000)

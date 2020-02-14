@@ -3,20 +3,15 @@ from scipy.integrate import quad
 from .special import carlson_rf, carlson_rd, carlson_rj
 
 
+STARRY_PAL_BO_EQUALS_RO_TOL = 1e-6
+
+
 def pal_indef(bo, ro, phi):
     """
     This is adapted from the `mttr_integral_primitive` function 
     in the MTTR code of Pal (2012).
 
     """
-
-    # TODO: Solve this case separately
-    if np.abs(bo - ro) < 1e-8:
-        s = np.sign(bo - ro)
-        if s == 0:
-            s = 1
-        bo = ro + s * 1e-8
-
     # TODO: Solve this case separately
     if np.abs(bo - (ro - 1)) < 1e-8:
         s = np.sign(bo - (ro - 1))
@@ -46,18 +41,22 @@ def pal_indef(bo, ro, phi):
         d2 = 1.0 - 1e-8
 
     w = (1 - q2) / (1 - d2)
+    beta = np.arctan2((bo - ro) * sx, (bo + ro) * cx)
 
     # Elliptic integrals
     # TODO: Compute in terms of E, F, and Pi?
     rf = carlson_rf(w, sx * sx, 1.0)
     rd = carlson_rd(w, sx * sx, 1.0)
-    if ro != bo:
+    if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
         rj = carlson_rj(w, sx * sx, 1.0, q2 / d2)
     else:
+        # TODO: Expand the integral in this limit?
         rj = 0.0
+        if bo < ro:
+            # Luger added this; investigate why this is needed
+            beta = -beta
 
     # Equation (34) in Pal (2012)
-    beta = np.arctan2((bo - ro) * sx, (bo + ro) * cx)
     w = cx / np.sqrt(1 - d2)
     iret = (
         -beta / 3.0
@@ -67,7 +66,7 @@ def pal_indef(bo, ro, phi):
         + 2.0 / 9.0 * ro * bo * (4 - 7 * ro * ro - bo * bo + 5 * ro * bo) * w * rf
         - 4.0 / 27.0 * ro * bo * (4 - 7 * ro * ro - bo * bo) * w * cx * cx * rd
     )
-    if ro != bo:
+    if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
         iret += 1.0 / 3.0 * w * (ro + bo) / (ro - bo) * (rf - (q2 - d2) / (3 * d2) * rj)
     else:
         iret -= 1.0 / 3.0 * w * (ro + bo) * (q2 - d2) * np.pi / (2 * q2 * np.sqrt(q2))

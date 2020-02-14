@@ -17,17 +17,7 @@ from scipy.interpolate import interp1d
 # ro = 0.3
 # bo = [0.9225 .. 0.9235]
 
-
-# The following case oscillates between two baselines
-# for the flux in this region of `bo`. Investigate.
-#
-# b = 0.25
-# theta = -np.pi / 3
-# ro = 0.3
-# bo = [0.75 .. 0.875]
-
-
-# The following cases are unstable at `bo = ro`. Investigate
+# The P2 term is unstable near `bo = ro`. [SOLVED]
 #
 # b = 0.25
 # theta = -np.pi / 3
@@ -40,14 +30,6 @@ from scipy.interpolate import interp1d
 # theta = 4 * np.pi / 3
 # ro = 0.3
 # bo = [0.299, 0.3, 0.301]
-
-# The following case oscillates between two baselines
-# for the flux in this region of `bo`. Investigate.
-#
-# b = -0.25
-# theta = 4 * np.pi / 3
-# ro = 0.3
-# bo = [0.75 .. 0.875]
 
 
 @pytest.mark.parametrize(
