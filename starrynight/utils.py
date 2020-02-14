@@ -14,6 +14,35 @@ FLUX_TRIP_NIGHT_OCC = 9
 FLUX_QUAD_DAY_VIS = 10
 FLUX_QUAD_NIGHT_VIS = 11
 
+# Maximum number of iterations when computing `el2`
+STARRY_EL2_MAX_ITER = 100
+
+# Maximum number of iterations when computing 2F1
+STARRY_2F1_MAXITER = 200
+
+# Square root of the desired precision in `el2`
+STARRY_EL2_CA = 1e-8
+
+# Replace `inf` with this value in argument to `el2`
+STARRY_HUGE_TAN = 1e15
+
+# If |sin(theta)| or |cos(theta)| is less than this, set = 0
+STARRY_T_TOL = 1e-12
+
+# Low, medium, and high tolerance for root polishing
+STARRY_ROOT_TOL_LOW = 1e-2
+STARRY_ROOT_TOL_MED = 1e-10
+STARRY_ROOT_TOL_HIGH = 1e-15
+
+# Maximum number of root polishing iterations
+STARRY_ROOT_MAX_ITER = 50
+
+# If |b| is less than this value, set = 0
+STARRY_B_ZERO_TOL = 1e-8
+
+# Tolerance for various functions that calculate phi, xi, and lam
+STARRY_ANGLE_TOL = 1e-13
+
 
 def pairdiff(x):
     return sum(-np.array(x)[::2] + np.array(x)[1::2])

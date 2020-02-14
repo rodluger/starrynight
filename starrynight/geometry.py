@@ -13,15 +13,15 @@ def on_dayside(b, theta, costheta, sintheta, x, y):
     return yr >= yt
 
 
-def sort_phi(b, theta, costheta, sintheta, bo, ro, phi, tol=1e-7):
+def sort_phi(b, theta, costheta, sintheta, bo, ro, phi):
     # Sort a pair of `phi` angles according to the order
     # of the integration limits.
     phi1, phi2 = phi
     phi = np.array([phi1, phi2]) % (2 * np.pi)
     if phi[1] < phi[0]:
         phi[1] += 2 * np.pi
-    x = ro * np.cos(phi[0] + tol)
-    y = bo + ro * np.sin(phi[0] + tol)
+    x = ro * np.cos(phi[0] + STARRY_ANGLE_TOL)
+    y = bo + ro * np.sin(phi[0] + STARRY_ANGLE_TOL)
     if (x ** 2 + y ** 2 > 1) or not on_dayside(b, theta, costheta, sintheta, x, y):
         phi = np.array([phi2, phi1]) % (2 * np.pi)
     if phi[1] < phi[0]:
@@ -29,15 +29,19 @@ def sort_phi(b, theta, costheta, sintheta, bo, ro, phi, tol=1e-7):
     return phi
 
 
-def sort_xi(b, theta, costheta, sintheta, bo, ro, xi, tol=1e-7):
+def sort_xi(b, theta, costheta, sintheta, bo, ro, xi):
     # Sort a pair of `xi` angles according to the order
     # of the integration limits.
     xi1, xi2 = xi
     xi = np.array([xi1, xi2]) % (2 * np.pi)
     if xi[0] < xi[1]:
         xi[0] += 2 * np.pi
-    x = costheta * np.cos(xi[1] + tol) - b * sintheta * np.sin(xi[1] + tol)
-    y = sintheta * np.cos(xi[1] + tol) + b * costheta * np.sin(xi[1] + tol)
+    x = costheta * np.cos(xi[1] + STARRY_ANGLE_TOL) - b * sintheta * np.sin(
+        xi[1] + STARRY_ANGLE_TOL
+    )
+    y = sintheta * np.cos(xi[1] + STARRY_ANGLE_TOL) + b * costheta * np.sin(
+        xi[1] + STARRY_ANGLE_TOL
+    )
     if x ** 2 + (y - bo) ** 2 > ro ** 2:
         xi = np.array([xi2, xi1]) % (2 * np.pi)
     if xi[0] < xi[1]:
@@ -45,15 +49,15 @@ def sort_xi(b, theta, costheta, sintheta, bo, ro, xi, tol=1e-7):
     return xi
 
 
-def sort_lam(b, theta, costheta, sintheta, bo, ro, lam, tol=1e-7):
+def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
     # Sort a pair of `lam` angles according to the order
     # of the integration limits.
     lam1, lam2 = lam
     lam = np.array([lam1, lam2]) % (2 * np.pi)
     if lam[1] < lam[0]:
         lam[1] += 2 * np.pi
-    x = np.cos(lam[0] + tol)
-    y = np.sin(lam[0] + tol)
+    x = np.cos(lam[0] + STARRY_ANGLE_TOL)
+    y = np.sin(lam[0] + STARRY_ANGLE_TOL)
     if x ** 2 + (y - bo) ** 2 > ro ** 2:
         lam = np.array([lam2, lam1]) % (2 * np.pi)
     if lam[1] < lam[0]:
@@ -61,7 +65,7 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam, tol=1e-7):
     return lam
 
 
-def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
+def get_angles(b, theta, costheta, sintheta, bo, ro):
 
     # Trivial cases
     if bo <= ro - 1:
@@ -91,7 +95,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
     yo = bo * costheta
 
     # Special case: b = 0
-    if np.abs(b) < tol:
+    if np.abs(b) < STARRY_B_ZERO_TOL:
 
         x = np.array([])
         term = np.sqrt(ro ** 2 - yo ** 2)
@@ -124,10 +128,6 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
 
         # Polish the roots using Newton's method on the *original*
         # function, which is more stable than the quartic expression.
-        htol = 1e-2
-        mtol = 1e-10
-        ttol = 1e-15
-        maxiter = 50
         x = []
         for n in range(len(roots)):
 
@@ -162,11 +162,11 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
             #
             # which is the wrong half of the terminator ellipse.
             # Let's only move forward if |f| is decently small.
-            if absf < htol:
+            if absf < STARRY_ROOT_TOL_LOW:
 
                 # Apply Newton's method to polish the root
                 minf = np.inf
-                for k in range(maxiter):
+                for k in range(STARRY_ROOT_MAX_ITER):
                     A = np.sqrt(1 - roots[n] ** 2)
                     B = np.sqrt(ro ** 2 - (roots[n] - xo) ** 2)
                     f = b * A + s * B - yo
@@ -174,16 +174,19 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
                     if absf < minf:
                         minf = absf
                         minx = roots[n]
-                        if minf <= ttol:
+                        if minf <= STARRY_ROOT_TOL_HIGH:
                             break
                     df = -(b / A + s * (roots[n] - xo) / B)
                     roots[n] -= f / df
 
                 # Only keep the root if the solver actually converged
-                if minf < mtol:
+                if minf < STARRY_ROOT_TOL_MED:
 
                     # Only keep the root if it's real
-                    if np.abs(minx.imag) < ttol and np.abs(minx.real) <= 1:
+                    if (
+                        np.abs(minx.imag) < STARRY_ROOT_TOL_HIGH
+                        and np.abs(minx.real) <= 1
+                    ):
 
                         # Discard the (tiny) imaginary part
                         minx = minx.real
@@ -191,7 +194,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
                         # Check that we haven't included this root already
                         good = True
                         for xk in x:
-                            if np.abs(xk - minx) < ttol:
+                            if np.abs(xk - minx) < STARRY_ROOT_TOL_HIGH:
                                 good = False
                                 break
                         if good:
@@ -199,83 +202,47 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
 
         x = np.array(x)
 
-        """
-        ### OLD METHOD
+        # Check if the extrema of the terminator ellipse are occulted
+        e1 = costheta ** 2 + (sintheta - bo) ** 2 < ro ** 2
+        e2 = costheta ** 2 + (sintheta + bo) ** 2 < ro ** 2
 
-        # Keep only real roots
-        x = np.array([xi.real for xi in x if np.abs(xi.imag) < tol])
+        if (e1 and e2) or (not e1 and not e2):
 
-        # Keep roots that satisfy `sgn(y(x)) = sgn(b)`.
-        x = np.array(
-            [
-                xi
-                for xi in x
-                if np.abs(
-                    (xi - xo) ** 2 + (b * np.sqrt(1 - xi ** 2) - yo) ** 2 - ro ** 2
-                )
-                < tol
-            ]
-        )
+            # Both occulted or neither occulted
+            pass
 
-        # Get rid of any multiplicity
-        xnew = []
-        for i, _ in enumerate(x):
-            if np.all(np.abs(x[i] - x[:i]) > tol):
-                xnew += [x[i]]
-        x = np.array(xnew)
+        else:
 
-        # Check that the number of roots is correct
-        x_l = costheta
-        y_l = sintheta
-        l1 = x_l ** 2 + (y_l - bo) ** 2 < ro ** 2
-        l2 = x_l ** 2 + (-y_l - bo) ** 2 < ro ** 2
-        if (l1 and not l2) or (l2 and not l1):
-            if len(x) == 1:
-                # All good
-                pass
-            else:
-                # There should be one root!
-                if len(x) == 0:
-                    raise RuntimeError(
-                        "Unable to find the root. Try decreasing the tolerance."
-                    )
-                elif len(x) == 2:
-                    # We likely have a rogue root that was included
-                    # because of the tolerance.
-                    # Pick the one with the smallest error
-                    x = np.array(
-                        [
-                            x[
-                                np.argmin(
-                                    np.abs(
-                                        (x - xo) ** 2
-                                        + (b * np.sqrt(1 - x ** 2) - yo) ** 2
-                                        - ro ** 2
-                                    )
-                                )
-                            ]
-                        ]
-                    )
-        """
+            # One is occulted, the other is not.
+            # Usually we should have a single root, but
+            # pathological cases with 3 roots (and maybe 4?)
+            # are also possible.
+            if (len(x) == 0) or (len(x) == 2):
+                # TODO
+                print("ERROR: Solver did not find the correct number of roots.")
+                breakpoint()
 
     # P-Q
     if len(x) == 0:
 
         # Trivial: use the standard starry algorithm
+        phi = np.array([])
+        lam = np.array([])
+        xi = np.array([])
 
         if np.abs(1 - ro) <= bo <= 1 + ro:
 
             # The occultor intersects the limb at this point
-            lam = np.arcsin((1 - ro ** 2 + bo ** 2) / (2 * bo))
-            x = (1 - tol) * np.cos(lam)
-            y = (1 - tol) * np.sin(lam)
+            q = (1 - ro ** 2 + bo ** 2) / (2 * bo)
+            x = (1 - STARRY_ANGLE_TOL) * np.sqrt(1 - q ** 2)
+            y = (1 - STARRY_ANGLE_TOL) * q
 
             if on_dayside(b, theta, costheta, sintheta, x, y):
 
                 # This point is guaranteed to be on the night side
                 # We're going to check if it's under the occultor or not
-                x = (1 - tol) * np.cos(theta + 3 * np.pi / 2)
-                y = (1 - tol) * np.sin(theta + 3 * np.pi / 2)
+                x = (1 - STARRY_ANGLE_TOL) * np.cos(theta + 3 * np.pi / 2)
+                y = (1 - STARRY_ANGLE_TOL) * np.sin(theta + 3 * np.pi / 2)
 
                 if x ** 2 + (y - bo) ** 2 <= ro ** 2:
 
@@ -292,8 +259,8 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
 
                 # This point is guaranteed to be on the day side
                 # We're going to check if it's under the occultor or not
-                x = (1 - tol) * np.cos(theta + np.pi / 2)
-                y = (1 - tol) * np.sin(theta + np.pi / 2)
+                x = (1 - STARRY_ANGLE_TOL) * np.cos(theta + np.pi / 2)
+                y = (1 - STARRY_ANGLE_TOL) * np.sin(theta + np.pi / 2)
 
                 if x ** 2 + (y - bo) ** 2 <= ro ** 2:
 
@@ -318,21 +285,14 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
                 # The occultor is only blocking the night side
                 code = FLUX_SIMPLE_REFL
 
-        return (
-            np.array([]),
-            np.array([]),
-            np.array([]),
-            code,
-        )
-
     # P-Q-T
-    if len(x) == 1:
+    elif len(x) == 1:
 
         # PHI
         # ---
 
-        # Angle of intersection with occultor
-        phi_o = np.arcsin((1 - ro ** 2 - bo ** 2) / (2 * bo * ro))
+        # Angle of intersection with limb
+        phi_l = np.arcsin((1 - ro ** 2 - bo ** 2) / (2 * bo * ro))
         # There are always two points; always pick the one
         # that's on the dayside for definiteness
         if not on_dayside(
@@ -340,18 +300,16 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
             theta,
             costheta,
             sintheta,
-            (1 - tol) * ro * np.cos(phi_o),
-            (1 - tol) * (bo + ro * np.sin(phi_o)),
+            (1 - STARRY_ANGLE_TOL) * ro * np.cos(phi_l),
+            (1 - STARRY_ANGLE_TOL) * (bo + ro * np.sin(phi_l)),
         ):
-            phi_o = np.pi - phi_o
+            phi_l = np.pi - phi_l
 
         # Angle of intersection with the terminator
         phi_t = theta + np.arctan2(b * np.sqrt(1 - x[0] ** 2) - yo, x[0] - xo)
 
         # Now ensure phi *only* spans the dayside.
-        phi = sort_phi(
-            b, theta, costheta, sintheta, bo, ro, np.array([phi_o, phi_t]), tol=tol
-        )
+        phi = sort_phi(b, theta, costheta, sintheta, bo, ro, np.array([phi_l, phi_t]),)
 
         # LAMBDA
         # ------
@@ -365,8 +323,8 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
             theta,
             costheta,
             sintheta,
-            (1 - tol) * np.cos(lam_o),
-            (1 - tol) * np.sin(lam_o),
+            (1 - STARRY_ANGLE_TOL) * np.cos(lam_o),
+            (1 - STARRY_ANGLE_TOL) * np.sin(lam_o),
         ):
             lam_o = np.pi - lam_o
 
@@ -378,9 +336,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
             lam_t = np.pi + theta
 
         # Now ensure lam *only* spans the inside of the occultor.
-        lam = sort_lam(
-            b, theta, costheta, sintheta, bo, ro, np.array([lam_o, lam_t]), tol=tol
-        )
+        lam = sort_lam(b, theta, costheta, sintheta, bo, ro, np.array([lam_o, lam_t]),)
 
         # XI
         # --
@@ -395,9 +351,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
             xi_l = np.pi
 
         # Now ensure xi *only* spans the inside of the occultor.
-        xi = sort_xi(
-            b, theta, costheta, sintheta, bo, ro, np.array([xi_l, xi_o]), tol=tol
-        )
+        xi = sort_xi(b, theta, costheta, sintheta, bo, ro, np.array([xi_l, xi_o]),)
 
         # In all cases, we're computing the dayside occulted flux
         code = FLUX_DAY_OCC
@@ -416,8 +370,8 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
         if bo <= 1 - ro:
 
             # No intersections with the limb (easy)
-            phi = sort_phi(b, theta, costheta, sintheta, bo, ro, phi, tol=tol)
-            xi = sort_xi(b, costheta, sintheta, theta, bo, ro, xi, tol=tol)
+            phi = sort_phi(b, theta, costheta, sintheta, bo, ro, phi,)
+            xi = sort_xi(b, costheta, sintheta, theta, bo, ro, xi,)
             code = FLUX_DAY_OCC
 
         else:
@@ -591,8 +545,10 @@ def get_angles(b, theta, costheta, sintheta, bo, ro, tol=1e-7):
 
         raise NotImplementedError("Unexpected branch.")
 
-    # DEBUG
+    # Check
     if np.isnan(np.sum(phi)):
+        # TODO
+        print("ERROR: At least one angle is NaN.")
         breakpoint()
 
     # Note that in starry, we use kappa = phi + pi / 2

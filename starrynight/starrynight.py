@@ -14,10 +14,9 @@ __all__ = ["StarryNight"]
 
 
 class StarryNight(object):
-    def __init__(self, ydeg, tol=1e-7):
+    def __init__(self, ydeg):
         # Load kwargs
         self.ydeg = ydeg
-        self.tol = tol
 
         # Instantiate the ops
         self.ops = Ops(self.ydeg + 1, 0, 0, 0)
@@ -127,13 +126,7 @@ class StarryNight(object):
 
         # Get integration code & limits
         self.kappa, self.lam, self.xi, self.code = get_angles(
-            self.b,
-            self.theta,
-            self.costheta,
-            self.sintheta,
-            self.bo,
-            self.ro,
-            tol=self.tol,
+            self.b, self.theta, self.costheta, self.sintheta, self.bo, self.ro,
         )
 
         # Illumination matrix

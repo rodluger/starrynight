@@ -1,15 +1,9 @@
-from .utils import pairdiff
+from .utils import *
 from mpmath import elliprf, elliprd, elliprj
 from mpmath import ellipf, ellipe, ellipk
 from scipy.special import hyp2f1 as scipy_hyp2f1
 from scipy.integrate import quad
 import numpy as np
-
-
-HUGE = 1e15
-EL2MAXITER = 100
-H2F1MAXITER = 200
-EL2CA = np.sqrt(1e-16)
 
 
 def carlson_rf(x, y, z):
@@ -42,14 +36,14 @@ def hyp2f1(a, b, c, z):
     term = a * b * z / c
     value = 1.0 + term
     n = 1
-    while (np.abs(term) > TOLERANCE) and (n < H2F1MAXITER):
+    while (np.abs(term) > TOLERANCE) and (n < STARRY_2F1_MAXITER):
         a += 1
         b += 1
         c += 1
         n += 1
         term *= a * b * z / c / n
         value += term
-    if n == H2F1MAXITER:
+    if n == STARRY_2F1_MAXITER:
         raise ValueError("Series for 2F1 did not converge.")
     return value
 
@@ -79,7 +73,7 @@ def el2(x, kc, a, b):
     m = 1
     kc = np.abs(kc)
 
-    for n in range(EL2MAXITER):
+    for n in range(STARRY_EL2_MAX_ITER):
 
         b = i * kc + b
         e = m * kc
@@ -96,7 +90,7 @@ def el2(x, kc, a, b):
 
         y[y == 0] = np.sqrt(e) * c[y == 0] * b
 
-        if np.abs(g - kc) > EL2CA * g:
+        if np.abs(g - kc) > STARRY_EL2_CA * g:
 
             kc = np.sqrt(e) * 2
             l = l * 2
@@ -106,10 +100,10 @@ def el2(x, kc, a, b):
 
             break
 
-    if n == EL2MAXITER - 1:
+    if n == STARRY_EL2_MAX_ITER - 1:
         raise ValueError(
             "Elliptic integral failed to converge after {} iterations.".format(
-                EL2MAXITER
+                STARRY_EL2_MAX_ITER
             )
         )
 
@@ -146,8 +140,8 @@ def dF(phi, k2):
         kc = np.sqrt(kc2)
         arg = k * np.sin(phi)
         tanphi = arg / np.sqrt(1 - arg ** 2)
-        tanphi[arg >= 1] = HUGE
-        tanphi[arg <= -1] = -HUGE
+        tanphi[arg >= 1] = STARRY_HUGE_TAN
+        tanphi[arg <= -1] = -STARRY_HUGE_TAN
 
         # Compute the elliptic integrals
         res = el2(tanphi, kc, 1, 1) / k
@@ -208,8 +202,8 @@ def dE(phi, k2):
         kcinv = np.sqrt(kcinv2)
         arg = k * np.sin(phi)
         tanphi = arg / np.sqrt(1 - arg ** 2)
-        tanphi[arg >= 1] = HUGE
-        tanphi[arg <= -1] = -HUGE
+        tanphi[arg >= 1] = STARRY_HUGE_TAN
+        tanphi[arg <= -1] = -STARRY_HUGE_TAN
 
         # Compute the elliptic integrals
         res = k * (el2(tanphi, kcinv, 1, kcinv2) - kcinv2 * el2(tanphi, kcinv, 1, 1))

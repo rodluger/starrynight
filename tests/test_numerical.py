@@ -6,8 +6,8 @@ import pytest
 
 ydeg = 1
 y = [1, 1, 1, 1]
-N = Numerical(ydeg, tol=1e-7)
-B = Brute(ydeg, tol=1e-7, res=4999)
+N = Numerical(ydeg)
+B = Brute(ydeg, res=4999)
 
 
 def run(b, theta, bo, ro):

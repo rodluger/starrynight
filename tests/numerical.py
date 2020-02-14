@@ -67,13 +67,7 @@ class Numerical(StarryNight):
 
         # Get integration code & limits
         self.kappa, self.lam, self.xi, self.code = get_angles(
-            self.b,
-            self.theta,
-            self.costheta,
-            self.sintheta,
-            self.bo,
-            self.ro,
-            tol=self.tol,
+            self.b, self.theta, self.costheta, self.sintheta, self.bo, self.ro
         )
         self.phi = self.kappa - np.pi / 2
 

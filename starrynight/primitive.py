@@ -1,5 +1,5 @@
 from .special import hyp2f1, dE, dF, J
-from .utils import pairdiff
+from .utils import *
 from .vieta import Vieta
 from .linear import pal
 import numpy as np
@@ -400,7 +400,7 @@ def compute_Q(ydeg, lam):
     return Q
 
 
-def compute_T(ydeg, b, theta, xi, tol=1e-12):
+def compute_T(ydeg, b, theta, xi):
 
     # Pre-compute H
     H = compute_H(ydeg + 2, xi)
@@ -421,7 +421,7 @@ def compute_T(ydeg, b, theta, xi, tol=1e-12):
     T[2] = pairdiff([np.sign(b) * _compute_T2_indef(np.abs(b), x) for x in xi])
 
     # Special limit: sin(theta) = 0
-    if np.abs(st) < tol:
+    if np.abs(st) < STARRY_T_TOL:
 
         sgnct = np.sign(ct)
         n = 0
@@ -446,7 +446,7 @@ def compute_T(ydeg, b, theta, xi, tol=1e-12):
         return T
 
     # Special limit: cos(theta) = 0
-    elif np.abs(ct) < tol:
+    elif np.abs(ct) < STARRY_T_TOL:
 
         sgnst = np.sign(st)
         n = 0
