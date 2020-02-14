@@ -206,21 +206,24 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         e1 = costheta ** 2 + (sintheta - bo) ** 2 < ro ** 2
         e2 = costheta ** 2 + (sintheta + bo) ** 2 < ro ** 2
 
-        if (e1 and e2) or (not e1 and not e2):
-
-            # Both occulted or neither occulted
-            pass
-
-        else:
-
-            # One is occulted, the other is not.
-            # Usually we should have a single root, but
-            # pathological cases with 3 roots (and maybe 4?)
-            # are also possible.
+        # One is occulted, the other is not.
+        # Usually we should have a single root, but
+        # pathological cases with 3 roots (and maybe 4?)
+        # are also possible.
+        if (e1 and not e1) or (e2 and not e1):
             if (len(x) == 0) or (len(x) == 2):
-                # TODO
+                # TODO: Fix this case if it ever shows up
                 print("ERROR: Solver did not find the correct number of roots.")
                 breakpoint()
+
+        # There is one root but none of the extrema are occulted.
+        # This likely corresponds to a grazing occultation of the
+        # dayside or nightside.
+        if len(x) == 1:
+            if not e1 and not e2:
+                # TODO: Check this more rigorously. For now
+                # we just delete the root.
+                x = np.array([])
 
     # P-Q
     if len(x) == 0:
@@ -547,7 +550,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
     # Check
     if np.isnan(np.sum(phi)):
-        # TODO
+        # TODO: Fix this case if it ever shows up
         print("ERROR: At least one angle is NaN.")
         breakpoint()
 

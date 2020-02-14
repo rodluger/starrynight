@@ -12,11 +12,24 @@ def pal_indef(bo, ro, phi):
 
     # TODO: Solve this case separately
     if np.abs(bo - ro) < 1e-8:
-        bo = ro + np.sign(bo - ro) * 1e-8
+        s = np.sign(bo - ro)
+        if s == 0:
+            s = 1
+        bo = ro + s * 1e-8
 
     # TODO: Solve this case separately
     if np.abs(bo - (ro - 1)) < 1e-8:
-        bo = ro - 1 + np.sign(bo - (ro - 1)) * 1e-8
+        s = np.sign(bo - (ro - 1))
+        if s == 0:
+            s = 1
+        bo = ro - 1 + s * 1e-8
+
+    # TODO: Solve this case separately
+    if np.abs(bo - (1 - ro)) < 1e-8:
+        s = np.sign(bo - (1 - ro))
+        if s == 0:
+            s = 1
+        bo = 1 - ro + s * 1e-8
 
     q2 = ro * ro + bo * bo + 2 * ro * bo * np.cos(phi)
     d2 = ro * ro + bo * bo - 2 * ro * bo
