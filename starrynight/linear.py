@@ -35,11 +35,6 @@ def pal_indef(bo, ro, phi):
         # TODO: solve the case q2 = 1 separately
         q2 = 1.0 - 1e-8
 
-    if d2 >= 1.0:
-        # TODO: solve the case d2 = 1 separately
-        # (It corresponds to the case bo = ro - 1 above)
-        d2 = 1.0 - 1e-8
-
     w = (1 - q2) / (1 - d2)
     beta = np.arctan2((bo - ro) * sx, (bo + ro) * cx)
 
@@ -57,19 +52,21 @@ def pal_indef(bo, ro, phi):
             beta = -beta
 
     # Equation (34) in Pal (2012)
-    w = cx / np.sqrt(1 - d2)
+    wp = cx / np.sqrt(1 - d2)
     iret = (
         -beta / 3.0
         + phi / 6.0
         + 2.0 / 9.0 * bo * ro * np.sin(phi) * np.sqrt(1 - q2)
-        + 1.0 / 3.0 * (1 + 2 * ro * ro * ro * ro - 4 * ro * ro) * w * rf
-        + 2.0 / 9.0 * ro * bo * (4 - 7 * ro * ro - bo * bo + 5 * ro * bo) * w * rf
-        - 4.0 / 27.0 * ro * bo * (4 - 7 * ro * ro - bo * bo) * w * cx * cx * rd
+        + 1.0 / 3.0 * (1 + 2 * ro * ro * ro * ro - 4 * ro * ro) * wp * rf
+        + 2.0 / 9.0 * ro * bo * (4 - 7 * ro * ro - bo * bo + 5 * ro * bo) * wp * rf
+        - 4.0 / 27.0 * ro * bo * (4 - 7 * ro * ro - bo * bo) * wp * cx * cx * rd
     )
     if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
-        iret += 1.0 / 3.0 * w * (ro + bo) / (ro - bo) * (rf - (q2 - d2) / (3 * d2) * rj)
+        iret += (
+            1.0 / 3.0 * wp * (ro + bo) / (ro - bo) * (rf - (q2 - d2) / (3 * d2) * rj)
+        )
     else:
-        iret -= 1.0 / 3.0 * w * (ro + bo) * (q2 - d2) * np.pi / (2 * q2 * np.sqrt(q2))
+        iret -= 1.0 / 3.0 * wp * (ro + bo) * (q2 - d2) * np.pi / (2 * q2 * np.sqrt(q2))
 
     return iret
 

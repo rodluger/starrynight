@@ -7,13 +7,12 @@ seed = 0
 nruns = 100
 res = 999
 atol = 1e-2
-tol = 1e-7
 res = 4999
 ydeg = 1
 y = [1, 1, 1, 1]
 
-N = Numerical(ydeg, tol=tol)
-B = Brute(ydeg, tol=tol, res=res)
+N = Numerical(ydeg)
+B = Brute(ydeg, res=res)
 
 
 def get_args():

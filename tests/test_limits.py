@@ -8,6 +8,9 @@ TODO: root finding
     - bo = 0 and theta = 90 (only one root)
     - bo <~ 0.1 and theta = 90 (root finding fails I think)
 
+    - bo = 1 - ro
+    - bo = 1 + ro
+
 """
 
 from numerical import Numerical
@@ -65,13 +68,43 @@ def test_Q_high_l(tol=1e-15):
     assert np.all(np.abs(S.Q - N.Q) < tol)
 
 
+"""
+def test_grazing():
+
+    b = 0.15
+    theta = 1.57
+    bo = 0.25
+    ro = 0.75
+
+    # Perturb the impact parameter about the given point
+    dbo = np.logspace(-15, -1, 300)
+    bo = np.abs(np.concatenate([[(1 - ro)], (1 - ro) + dbo]))
+
+    # Compare
+    S = StarryNight(1)
+    P0 = np.zeros_like(bo)
+    for i in range(len(bo)):
+        S.precompute(b, theta, bo[i], ro)
+        if hasattr(S, "P"):
+            P0[i] = S.P[2]
+            del S.P
+
+    # DEBUG
+    plt.plot(bo - (1 - ro), P0)
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.show()
+    assert False
+"""
+
+
 @pytest.mark.parametrize(
     "b,theta,bo,ro,tol,sign",
     [
         [0.15, 0, 0, 0.4, 1e-10, "both"],  # bo ~ 0
-        [0.15, 0, 0.25, 0.25, 2e-8, "both"],  # bo ~ ro
+        [0.15, 0, 0.25, 0.25, 2e-6, "both"],  # bo ~ ro
         [0.15, 1.57, 0.25, 1.25, 1e-8, "pos"],  # bo ~ ro - 1
-        [0.15, 1.57, 0.25, 0.75, 2e-8, "both"],  # bo ~ 1 - ro
+        [0.15, 1.57, 0.25, 0.75, 1e-7, "both"],  # bo ~ 1 - ro
     ],
 )
 def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
@@ -100,6 +133,7 @@ def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
     S = StarryNight(1)
     N = Numerical(1)
     err = np.zeros_like(bo)
+    tmp = np.zeros_like(bo)
     for i in range(len(bo)):
         N.precompute(b, theta, bo[i], ro)
         S.precompute(b, theta, bo[i], ro)
@@ -108,9 +142,12 @@ def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
             # that the root finder doesn't find the intersection.
             # This is fine; the answer will still be approximately correct.
             err[i] = np.abs(N.P[2] - S.P[2])
+            tmp[i] = N.P[0]
+            del N.P
+            del S.P
         if np.isnan(err[i]):
             err[i] = 1.0
-    assert np.all(err < tol)
+    assert np.all(err < tol), "{}".format(np.max(err))
 
 
 def test_J_high_l(tol=1e-15):
@@ -216,6 +253,9 @@ def test_P_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
             err[i] = max(
                 np.max(np.abs(N.P[:2] - S.P[:2])), np.max(np.abs(N.P[3:] - S.P[3:]))
             )
+            del N.P
+            del S.P
         if np.isnan(err[i]):
             err[i] = 1.0
-    assert np.all(err < tol)
+
+    assert np.all(err < tol), "{}".format(np.max(err))

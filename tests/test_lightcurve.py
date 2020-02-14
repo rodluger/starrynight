@@ -8,30 +8,6 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
 
-# The following case corresponds to the occultor
-# going from partial night occultation to no
-# night occultation and triggers a numerical instability. [SOLVED]
-#
-# b = 0.25
-# theta = np.pi / 3
-# ro = 0.3
-# bo = [0.9225 .. 0.9235]
-
-# The P2 term is unstable near `bo = ro`. [SOLVED]
-#
-# b = 0.25
-# theta = -np.pi / 3
-# ro = 0.3
-# bo = [0.299, 0.3, 0.301]
-#
-# and
-#
-# b = -0.25
-# theta = 4 * np.pi / 3
-# ro = 0.3
-# bo = [0.299, 0.3, 0.301]
-
-
 @pytest.mark.parametrize(
     "b,theta,ro",
     [
@@ -43,9 +19,10 @@ from scipy.interpolate import interp1d
         [-0.25, 2 * np.pi / 3, 0.3],
         [0.25, 4 * np.pi / 3, 0.3],
         [-0.25, 4 * np.pi / 3, 0.3],
+        [0.5, np.pi / 2, 1.0],
     ],
 )
-def test_lightcurve(b, theta, ro, y=[1], ns=1000, nb=25, res=999, plot=True):
+def test_lightcurve(b, theta, ro, y=[1], ns=1000, nb=25, res=999, plot=False):
 
     # Array over full occultation, including all singularities
     bo = np.linspace(0, 1 + ro, ns, endpoint=True)

@@ -68,7 +68,7 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
 def get_angles(b, theta, costheta, sintheta, bo, ro):
 
     # Trivial cases
-    if bo <= ro - 1:
+    if bo <= ro - 1 + STARRY_COMPLETE_OCC_TOL:
 
         # Complete occultation
         return (
@@ -78,7 +78,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             FLUX_ZERO,
         )
 
-    elif bo >= 1 + ro:
+    elif bo >= 1 + ro - STARRY_NO_OCC_TOL:
 
         # No occultation
         return (
@@ -87,6 +87,11 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             np.array([]),
             FLUX_SIMPLE_REFL,
         )
+
+    # Hack. This grazing configuration leads to instabilities
+    # in the root solver. Let's avoid it.
+    if 1 - ro < bo < 1 - ro + STARRY_GRAZING_TOL:
+        bo = 1 - ro + STARRY_GRAZING_TOL
 
     # We'll solve for occultor-terminator intersections
     # in the frame where the semi-major axis of the
@@ -221,7 +226,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         # dayside or nightside.
         if len(x) == 1:
             if not e1 and not e2:
-                # TODO: Check this more rigorously. For now
+                # TODO: Check this more rigorously? For now
                 # we just delete the root.
                 x = np.array([])
 

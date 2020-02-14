@@ -43,6 +43,16 @@ STARRY_B_ZERO_TOL = 1e-8
 # Tolerance for various functions that calculate phi, xi, and lam
 STARRY_ANGLE_TOL = 1e-13
 
+# Hacks. Determining the integration paths close to the singular
+# points of the occultation is quite hard, and the solution can
+# often oscillate between two regimes. These tolerances prevent us
+# from entering those regimes, at the cost of precision loss near
+# these singular points. TODO: Improve our root finding code so
+# we can bump these down to at least 1e-9.
+STARRY_COMPLETE_OCC_TOL = 1e-6
+STARRY_NO_OCC_TOL = 1e-6
+STARRY_GRAZING_TOL = 1e-5
+
 
 def pairdiff(x):
     return sum(-np.array(x)[::2] + np.array(x)[1::2])
