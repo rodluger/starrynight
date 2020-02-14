@@ -5,12 +5,10 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc
 
 
-def visualize(b, theta, bo, ro, tol=1e-7, res=4999):
+def visualize(b, theta, bo, ro, res=4999):
 
     # Find angles of intersection
-    kappa, lam, xi, _ = get_angles(
-        b, theta, np.cos(theta), np.sin(theta), bo, ro, tol=tol
-    )
+    kappa, lam, xi, _ = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
     phi = kappa - np.pi / 2
 
     # Equation of half-ellipse
@@ -258,6 +256,7 @@ def visualize(b, theta, bo, ro, tol=1e-7, res=4999):
             )
 
         # points of intersection?
+        tol = 1e-7
         for phi_i in phi:
             x_phi = ro * np.cos(phi_i)
             y_phi = bo + ro * np.sin(phi_i)

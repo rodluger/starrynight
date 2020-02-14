@@ -194,7 +194,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
                         # Check that we haven't included this root already
                         good = True
                         for xk in x:
-                            if np.abs(xk - minx) < STARRY_ROOT_TOL_HIGH:
+                            if np.abs(xk - minx) < STARRY_ROOT_TOL_MED:
                                 good = False
                                 break
                         if good:
@@ -371,7 +371,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
             # No intersections with the limb (easy)
             phi = sort_phi(b, theta, costheta, sintheta, bo, ro, phi,)
-            xi = sort_xi(b, costheta, sintheta, theta, bo, ro, xi,)
+            xi = sort_xi(b, theta, costheta, sintheta, bo, ro, xi,)
             code = FLUX_DAY_OCC
 
         else:
