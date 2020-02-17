@@ -38,6 +38,7 @@ args = [get_args() for n in range(nruns)]
     "b,theta,bo,ro", args,
 )
 def test_mc(b, theta, bo, ro):
+
     assert np.allclose(
         N.flux(y, b, theta, bo, ro), B.flux(y, b, theta, bo, ro), atol=atol
     )

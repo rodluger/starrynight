@@ -14,14 +14,23 @@ def on_dayside(b, theta, costheta, sintheta, x, y):
 
 
 def sort_phi(b, theta, costheta, sintheta, bo, ro, phi):
-    # Sort a pair of `phi` angles according to the order
-    # of the integration limits.
+    """
+    Sort a pair of `phi` angles.
+    
+    The basic rule here: the direction phi1 -> phi2 must 
+    always span the dayside.
+    """
+    # First ensure the range is correct
     phi1, phi2 = phi
     phi = np.array([phi1, phi2]) % (2 * np.pi)
     if phi[1] < phi[0]:
         phi[1] += 2 * np.pi
-    x = ro * np.cos(phi[0] + STARRY_ANGLE_TOL)
-    y = bo + ro * np.sin(phi[0] + STARRY_ANGLE_TOL)
+
+    # Now take the midpoint and check that it's on-planet and on the
+    # dayside. If not, we swap the integration limits.
+    phim = np.mean(phi)
+    x = ro * np.cos(phim)
+    y = bo + ro * np.sin(phim)
     if (x ** 2 + y ** 2 > 1) or not on_dayside(b, theta, costheta, sintheta, x, y):
         phi = np.array([phi2, phi1]) % (2 * np.pi)
     if phi[1] < phi[0]:
@@ -30,34 +39,41 @@ def sort_phi(b, theta, costheta, sintheta, bo, ro, phi):
 
 
 def sort_xi(b, theta, costheta, sintheta, bo, ro, xi):
-    # Sort a pair of `xi` angles according to the order
-    # of the integration limits.
+    """Sort a pair of `xi` angles.
+    
+    The basic rule here: the direction xi2 --> xi1 must
+    always span the inside of the occultor. (Note that
+    the limits of the `T` integral are xi2 --> xi1, since
+    we integrate *clockwise* along the arc.) Since xi
+    is limited to the range [0, pi], enforcing this is
+    actually trivial: we just need to make sure they are
+    arranged in decreasing order.
+    """
     xi1, xi2 = xi
     xi = np.array([xi1, xi2]) % (2 * np.pi)
     if xi[0] < xi[1]:
-        xi[0] += 2 * np.pi
-    x = costheta * np.cos(xi[1] + STARRY_ANGLE_TOL) - b * sintheta * np.sin(
-        xi[1] + STARRY_ANGLE_TOL
-    )
-    y = sintheta * np.cos(xi[1] + STARRY_ANGLE_TOL) + b * costheta * np.sin(
-        xi[1] + STARRY_ANGLE_TOL
-    )
-    if x ** 2 + (y - bo) ** 2 > ro ** 2:
-        xi = np.array([xi2, xi1]) % (2 * np.pi)
-    if xi[0] < xi[1]:
-        xi[0] += 2 * np.pi
+        xi = [xi[1], xi[0]]
     return xi
 
 
 def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
-    # Sort a pair of `lam` angles according to the order
-    # of the integration limits.
+    """
+    Sort a pair of `lam` angles.
+    
+    The basic rule here: the direction lam1 --> lam2
+    must always span the inside of the occultor.
+    """
+    # First ensure the range is correct
     lam1, lam2 = lam
     lam = np.array([lam1, lam2]) % (2 * np.pi)
     if lam[1] < lam[0]:
         lam[1] += 2 * np.pi
-    x = np.cos(lam[0] + STARRY_ANGLE_TOL)
-    y = np.sin(lam[0] + STARRY_ANGLE_TOL)
+
+    # Now take the midpoint and ensure it is inside
+    # the occultor. If not, swap the integration limits.
+    lamm = np.mean(lam)
+    x = np.cos(lamm)
+    y = np.sin(lamm)
     if x ** 2 + (y - bo) ** 2 > ro ** 2:
         lam = np.array([lam2, lam1]) % (2 * np.pi)
     if lam[1] < lam[0]:
@@ -199,7 +215,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
                         # Check that we haven't included this root already
                         good = True
                         for xk in x:
-                            if np.abs(xk - minx) < STARRY_ROOT_TOL_MED:
+                            if np.abs(xk - minx) < STARRY_ROOT_TOL_DUP:
                                 good = False
                                 break
                         if good:
@@ -207,28 +223,28 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
         x = np.array(x)
 
-        # Check if the extrema of the terminator ellipse are occulted
-        e1 = costheta ** 2 + (sintheta - bo) ** 2 < ro ** 2
-        e2 = costheta ** 2 + (sintheta + bo) ** 2 < ro ** 2
+    # Check if the extrema of the terminator ellipse are occulted
+    e1 = costheta ** 2 + (sintheta - bo) ** 2 < ro ** 2
+    e2 = costheta ** 2 + (sintheta + bo) ** 2 < ro ** 2
 
-        # One is occulted, the other is not.
-        # Usually we should have a single root, but
-        # pathological cases with 3 roots (and maybe 4?)
-        # are also possible.
-        if (e1 and not e1) or (e2 and not e1):
-            if (len(x) == 0) or (len(x) == 2):
-                # TODO: Fix this case if it ever shows up
-                print("ERROR: Solver did not find the correct number of roots.")
-                breakpoint()
+    # One is occulted, the other is not.
+    # Usually we should have a single root, but
+    # pathological cases with 3 roots (and maybe 4?)
+    # are also possible.
+    if (e1 and not e1) or (e2 and not e1):
+        if (len(x) == 0) or (len(x) == 2):
+            # TODO: Fix this case if it ever shows up
+            print("ERROR: Solver did not find the correct number of roots.")
+            breakpoint()
 
-        # There is one root but none of the extrema are occulted.
-        # This likely corresponds to a grazing occultation of the
-        # dayside or nightside.
-        if len(x) == 1:
-            if not e1 and not e2:
-                # TODO: Check this more rigorously? For now
-                # we just delete the root.
-                x = np.array([])
+    # There is one root but none of the extrema are occulted.
+    # This likely corresponds to a grazing occultation of the
+    # dayside or nightside.
+    if len(x) == 1:
+        if not e1 and not e2:
+            # TODO: Check this more rigorously? For now
+            # we just delete the root.
+            x = np.array([])
 
     # P-Q
     if len(x) == 0:
@@ -423,9 +439,9 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             # along each integration path and average their (x, y)
             # coordinates to determine what kind of region we are
             # bounding.
-            xi_mean = np.mean(xi)
-            x_xi = costheta * np.cos(xi_mean) - b * sintheta * np.sin(xi_mean)
-            y_xi = sintheta * np.cos(xi_mean) + b * costheta * np.sin(xi_mean)
+            xim = np.mean(xi)
+            x_xi = costheta * np.cos(xim) - b * sintheta * np.sin(xim)
+            y_xi = sintheta * np.cos(xim) + b * costheta * np.sin(xim)
             phi_mean = np.mean(phi)
             x_phi = ro * np.cos(phi_mean)
             y_phi = bo + ro * np.sin(phi_mean)

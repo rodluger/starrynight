@@ -34,6 +34,9 @@ STARRY_ROOT_TOL_LOW = 1e-2
 STARRY_ROOT_TOL_MED = 1e-10
 STARRY_ROOT_TOL_HIGH = 1e-15
 
+# Tolerance for duplicate roots
+STARRY_ROOT_TOL_DUP = 1e-6
+
 # Maximum number of root polishing iterations
 STARRY_ROOT_MAX_ITER = 50
 

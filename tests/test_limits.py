@@ -7,7 +7,6 @@ TODO: root finding
     - bo = 0
     - bo = 0 and theta = 90 (only one root)
     - bo <~ 0.1 and theta = 90 (root finding fails I think)
-
     - bo = 1 - ro
     - bo = 1 + ro
 
@@ -66,36 +65,6 @@ def test_Q_high_l(tol=1e-15):
     N.precompute(b, theta, bo, ro)
     S.precompute(b, theta, bo, ro)
     assert np.all(np.abs(S.Q - N.Q) < tol)
-
-
-"""
-def test_grazing():
-
-    b = 0.15
-    theta = 1.57
-    bo = 0.25
-    ro = 0.75
-
-    # Perturb the impact parameter about the given point
-    dbo = np.logspace(-15, -1, 300)
-    bo = np.abs(np.concatenate([[(1 - ro)], (1 - ro) + dbo]))
-
-    # Compare
-    S = StarryNight(1)
-    P0 = np.zeros_like(bo)
-    for i in range(len(bo)):
-        S.precompute(b, theta, bo[i], ro)
-        if hasattr(S, "P"):
-            P0[i] = S.P[2]
-            del S.P
-
-    # DEBUG
-    plt.plot(bo - (1 - ro), P0)
-    plt.xscale("log")
-    plt.yscale("log")
-    plt.show()
-    assert False
-"""
 
 
 @pytest.mark.parametrize(

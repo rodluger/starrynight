@@ -20,13 +20,15 @@ from scipy.interpolate import interp1d
         [0.25, 4 * np.pi / 3, 0.3],
         [-0.25, 4 * np.pi / 3, 0.3],
         [0.5, np.pi / 2, 1.0],
+        [0.0, 0.0, 0.5],
+        [0.5, 0.0, 0.1],
     ],
 )
-def test_lightcurve(b, theta, ro, y=[1], ns=1000, nb=25, res=999, plot=False):
+def test_lightcurve(b, theta, ro, y=[1], ns=1000, nb=50, res=999, plot=False):
 
     # Array over full occultation, including all singularities
     bo = np.linspace(0, 1 + ro, ns, endpoint=True)
-    for pt in [ro, 1, 1 - ro]:
+    for pt in [ro, 1, 1 - ro, b + ro]:
         bo[np.argmin(np.abs(bo - pt))] = pt
 
     # Setup
@@ -69,4 +71,5 @@ def test_lightcurve(b, theta, ro, y=[1], ns=1000, nb=25, res=999, plot=False):
     # Compare with very lax tolerance; we're mostly looking
     # for gross outliers
     diff = np.abs(flux - flux_num_interp)
+
     assert np.max(diff) < 0.00075
