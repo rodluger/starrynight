@@ -17,8 +17,9 @@ FLUX_QUAD_NIGHT_VIS = 11
 # Maximum number of iterations when computing `el2`
 STARRY_EL2_MAX_ITER = 100
 
-# Maximum number of iterations when computing 2F1
+# Maximum number of iterations & tolerance when computing 2F1
 STARRY_2F1_MAXITER = 200
+STARRY_2F1_TOL = 1e-15
 
 # Square root of the desired precision in `el2`
 STARRY_EL2_CA = 1e-8
@@ -35,7 +36,7 @@ STARRY_ROOT_TOL_MED = 1e-10
 STARRY_ROOT_TOL_HIGH = 1e-15
 
 # Tolerance for duplicate roots
-STARRY_ROOT_TOL_DUP = 1e-6
+STARRY_ROOT_TOL_DUP = 1e-8
 
 # Maximum number of root polishing iterations
 STARRY_ROOT_MAX_ITER = 50
@@ -50,11 +51,10 @@ STARRY_ANGLE_TOL = 1e-13
 # points of the occultation is quite hard, and the solution can
 # often oscillate between two regimes. These tolerances prevent us
 # from entering those regimes, at the cost of precision loss near
-# these singular points. TODO: Improve our root finding code so
-# we can bump these down to at least 1e-9.
-STARRY_COMPLETE_OCC_TOL = 1e-6
-STARRY_NO_OCC_TOL = 1e-6
-STARRY_GRAZING_TOL = 1e-5
+# these singular points.
+STARRY_COMPLETE_OCC_TOL = 1e-8
+STARRY_NO_OCC_TOL = 1e-8
+STARRY_GRAZING_TOL = 1e-8
 
 
 def pairdiff(x):

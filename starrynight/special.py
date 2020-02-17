@@ -32,11 +32,10 @@ def J(N, k2, kappa):
 
 
 def hyp2f1(a, b, c, z):
-    TOLERANCE = 1.0e-15
     term = a * b * z / c
     value = 1.0 + term
     n = 1
-    while (np.abs(term) > TOLERANCE) and (n < STARRY_2F1_MAXITER):
+    while (np.abs(term) > STARRY_2F1_TOL) and (n < STARRY_2F1_MAXITER):
         a += 1
         b += 1
         c += 1
