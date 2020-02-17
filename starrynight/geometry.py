@@ -61,7 +61,8 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
     Sort a pair of `lam` angles.
     
     The basic rule here: the direction lam1 --> lam2
-    must always span the inside of the occultor.
+    must always span the inside of the occultor and the
+    dayside.
     """
     # First ensure the range is correct
     lam1, lam2 = lam
@@ -70,14 +71,24 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
         lam[1] += 2 * np.pi
 
     # Now take the midpoint and ensure it is inside
-    # the occultor. If not, swap the integration limits.
+    # the occultor *and* on the dayside. If not, swap
+    # the integration limits.
     lamm = np.mean(lam)
     x = np.cos(lamm)
     y = np.sin(lamm)
-    if x ** 2 + (y - bo) ** 2 > ro ** 2:
+    if x ** 2 + (y - bo) ** 2 > ro ** 2 or not on_dayside(
+        b,
+        theta,
+        costheta,
+        sintheta,
+        (1 - STARRY_ANGLE_TOL) * x,
+        (1 - STARRY_ANGLE_TOL) * y,
+    ):
         lam = np.array([lam2, lam1]) % (2 * np.pi)
+
     if lam[1] < lam[0]:
         lam[1] += 2 * np.pi
+
     return lam
 
 
