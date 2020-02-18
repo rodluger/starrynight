@@ -1,9 +1,6 @@
-import numpy as np
-from scipy.integrate import quad
+from .configdefaults import config
+from .utils import *
 from .special import carlson_rf, carlson_rd, carlson_rj
-
-
-STARRY_PAL_BO_EQUALS_RO_TOL = 1e-6
 
 
 def pal_indef(bo, ro, phi):
@@ -13,36 +10,36 @@ def pal_indef(bo, ro, phi):
 
     """
     # TODO: Solve this case separately
-    if np.abs(bo - (ro - 1)) < 1e-8:
-        s = np.sign(bo - (ro - 1))
+    if config.np.abs(bo - (ro - 1)) < 1e-8:
+        s = config.np.sign(bo - (ro - 1))
         if s == 0:
             s = 1
         bo = ro - 1 + s * 1e-8
 
     # TODO: Solve this case separately
-    if np.abs(bo - (1 - ro)) < 1e-8:
-        s = np.sign(bo - (1 - ro))
+    if config.np.abs(bo - (1 - ro)) < 1e-8:
+        s = config.np.sign(bo - (1 - ro))
         if s == 0:
             s = 1
         bo = 1 - ro + s * 1e-8
 
-    q2 = ro * ro + bo * bo + 2 * ro * bo * np.cos(phi)
+    q2 = ro * ro + bo * bo + 2 * ro * bo * config.np.cos(phi)
     d2 = ro * ro + bo * bo - 2 * ro * bo
-    sx = np.sin(phi / 2)
-    cx = np.cos(phi / 2)
+    sx = config.np.sin(phi / 2)
+    cx = config.np.cos(phi / 2)
 
     if q2 > 1.0:
         # TODO: solve the case q2 = 1 separately
         q2 = 1.0 - 1e-8
 
     w = (1 - q2) / (1 - d2)
-    beta = np.arctan2((bo - ro) * sx, (bo + ro) * cx)
+    beta = config.np.arctan2((bo - ro) * sx, (bo + ro) * cx)
 
     # Elliptic integrals
     # TODO: Compute in terms of E, F, and Pi?
     rf = carlson_rf(w, sx * sx, 1.0)
     rd = carlson_rd(w, sx * sx, 1.0)
-    if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
+    if config.np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
         rj = carlson_rj(w, sx * sx, 1.0, q2 / d2)
     else:
         # TODO: Expand the integral in this limit?
@@ -52,21 +49,29 @@ def pal_indef(bo, ro, phi):
             beta = -beta
 
     # Equation (34) in Pal (2012)
-    wp = cx / np.sqrt(1 - d2)
+    wp = cx / config.np.sqrt(1 - d2)
     iret = (
         -beta / 3.0
         + phi / 6.0
-        + 2.0 / 9.0 * bo * ro * np.sin(phi) * np.sqrt(1 - q2)
+        + 2.0 / 9.0 * bo * ro * config.np.sin(phi) * config.np.sqrt(1 - q2)
         + 1.0 / 3.0 * (1 + 2 * ro * ro * ro * ro - 4 * ro * ro) * wp * rf
         + 2.0 / 9.0 * ro * bo * (4 - 7 * ro * ro - bo * bo + 5 * ro * bo) * wp * rf
         - 4.0 / 27.0 * ro * bo * (4 - 7 * ro * ro - bo * bo) * wp * cx * cx * rd
     )
-    if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
+    if config.np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
         iret += (
             1.0 / 3.0 * wp * (ro + bo) / (ro - bo) * (rf - (q2 - d2) / (3 * d2) * rj)
         )
     else:
-        iret -= 1.0 / 3.0 * wp * (ro + bo) * (q2 - d2) * np.pi / (2 * q2 * np.sqrt(q2))
+        iret -= (
+            1.0
+            / 3.0
+            * wp
+            * (ro + bo)
+            * (q2 - d2)
+            * config.np.pi
+            / (2 * q2 * config.np.sqrt(q2))
+        )
 
     return iret
 
@@ -79,7 +84,9 @@ def pal(bo, ro, phi1, phi2):
     """
     if bo == 0.0:
         if ro < 1.0:
-            return (1 - (1 - ro ** 2) * np.sqrt(1 - ro ** 2)) * (phi2 - phi1) / 3.0
+            return (
+                (1 - (1 - ro ** 2) * config.np.sqrt(1 - ro ** 2)) * (phi2 - phi1) / 3.0
+            )
         else:
             return (phi2 - phi1) / 3.0
 
@@ -96,12 +103,12 @@ def pal(bo, ro, phi1, phi2):
         x0 += dx
         dx = -dx
     while x0 < 0.0:
-        x0 += 2 * np.pi
-    while 2 * np.pi <= x0:
-        x0 -= 2 * np.pi
+        x0 += 2 * config.np.pi
+    while 2 * config.np.pi <= x0:
+        x0 -= 2 * config.np.pi
     ret = 0.0
     while 0.0 < dx:
-        dc = 2 * np.pi - x0
+        dc = 2 * config.np.pi - x0
         if dx < dc:
             dc = dx
             nx = x0 + dx

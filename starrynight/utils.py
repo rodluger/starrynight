@@ -1,4 +1,6 @@
-import numpy as np
+from .configdefaults import config
+import jax
+
 
 # Integration codes
 FLUX_ZERO = 0
@@ -56,6 +58,55 @@ STARRY_COMPLETE_OCC_TOL = 1e-8
 STARRY_NO_OCC_TOL = 1e-8
 STARRY_GRAZING_TOL = 1e-8
 
+STARRY_PAL_BO_EQUALS_RO_TOL = 1e-6
+
 
 def pairdiff(x):
-    return sum(-np.array(x)[::2] + np.array(x)[1::2])
+    """Return the sum over pairwise differences of an array.
+
+    This is used to evaluate a (series of) definite integral(s) given
+    the antiderivatives at each of the integration limits.
+    """
+    return sum(-config.np.array(x)[::2] + config.np.array(x)[1::2])
+
+
+def custom_gradient(func_and_grad):
+    """Function wrapper enabling custom gradients for black-box functions.
+    
+    Based on https://github.com/google/jax/issues/1142#issuecomment-522283030.
+
+    Args:
+        func_and_grad (callable): A function taking in any number of positional
+            arguments and returning the tuple (`f`, `df`) of the function value 
+            `f` (a scalar) and its gradient `df` (a tuple of scalars, one per
+            argument).
+    
+    Returns:
+        callable: A jax-compatible function with its first derivative implemented.
+    """
+    if not config.use_jax:
+
+        # Return just the function value
+        return lambda *args: func_and_grad(*args)[0]
+
+    else:
+
+        # Declare
+        func_p = jax.core.Primitive("func")
+
+        # Bind
+        def func(*args):
+            return func_p.bind(*args)
+
+        # Evaluation
+        func_p.def_impl(lambda *args: func_and_grad(*args)[0])
+
+        # Gradient
+        def func_vjp(*args):
+            val, grad = func_and_grad(*args)
+            return val, lambda g: grad
+
+        # Bind the gradient
+        jax.interpreters.ad.defvjp_all(func_p, func_vjp)
+
+        return func

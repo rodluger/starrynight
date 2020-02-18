@@ -1,7 +1,7 @@
+from .configdefaults import config
 from .utils import *
 from .geometry import get_angles
 from .primitive import compute_P, compute_T, compute_Q
-import numpy as np
 import starry
 from starry._c_ops import Ops
 from starry._core.ops.rotation import dotROp
@@ -22,22 +22,22 @@ class StarryNight(object):
         self.ops = Ops(self.ydeg + 1, 0, 0, 0)
 
         # Basis transform from poly to Green's
-        self.A2 = np.array(theano.sparse.dot(self.ops.A, self.ops.A1Inv).eval())
+        self.A2 = config.np.array(theano.sparse.dot(self.ops.A, self.ops.A1Inv).eval())
 
         # Basis transform from Ylms to poly and back
         N = (self.ydeg + 1) ** 2
-        self.A1 = np.array(self.ops.A1.todense())[:N, :N]
-        self.A1Inv = np.array(self.ops.A1Inv.todense())
+        self.A1 = config.np.array(self.ops.A1.todense())[:N, :N]
+        self.A1Inv = config.np.array(self.ops.A1Inv.todense())
 
         # Z-rotation matrix (for degree ydeg + 1)
         theta = theano.tensor.dscalar()
         self.Rz = theano.function(
             [theta],
             dotROp(self.ops.dotR)(
-                np.eye((self.ydeg + 2) ** 2),
-                np.array(0.0),
-                np.array(0.0),
-                np.array(1.0),
+                config.np.eye((self.ydeg + 2) ** 2),
+                config.np.array(0.0),
+                config.np.array(0.0),
+                config.np.array(1.0),
                 theta,
             ),
         )
@@ -62,15 +62,15 @@ class StarryNight(object):
 
     def illum(self):
         # Illumination matrix
-        y0 = np.sqrt(1 - self.b ** 2)
-        x = -y0 * np.sin(self.theta)
-        y = y0 * np.cos(self.theta)
+        y0 = config.np.sqrt(1 - self.b ** 2)
+        x = -y0 * config.np.sin(self.theta)
+        y = y0 * config.np.cos(self.theta)
         z = -self.b
         # NOTE: 3 / 2 is the starry normalization for reflected light maps
-        p = np.array([0, x, z, y]) * 1.5
+        p = config.np.array([0, x, z, y]) * 1.5
         n1 = 0
         n2 = 0
-        I = np.zeros(((self.ydeg + 2) ** 2, (self.ydeg + 1) ** 2))
+        I = config.np.zeros(((self.ydeg + 2) ** 2, (self.ydeg + 1) ** 2))
         for l1 in range(self.ydeg + 1):
             for m1 in range(-l1, l1 + 1):
                 if (l1 + m1) % 2 == 0:
@@ -96,16 +96,16 @@ class StarryNight(object):
         return self.Xe(0.0, self.bo, self.ro).dot(self.A1Inv.dot(self.IA1))
 
     def Xd(self):
-        y0 = np.sqrt(1 - self.b ** 2)
-        xs = -y0 * np.sin(self.theta)
-        ys = y0 * np.cos(self.theta)
+        y0 = config.np.sqrt(1 - self.b ** 2)
+        xs = -y0 * config.np.sin(self.theta)
+        ys = y0 * config.np.cos(self.theta)
         zs = -self.b
         return self.Xr(xs, ys, zs)
 
     def Xn(self):
-        y0 = np.sqrt(1 - self.b ** 2)
-        xs = -y0 * np.sin(self.theta)
-        ys = y0 * np.cos(self.theta)
+        y0 = config.np.sqrt(1 - self.b ** 2)
+        xs = -y0 * config.np.sin(self.theta)
+        ys = y0 * config.np.cos(self.theta)
         zs = -self.b
         return -self.Xr(-xs, -ys, -zs)
 
@@ -114,9 +114,9 @@ class StarryNight(object):
 
     def ingest(self, b, theta, bo, ro):
         self.b = b
-        self.theta = theta % (2 * np.pi)
-        self.costheta = np.cos(self.theta)
-        self.sintheta = np.sin(self.theta)
+        self.theta = theta % (2 * config.np.pi)
+        self.costheta = config.np.cos(self.theta)
+        self.sintheta = config.np.sin(self.theta)
         self.bo = bo
         self.ro = ro
 
@@ -154,7 +154,7 @@ class StarryNight(object):
 
         # All branches
         if self.code == FLUX_ZERO:
-            return np.zeros((self.ydeg + 1) ** 2)
+            return config.np.zeros((self.ydeg + 1) ** 2)
         elif self.code == FLUX_SIMPLE_OCC:
             return self.Xs()
         elif self.code == FLUX_SIMPLE_REFL:

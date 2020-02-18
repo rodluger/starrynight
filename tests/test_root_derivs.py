@@ -30,7 +30,7 @@ def roots(b, theta, bo, ro):
     return x, dxdb, dxdtheta, dxdbo, dxdro
 
 
-def test_root_derivs(plot=False):
+def todo_root_derivs(plot=False):
     """Test the derivatives of the roots of the quartic equation."""
     # Number of data points
     ns = 1000

@@ -1,9 +1,9 @@
+from .configdefaults import config
 from .utils import *
 from mpmath import elliprf, elliprd, elliprj
 from mpmath import ellipf, ellipe, ellipk
 from scipy.special import hyp2f1 as scipy_hyp2f1
 from scipy.integrate import quad
-import numpy as np
 
 
 def carlson_rf(x, y, z):
@@ -21,7 +21,8 @@ def carlson_rj(x, y, z, p):
 def J(N, k2, kappa):
     # We'll need to solve this with gaussian quadrature
     func = (
-        lambda x: np.sin(x) ** (2 * N) * (np.maximum(0, 1 - np.sin(x) ** 2 / k2)) ** 1.5
+        lambda x: config.np.sin(x) ** (2 * N)
+        * (config.np.maximum(0, 1 - config.np.sin(x) ** 2 / k2)) ** 1.5
     )
     res = 0.0
     for i in range(0, len(kappa), 2):
@@ -35,7 +36,7 @@ def hyp2f1(a, b, c, z):
     term = a * b * z / c
     value = 1.0 + term
     n = 1
-    while (np.abs(term) > STARRY_2F1_TOL) and (n < STARRY_2F1_MAXITER):
+    while (config.np.abs(term) > STARRY_2F1_TOL) and (n < STARRY_2F1_MAXITER):
         a += 1
         b += 1
         c += 1
@@ -60,17 +61,17 @@ def el2(x, kc, a, b):
 
     c = x * x
     d = 1 + c
-    p = np.sqrt((1 + kc * kc * c) / d)
+    p = config.np.sqrt((1 + kc * kc * c) / d)
     d = x / d
     c = d / (2 * p)
     z = a - b
     i = a
     a = (b + a) / 2
-    y = np.abs(1 / x)
+    y = config.np.abs(1 / x)
     f = 0
-    l = np.zeros_like(x)
+    l = config.np.zeros_like(x)
     m = 1
-    kc = np.abs(kc)
+    kc = config.np.abs(kc)
 
     for n in range(STARRY_EL2_MAX_ITER):
 
@@ -87,11 +88,11 @@ def el2(x, kc, a, b):
         a = (b / m + a) / 2
         y = -e / y + y
 
-        y[y == 0] = np.sqrt(e) * c[y == 0] * b
+        y[y == 0] = config.np.sqrt(e) * c[y == 0] * b
 
-        if np.abs(g - kc) > STARRY_EL2_CA * g:
+        if config.np.abs(g - kc) > STARRY_EL2_CA * g:
 
-            kc = np.sqrt(e) * 2
+            kc = config.np.sqrt(e) * 2
             l = l * 2
             l[y < 0] = 1 + l[y < 0]
 
@@ -107,7 +108,7 @@ def el2(x, kc, a, b):
         )
 
     l[y < 0] = 1 + l[y < 0]
-    e = (np.arctan(m / y) + np.pi * l) * a / m
+    e = (config.np.arctan(m / y) + config.np.pi * l) * a / m
     e[x < 0] = -e[x < 0]
 
     return e + c * z
@@ -125,7 +126,7 @@ def dF(phi, k2):
     """
     if k2 > 1:
         K = float(ellipk(1 / k2))  # = cel(kcinv, 1, 1, 1)
-        K /= np.sqrt(k2)
+        K /= config.np.sqrt(k2)
     else:
         K = float(ellipk(k2))  # = cel(kc, 1, 1, 1)
 
@@ -134,11 +135,11 @@ def dF(phi, k2):
         # Analytic continuation from (17.4.15) in Abramowitz & Stegun
 
         # Helper variables
-        k = np.sqrt(k2)
+        k = config.np.sqrt(k2)
         kc2 = 1 - 1 / k2
-        kc = np.sqrt(kc2)
-        arg = k * np.sin(phi)
-        tanphi = arg / np.sqrt(1 - arg ** 2)
+        kc = config.np.sqrt(kc2)
+        arg = k * config.np.sin(phi)
+        tanphi = arg / config.np.sqrt(1 - arg ** 2)
         tanphi[arg >= 1] = STARRY_HUGE_TAN
         tanphi[arg <= -1] = -STARRY_HUGE_TAN
 
@@ -147,26 +148,26 @@ def dF(phi, k2):
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(phi)):
-            if phi[i] > np.pi / 2:
+            if phi[i] > config.np.pi / 2:
                 res[i] = 2 * K - res[i]
-            if phi[i] > 3 * np.pi / 2:
+            if phi[i] > 3 * config.np.pi / 2:
                 res[i] = 6 * K - res[i]
 
     else:
 
         # Helper variables
         kc2 = 1 - k2
-        kc = np.sqrt(kc2)
-        tanphi = np.tan(phi)
+        kc = config.np.sqrt(kc2)
+        tanphi = config.np.tan(phi)
 
         # Compute the elliptic integrals
         res = el2(tanphi, kc, 1, 1)
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(phi)):
-            if phi[i] > np.pi / 2:
+            if phi[i] > config.np.pi / 2:
                 res[i] += 2 * K
-            if phi[i] > 3 * np.pi / 2:
+            if phi[i] > 3 * config.np.pi / 2:
                 res[i] += 2 * K
 
     return pairdiff(res)
@@ -185,7 +186,7 @@ def dE(phi, k2):
     if k2 > 1:
         K = float(ellipk(1 / k2))  # = cel(kcinv, 1, 1, 1)
         E = float(ellipe(1 / k2))  # = cel(kcinv, 1, 1, kcinv2)
-        E = np.sqrt(k2) * (E - (1 - 1 / k2) * K)
+        E = config.np.sqrt(k2) * (E - (1 - 1 / k2) * K)
     else:
         E = float(ellipe(k2))  # = cel(kc, 1, 1, kc2)
 
@@ -195,12 +196,12 @@ def dE(phi, k2):
         # A better format is here: https://dlmf.nist.gov/19.7#ii
 
         # Helper variables
-        k = np.sqrt(k2)
+        k = config.np.sqrt(k2)
         k2inv = 1 / k2
         kcinv2 = 1 - k2inv
-        kcinv = np.sqrt(kcinv2)
-        arg = k * np.sin(phi)
-        tanphi = arg / np.sqrt(1 - arg ** 2)
+        kcinv = config.np.sqrt(kcinv2)
+        arg = k * config.np.sin(phi)
+        tanphi = arg / config.np.sqrt(1 - arg ** 2)
         tanphi[arg >= 1] = STARRY_HUGE_TAN
         tanphi[arg <= -1] = -STARRY_HUGE_TAN
 
@@ -209,26 +210,26 @@ def dE(phi, k2):
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(phi)):
-            if phi[i] > np.pi / 2:
+            if phi[i] > config.np.pi / 2:
                 res[i] = 2 * E - res[i]
-            if phi[i] > 3 * np.pi / 2:
+            if phi[i] > 3 * config.np.pi / 2:
                 res[i] = 6 * E - res[i]
 
     else:
 
         # Helper variables
         kc2 = 1 - k2
-        kc = np.sqrt(kc2)
-        tanphi = np.tan(phi)
+        kc = config.np.sqrt(kc2)
+        tanphi = config.np.tan(phi)
 
         # Compute the elliptic integrals
         res = el2(tanphi, kc, 1, kc2)
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(phi)):
-            if phi[i] > np.pi / 2:
+            if phi[i] > config.np.pi / 2:
                 res[i] += 2 * E
-            if phi[i] > 3 * np.pi / 2:
+            if phi[i] > 3 * config.np.pi / 2:
                 res[i] += 2 * E
 
     return pairdiff(res)

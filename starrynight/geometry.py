@@ -1,4 +1,5 @@
 import numpy as np
+from .configdefaults import config
 from .utils import *
 
 
@@ -9,7 +10,7 @@ def on_dayside(b, theta, costheta, sintheta, x, y):
     xr = x * costheta + y * sintheta
     yr = -x * sintheta + y * costheta
     term = 1 - xr ** 2
-    yt = b * np.sqrt(term)
+    yt = b * config.np.sqrt(term)
     return yr >= yt
 
 
@@ -22,19 +23,19 @@ def sort_phi(b, theta, costheta, sintheta, bo, ro, phi):
     """
     # First ensure the range is correct
     phi1, phi2 = phi
-    phi = np.array([phi1, phi2]) % (2 * np.pi)
+    phi = config.np.array([phi1, phi2]) % (2 * config.np.pi)
     if phi[1] < phi[0]:
-        phi[1] += 2 * np.pi
+        phi = config.np.array([phi[0], phi[1] + 2 * config.np.pi])
 
     # Now take the midpoint and check that it's on-planet and on the
     # dayside. If not, we swap the integration limits.
-    phim = np.mean(phi)
-    x = ro * np.cos(phim)
-    y = bo + ro * np.sin(phim)
+    phim = config.np.mean(phi)
+    x = ro * config.np.cos(phim)
+    y = bo + ro * config.np.sin(phim)
     if (x ** 2 + y ** 2 > 1) or not on_dayside(b, theta, costheta, sintheta, x, y):
-        phi = np.array([phi2, phi1]) % (2 * np.pi)
+        phi = config.np.array([phi2, phi1]) % (2 * config.np.pi)
     if phi[1] < phi[0]:
-        phi[1] += 2 * np.pi
+        phi = config.np.array([phi[0], phi[1] + 2 * config.np.pi])
     return phi
 
 
@@ -50,9 +51,9 @@ def sort_xi(b, theta, costheta, sintheta, bo, ro, xi):
     arranged in decreasing order.
     """
     xi1, xi2 = xi
-    xi = np.array([xi1, xi2]) % (2 * np.pi)
+    xi = config.np.array([xi1, xi2]) % (2 * config.np.pi)
     if xi[0] < xi[1]:
-        xi = [xi[1], xi[0]]
+        xi = config.np.array([xi[1], xi[0]])
     return xi
 
 
@@ -66,16 +67,16 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
     """
     # First ensure the range is correct
     lam1, lam2 = lam
-    lam = np.array([lam1, lam2]) % (2 * np.pi)
+    lam = config.np.array([lam1, lam2]) % (2 * config.np.pi)
     if lam[1] < lam[0]:
-        lam[1] += 2 * np.pi
+        lam = config.np.array([lam[0], lam[1] + 2 * config.np.pi])
 
     # Now take the midpoint and ensure it is inside
     # the occultor *and* on the dayside. If not, swap
     # the integration limits.
-    lamm = np.mean(lam)
-    x = np.cos(lamm)
-    y = np.sin(lamm)
+    lamm = config.np.mean(lam)
+    x = config.np.cos(lamm)
+    y = config.np.sin(lamm)
     if x ** 2 + (y - bo) ** 2 > ro ** 2 or not on_dayside(
         b,
         theta,
@@ -84,14 +85,15 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
         (1 - STARRY_ANGLE_TOL) * x,
         (1 - STARRY_ANGLE_TOL) * y,
     ):
-        lam = np.array([lam2, lam1]) % (2 * np.pi)
+        lam = config.np.array([lam2, lam1]) % (2 * config.np.pi)
 
     if lam[1] < lam[0]:
-        lam[1] += 2 * np.pi
+        lam = config.np.array([lam[0], lam[1] + 2 * config.np.pi])
 
     return lam
 
 
+@custom_gradient
 def get_roots(b, theta, costheta, sintheta, bo, ro):
     # We'll solve for occultor-terminator intersections
     # in the frame where the semi-major axis of the
@@ -269,7 +271,8 @@ def get_roots(b, theta, costheta, sintheta, bo, ro):
             dxdbo = np.array([])
             dxdro = np.array([])
 
-    return x, dxdb, dxdtheta, dxdbo, dxdro
+    # Return the value of the roots and all derivs
+    return x, (dxdb, dxdtheta, dxdbo, dxdro)
 
 
 def get_angles(b, theta, costheta, sintheta, bo, ro):
@@ -279,9 +282,9 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
         # Complete occultation
         return (
-            np.array([]),
-            np.array([]),
-            np.array([]),
+            config.np.array([]),
+            config.np.array([]),
+            config.np.array([]),
             FLUX_ZERO,
         )
 
@@ -289,9 +292,9 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
         # No occultation
         return (
-            np.array([]),
-            np.array([]),
-            np.array([]),
+            config.np.array([]),
+            config.np.array([]),
+            config.np.array([]),
             FLUX_SIMPLE_REFL,
         )
 
@@ -304,29 +307,29 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
     # These are the roots to a quartic equation.
     xo = bo * sintheta
     yo = bo * costheta
-    x, _, _, _, _ = get_roots(b, theta, costheta, sintheta, bo, ro)
+    x = get_roots(b, theta, costheta, sintheta, bo, ro)
 
     # P-Q
     if len(x) == 0:
 
         # Trivial: use the standard starry algorithm
-        phi = np.array([])
-        lam = np.array([])
-        xi = np.array([])
+        phi = config.np.array([])
+        lam = config.np.array([])
+        xi = config.np.array([])
 
-        if np.abs(1 - ro) <= bo <= 1 + ro:
+        if config.np.abs(1 - ro) <= bo <= 1 + ro:
 
             # The occultor intersects the limb at this point
             q = (1 - ro ** 2 + bo ** 2) / (2 * bo)
-            x = (1 - STARRY_ANGLE_TOL) * np.sqrt(1 - q ** 2)
+            x = (1 - STARRY_ANGLE_TOL) * config.np.sqrt(1 - q ** 2)
             y = (1 - STARRY_ANGLE_TOL) * q
 
             if on_dayside(b, theta, costheta, sintheta, x, y):
 
                 # This point is guaranteed to be on the night side
                 # We're going to check if it's under the occultor or not
-                x = (1 - STARRY_ANGLE_TOL) * np.cos(theta + 3 * np.pi / 2)
-                y = (1 - STARRY_ANGLE_TOL) * np.sin(theta + 3 * np.pi / 2)
+                x = (1 - STARRY_ANGLE_TOL) * config.np.cos(theta + 3 * config.np.pi / 2)
+                y = (1 - STARRY_ANGLE_TOL) * config.np.sin(theta + 3 * config.np.pi / 2)
 
                 if x ** 2 + (y - bo) ** 2 <= ro ** 2:
 
@@ -343,8 +346,8 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
                 # This point is guaranteed to be on the day side
                 # We're going to check if it's under the occultor or not
-                x = (1 - STARRY_ANGLE_TOL) * np.cos(theta + np.pi / 2)
-                y = (1 - STARRY_ANGLE_TOL) * np.sin(theta + np.pi / 2)
+                x = (1 - STARRY_ANGLE_TOL) * config.np.cos(theta + config.np.pi / 2)
+                y = (1 - STARRY_ANGLE_TOL) * config.np.sin(theta + config.np.pi / 2)
 
                 if x ** 2 + (y - bo) ** 2 <= ro ** 2:
 
@@ -376,7 +379,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         # ---
 
         # Angle of intersection with limb
-        phi_l = np.arcsin((1 - ro ** 2 - bo ** 2) / (2 * bo * ro))
+        phi_l = config.np.arcsin((1 - ro ** 2 - bo ** 2) / (2 * bo * ro))
         # There are always two points; always pick the one
         # that's on the dayside for definiteness
         if not on_dayside(
@@ -384,22 +387,26 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             theta,
             costheta,
             sintheta,
-            (1 - STARRY_ANGLE_TOL) * ro * np.cos(phi_l),
-            (1 - STARRY_ANGLE_TOL) * (bo + ro * np.sin(phi_l)),
+            (1 - STARRY_ANGLE_TOL) * ro * config.np.cos(phi_l),
+            (1 - STARRY_ANGLE_TOL) * (bo + ro * config.np.sin(phi_l)),
         ):
-            phi_l = np.pi - phi_l
+            phi_l = config.np.pi - phi_l
 
         # Angle of intersection with the terminator
-        phi_t = theta + np.arctan2(b * np.sqrt(1 - x[0] ** 2) - yo, x[0] - xo)
+        phi_t = theta + config.np.arctan2(
+            b * config.np.sqrt(1 - x[0] ** 2) - yo, x[0] - xo
+        )
 
         # Now ensure phi *only* spans the dayside.
-        phi = sort_phi(b, theta, costheta, sintheta, bo, ro, np.array([phi_l, phi_t]),)
+        phi = sort_phi(
+            b, theta, costheta, sintheta, bo, ro, config.np.array([phi_l, phi_t]),
+        )
 
         # LAMBDA
         # ------
 
         # Angle of intersection with occultor
-        lam_o = np.arcsin((1 - ro ** 2 + bo ** 2) / (2 * bo))
+        lam_o = config.np.arcsin((1 - ro ** 2 + bo ** 2) / (2 * bo))
         # There are always two points; always pick the one
         # that's on the dayside for definiteness
         if not on_dayside(
@@ -407,35 +414,39 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             theta,
             costheta,
             sintheta,
-            (1 - STARRY_ANGLE_TOL) * np.cos(lam_o),
-            (1 - STARRY_ANGLE_TOL) * np.sin(lam_o),
+            (1 - STARRY_ANGLE_TOL) * config.np.cos(lam_o),
+            (1 - STARRY_ANGLE_TOL) * config.np.sin(lam_o),
         ):
-            lam_o = np.pi - lam_o
+            lam_o = config.np.pi - lam_o
 
         # Angle of intersection with the terminator
         lam_t = theta
         # There are always two points; always pick the one
         # that's inside the occultor
-        if np.cos(lam_t) ** 2 + (np.sin(lam_t) - bo) ** 2 > ro ** 2:
-            lam_t = np.pi + theta
+        if config.np.cos(lam_t) ** 2 + (config.np.sin(lam_t) - bo) ** 2 > ro ** 2:
+            lam_t = config.np.pi + theta
 
         # Now ensure lam *only* spans the inside of the occultor.
-        lam = sort_lam(b, theta, costheta, sintheta, bo, ro, np.array([lam_o, lam_t]),)
+        lam = sort_lam(
+            b, theta, costheta, sintheta, bo, ro, config.np.array([lam_o, lam_t]),
+        )
 
         # XI
         # --
 
         # Angle of intersection with occultor
-        xi_o = np.arctan2(np.sqrt(1 - x[0] ** 2), x[0])
+        xi_o = config.np.arctan2(config.np.sqrt(1 - x[0] ** 2), x[0])
 
         # Angle of intersection with the limb
         if (1 - xo) ** 2 + yo ** 2 < ro ** 2:
             xi_l = 0
         else:
-            xi_l = np.pi
+            xi_l = config.np.pi
 
         # Now ensure xi *only* spans the inside of the occultor.
-        xi = sort_xi(b, theta, costheta, sintheta, bo, ro, np.array([xi_l, xi_o]),)
+        xi = sort_xi(
+            b, theta, costheta, sintheta, bo, ro, config.np.array([xi_l, xi_o]),
+        )
 
         # In all cases, we're computing the dayside occulted flux
         code = FLUX_DAY_OCC
@@ -445,10 +456,13 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
         # Angles are easy
         lam = []
-        phi = np.sort(
-            (theta + np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)) % (2 * np.pi)
+        phi = config.np.sort(
+            (theta + config.np.arctan2(b * config.np.sqrt(1 - x ** 2) - yo, x - xo))
+            % (2 * config.np.pi)
         )
-        xi = np.sort(np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi))
+        xi = config.np.sort(
+            config.np.arctan2(config.np.sqrt(1 - x ** 2), x) % (2 * config.np.pi)
+        )
 
         # Cases
         if bo <= 1 - ro:
@@ -468,20 +482,24 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             # We're going to choose xi[0] to be the rightmost point in
             # this frame, so that the integration is counter-clockwise along
             # the terminator to xi[1].
-            x = costheta * np.cos(xi) - b * sintheta * np.sin(xi)
-            y = sintheta * np.cos(xi) + b * costheta * np.sin(xi)
+            x = costheta * config.np.cos(xi) - b * sintheta * config.np.sin(xi)
+            y = sintheta * config.np.cos(xi) + b * costheta * config.np.sin(xi)
             xr = x * costheta + y * sintheta
             if xr[1] > xr[0]:
-                xi = xi[::-1]
+                xi = config.np.array([xi[1], xi[0]])
 
             # 2. Now we need the point corresponding to xi[1] to be the same as the
             # point corresponding to phi[0] in order for the path to be continuous
-            x_xi1 = costheta * np.cos(xi[1]) - b * sintheta * np.sin(xi[1])
-            y_xi1 = sintheta * np.cos(xi[1]) + b * costheta * np.sin(xi[1])
-            x_phi = ro * np.cos(phi)
-            y_phi = bo + ro * np.sin(phi)
-            if np.argmin((x_xi1 - x_phi) ** 2 + (y_xi1 - y_phi) ** 2) == 1:
-                phi = phi[::-1]
+            x_xi1 = costheta * config.np.cos(xi[1]) - b * sintheta * config.np.sin(
+                xi[1]
+            )
+            y_xi1 = sintheta * config.np.cos(xi[1]) + b * costheta * config.np.sin(
+                xi[1]
+            )
+            x_phi = ro * config.np.cos(phi)
+            y_phi = bo + ro * config.np.sin(phi)
+            if config.np.argmin((x_xi1 - x_phi) ** 2 + (y_xi1 - y_phi) ** 2) == 1:
+                phi = config.np.array([phi[1], phi[0]])
 
             # 3. Compare the *curvature* of the two sides of the
             # integration area. The curvatures are similar (i.e., same sign)
@@ -489,22 +507,22 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             if costheta < 0:
                 # Integrate *clockwise* along P
                 if phi[0] < phi[1]:
-                    phi[0] += 2 * np.pi
+                    phi = config.np.array([phi[0] + 2 * config.np.pi, phi[1]])
             else:
                 # Integrate *counter-clockwise* along P
                 if phi[1] < phi[0]:
-                    phi[1] += 2 * np.pi
+                    phi = config.np.array([phi[0], phi[1] + 2 * config.np.pi])
 
             # 4. Determine the integration code. Let's identify the midpoint
             # along each integration path and average their (x, y)
             # coordinates to determine what kind of region we are
             # bounding.
-            xim = np.mean(xi)
-            x_xi = costheta * np.cos(xim) - b * sintheta * np.sin(xim)
-            y_xi = sintheta * np.cos(xim) + b * costheta * np.sin(xim)
-            phi_mean = np.mean(phi)
-            x_phi = ro * np.cos(phi_mean)
-            y_phi = bo + ro * np.sin(phi_mean)
+            xim = config.np.mean(xi)
+            x_xi = costheta * config.np.cos(xim) - b * sintheta * config.np.sin(xim)
+            y_xi = sintheta * config.np.cos(xim) + b * costheta * config.np.sin(xim)
+            phi_mean = config.np.mean(phi)
+            x_phi = ro * config.np.cos(phi_mean)
+            y_phi = bo + ro * config.np.sin(phi_mean)
             x = 0.5 * (x_xi + x_phi)
             y = 0.5 * (y_xi + y_phi)
             if on_dayside(b, theta, costheta, sintheta, x, y):
@@ -515,14 +533,14 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
                     # the terminator is *under* the arc along the limb
                     # and we should instead start at the *leftmost* xi
                     # value.
-                    phi = phi[::-1]
-                    xi = xi[::-1]
+                    phi = config.np.array([phi[1], phi[0]])
+                    xi = config.np.array([xi[1], xi[0]])
                 else:
                     # Dayside visible
                     code = FLUX_DAY_VIS
                     if b < 0:
-                        phi = phi[::-1]
-                        xi = xi[::-1]
+                        phi = config.np.array([phi[1], phi[0]])
+                        xi = config.np.array([xi[1], xi[0]])
             else:
                 if x ** 2 + (y - bo) ** 2 < ro ** 2:
                     # Nightside under occultor
@@ -535,43 +553,77 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
     elif len(x) == 3:
 
         # Pre-compute some angles
-        x = np.sort(x)
-        phi_l = np.arcsin((1 - ro ** 2 - bo ** 2) / (2 * bo * ro))
-        lam_o = np.arcsin((1 - ro ** 2 + bo ** 2) / (2 * bo))
+        x = config.np.sort(x)
+        phi_l = config.np.arcsin((1 - ro ** 2 - bo ** 2) / (2 * bo * ro))
+        lam_o = config.np.arcsin((1 - ro ** 2 + bo ** 2) / (2 * bo))
 
         # We need to do this case-by-case
         if b > 0:
 
             if (-1 - xo) ** 2 + yo ** 2 < ro ** 2:
 
-                x = np.array([x[2], x[1], x[0]])
-                phi_t = np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)
-                phi = np.append(theta + phi_t, phi_l,) % (2 * np.pi)
-                for n in range(3):
-                    while phi[n + 1] < phi[n]:
-                        phi[n + 1] += 2 * np.pi
-                xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
-                xi = np.append(xi_o, np.pi)
-                xi = np.array([xi[1], xi[0], xi[3], xi[2]])
-                lam = np.array([lam_o, np.pi + theta,]) % (2 * np.pi)
+                x = config.np.array([x[2], x[1], x[0]])
+                phi_t = config.np.arctan2(b * config.np.sqrt(1 - x ** 2) - yo, x - xo)
+                phi = config.np.append(theta + phi_t, phi_l,) % (2 * config.np.pi)
+
+                # NOTE: Looks silly but simplest way to make jax-compliant
+                while phi[1] < phi[0]:
+                    phi = config.np.array(
+                        [phi[0], phi[1] + 2 * config.np.pi, phi[2], phi[3]]
+                    )
+                while phi[2] < phi[1]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2] + 2 * config.np.pi, phi[3]]
+                    )
+                while phi[3] < phi[2]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2], phi[3] + 2 * config.np.pi]
+                    )
+
+                xi_o = config.np.arctan2(config.np.sqrt(1 - x ** 2), x) % (
+                    2 * config.np.pi
+                )
+                xi = config.np.append(xi_o, config.np.pi)
+                xi = config.np.array([xi[1], xi[0], xi[3], xi[2]])
+                lam = config.np.array([lam_o, config.np.pi + theta,]) % (
+                    2 * config.np.pi
+                )
                 if lam[1] < lam[0]:
-                    lam[1] += 2 * np.pi
+                    lam = config.np.array([lam[0], lam[1] + 2 * config.np.pi])
 
             else:
 
-                x = np.array([x[1], x[0], x[2]])
-                phi_t = np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)
-                phi = np.append(theta + phi_t, np.pi - phi_l,) % (2 * np.pi)
-                phi[[2, 3]] = phi[[3, 2]]
-                for n in range(3):
-                    while phi[n + 1] < phi[n]:
-                        phi[n + 1] += 2 * np.pi
-                xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
-                xi = np.append(xi_o, 0.0)
-                xi = np.array([xi[1], xi[0], xi[2], xi[3]])
-                lam = np.array([theta, np.pi - lam_o,]) % (2 * np.pi)
+                x = config.np.array([x[1], x[0], x[2]])
+                phi_t = config.np.arctan2(b * config.np.sqrt(1 - x ** 2) - yo, x - xo)
+                phi = config.np.append(theta + phi_t, config.np.pi - phi_l,) % (
+                    2 * config.np.pi
+                )
+                phi = config.np.array([phi[0], phi[1], phi[3], phi[2]])
+
+                # NOTE: Looks silly but simplest way to make jax-compliant
+                while phi[1] < phi[0]:
+                    phi = config.np.array(
+                        [phi[0], phi[1] + 2 * config.np.pi, phi[2], phi[3]]
+                    )
+                while phi[2] < phi[1]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2] + 2 * config.np.pi, phi[3]]
+                    )
+                while phi[3] < phi[2]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2], phi[3] + 2 * config.np.pi]
+                    )
+
+                xi_o = config.np.arctan2(config.np.sqrt(1 - x ** 2), x) % (
+                    2 * config.np.pi
+                )
+                xi = config.np.append(xi_o, 0.0)
+                xi = config.np.array([xi[1], xi[0], xi[2], xi[3]])
+                lam = config.np.array([theta, config.np.pi - lam_o,]) % (
+                    2 * config.np.pi
+                )
                 if lam[1] < lam[0]:
-                    lam[1] += 2 * np.pi
+                    lam = config.np.array([lam[0], lam[1] + 2 * config.np.pi])
 
             code = FLUX_TRIP_DAY_OCC
 
@@ -579,33 +631,65 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
 
             if (-1 - xo) ** 2 + yo ** 2 < ro ** 2:
 
-                x = np.array([x[1], x[2], x[0]])
-                phi_t = np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)
-                phi = np.append(theta + phi_t, np.pi - phi_l,) % (2 * np.pi)
-                phi[[2, 3]] = phi[[3, 2]]
-                for n in range(3):
-                    while phi[n + 1] < phi[n]:
-                        phi[n + 1] += 2 * np.pi
-                xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
-                xi = np.append(xi_o, np.pi)
-                xi = np.array([xi[1], xi[0], xi[2], xi[3]])
-                lam = np.array([np.pi + theta, np.pi - lam_o,]) % (2 * np.pi)
+                x = config.np.array([x[1], x[2], x[0]])
+                phi_t = config.np.arctan2(b * config.np.sqrt(1 - x ** 2) - yo, x - xo)
+                phi = config.np.append(theta + phi_t, config.np.pi - phi_l,) % (
+                    2 * config.np.pi
+                )
+                phi = config.np.array([phi[0], phi[1], phi[3], phi[2]])
+
+                # NOTE: Looks silly but simplest way to make jax-compliant
+                while phi[1] < phi[0]:
+                    phi = config.np.array(
+                        [phi[0], phi[1] + 2 * config.np.pi, phi[2], phi[3]]
+                    )
+                while phi[2] < phi[1]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2] + 2 * config.np.pi, phi[3]]
+                    )
+                while phi[3] < phi[2]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2], phi[3] + 2 * config.np.pi]
+                    )
+
+                xi_o = config.np.arctan2(config.np.sqrt(1 - x ** 2), x) % (
+                    2 * config.np.pi
+                )
+                xi = config.np.append(xi_o, config.np.pi)
+                xi = config.np.array([xi[1], xi[0], xi[2], xi[3]])
+                lam = config.np.array([config.np.pi + theta, config.np.pi - lam_o,]) % (
+                    2 * config.np.pi
+                )
                 if lam[1] < lam[0]:
-                    lam[1] += 2 * np.pi
+                    lam = config.np.array([lam[0], lam[1] + 2 * config.np.pi])
 
             else:
 
-                phi_t = np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)
-                phi = np.append(theta + phi_t, phi_l,) % (2 * np.pi)
-                for n in range(3):
-                    while phi[n + 1] < phi[n]:
-                        phi[n + 1] += 2 * np.pi
-                xi_o = np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi)
-                xi = np.append(xi_o, 0.0)
-                xi = np.array([xi[1], xi[0], xi[3], xi[2]])
-                lam = np.array([lam_o, theta,]) % (2 * np.pi)
+                phi_t = config.np.arctan2(b * config.np.sqrt(1 - x ** 2) - yo, x - xo)
+                phi = config.np.append(theta + phi_t, phi_l,) % (2 * config.np.pi)
+
+                # NOTE: Looks silly but simplest way to make jax-compliant
+                while phi[1] < phi[0]:
+                    phi = config.np.array(
+                        [phi[0], phi[1] + 2 * config.np.pi, phi[2], phi[3]]
+                    )
+                while phi[2] < phi[1]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2] + 2 * config.np.pi, phi[3]]
+                    )
+                while phi[3] < phi[2]:
+                    phi = config.np.array(
+                        [phi[0], phi[1], phi[2], phi[3] + 2 * config.np.pi]
+                    )
+
+                xi_o = config.np.arctan2(config.np.sqrt(1 - x ** 2), x) % (
+                    2 * config.np.pi
+                )
+                xi = config.np.append(xi_o, 0.0)
+                xi = config.np.array([xi[1], xi[0], xi[3], xi[2]])
+                lam = config.np.array([lam_o, theta,]) % (2 * config.np.pi)
                 if lam[1] < lam[0]:
-                    lam[1] += 2 * np.pi
+                    lam = config.np.array([lam[0], lam[1] + 2 * config.np.pi])
 
             code = FLUX_TRIP_NIGHT_OCC
 
@@ -613,16 +697,19 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
     elif len(x) == 4:
 
         lam = []
-        phi = np.sort(
-            (theta + np.arctan2(b * np.sqrt(1 - x ** 2) - yo, x - xo)) % (2 * np.pi)
+        phi = config.np.sort(
+            (theta + config.np.arctan2(b * config.np.sqrt(1 - x ** 2) - yo, x - xo))
+            % (2 * config.np.pi)
         )
-        phi = np.array([phi[1], phi[0], phi[3], phi[2]])
-        xi = np.sort(np.arctan2(np.sqrt(1 - x ** 2), x) % (2 * np.pi))
+        phi = config.np.array([phi[1], phi[0], phi[3], phi[2]])
+        xi = config.np.sort(
+            config.np.arctan2(config.np.sqrt(1 - x ** 2), x) % (2 * config.np.pi)
+        )
 
         if b > 0:
             code = FLUX_QUAD_NIGHT_VIS
         else:
-            xi = np.array([xi[1], xi[0], xi[3], xi[2]])
+            xi = config.np.array([xi[1], xi[0], xi[3], xi[2]])
             code = FLUX_QUAD_DAY_VIS
 
     else:
@@ -630,11 +717,16 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         raise NotImplementedError("Unexpected branch.")
 
     # Check
-    if np.isnan(np.sum(phi)):
+    if config.np.isnan(config.np.sum(phi)):
         # TODO: Fix this case if it ever shows up
         print("ERROR: At least one angle is NaN.")
         breakpoint()
 
     # Note that in starry, we use kappa = phi + pi / 2
-    return np.array(phi) + np.pi / 2, np.array(lam), np.array(xi), code
+    return (
+        config.np.array(phi) + config.np.pi / 2,
+        config.np.array(lam),
+        config.np.array(xi),
+        code,
+    )
 
