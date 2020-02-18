@@ -142,6 +142,10 @@ class StarryNight(object):
             self.P = compute_P(self.ydeg + 1, self.bo, self.ro, self.kappa)
             self.Q = compute_Q(self.ydeg + 1, self.lam)
             self.T = compute_T(self.ydeg + 1, self.b, self.theta, self.xi)
+        else:
+            self.P = None
+            self.Q = None
+            self.T = None
 
     def design_matrix(self, b, theta, bo, ro):
 

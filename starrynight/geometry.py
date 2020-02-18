@@ -92,34 +92,7 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
     return lam
 
 
-def get_angles(b, theta, costheta, sintheta, bo, ro):
-
-    # Trivial cases
-    if bo <= ro - 1 + STARRY_COMPLETE_OCC_TOL:
-
-        # Complete occultation
-        return (
-            np.array([]),
-            np.array([]),
-            np.array([]),
-            FLUX_ZERO,
-        )
-
-    elif bo >= 1 + ro - STARRY_NO_OCC_TOL:
-
-        # No occultation
-        return (
-            np.array([]),
-            np.array([]),
-            np.array([]),
-            FLUX_SIMPLE_REFL,
-        )
-
-    # Hack. This grazing configuration leads to instabilities
-    # in the root solver. Let's avoid it.
-    if 1 - ro < bo < 1 - ro + STARRY_GRAZING_TOL:
-        bo = 1 - ro + STARRY_GRAZING_TOL
-
+def get_roots(b, theta, costheta, sintheta, bo, ro):
     # We'll solve for occultor-terminator intersections
     # in the frame where the semi-major axis of the
     # terminator ellipse is aligned with the x axis
@@ -129,6 +102,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
     # Special case: b = 0
     if np.abs(b) < STARRY_B_ZERO_TOL:
 
+        # Roots
         x = np.array([])
         term = np.sqrt(ro ** 2 - yo ** 2)
         if np.abs(xo + term) < 1:
@@ -136,6 +110,18 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         if np.abs(xo - term) < 1:
             x = np.append(x, xo - term)
         x = np.array(list(set(x)))
+
+        # Derivatives
+        if yo < 0:
+            s = 1
+        else:
+            s = -1
+        dxdb = s * np.sqrt((1 - x ** 2) * (ro ** 2 - (x - xo) ** 2)) / (x - xo)
+        dxdtheta = bo * (
+            costheta - s * np.sqrt(ro ** 2 - (x - xo) ** 2) / (x - xo) * sintheta
+        )
+        dxdbo = sintheta + s * np.sqrt(ro ** 2 - (x - xo) ** 2) / (x - xo) * costheta
+        dxdro = ro / (x - xo)
 
     # Need to solve a quartic
     else:
@@ -161,6 +147,10 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         # Polish the roots using Newton's method on the *original*
         # function, which is more stable than the quartic expression.
         x = []
+        dxdb = []
+        dxdtheta = []
+        dxdbo = []
+        dxdro = []
         for n in range(len(roots)):
 
             # We're looking for the intersection of the function
@@ -230,13 +220,31 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
                                 good = False
                                 break
                         if good:
+
+                            # Store the root
                             x += [minx]
 
-        x = np.array(x)
+                            # Now compute its derivatives
+                            q = (ro ** 2 - (minx - xo) ** 2) ** 0.5
+                            p = (1 - minx ** 2) ** 0.5
+                            v = (minx - xo) / q
+                            w = b / p
+                            t = 1 / (-w * minx - s * v)
+                            dxdb += [-t * p]
+                            dxdtheta += [-t * bo * (sintheta + s * v * costheta)]
+                            dxdbo += [t * (costheta - s * v * sintheta)]
+                            dxdro += [-t * s * ro / q]
+
+    # Convert to arrays
+    x = np.array(x)
+    dxdb = np.array(dxdb)
+    dxdtheta = np.array(dxdtheta)
+    dxdbo = np.array(dxdbo)
+    dxdro = np.array(dxdro)
 
     # Check if the extrema of the terminator ellipse are occulted
-    e1 = costheta ** 2 + (sintheta - bo) ** 2 < ro ** 2
-    e2 = costheta ** 2 + (sintheta + bo) ** 2 < ro ** 2
+    e1 = costheta ** 2 + (sintheta - bo) ** 2 < ro ** 2 + STARRY_ROOT_TOL_HIGH
+    e2 = costheta ** 2 + (sintheta + bo) ** 2 < ro ** 2 + STARRY_ROOT_TOL_HIGH
 
     # One is occulted, the other is not.
     # Usually we should have a single root, but
@@ -256,6 +264,47 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
             # TODO: Check this more rigorously? For now
             # we just delete the root.
             x = np.array([])
+            dxdb = np.array([])
+            dxdtheta = np.array([])
+            dxdbo = np.array([])
+            dxdro = np.array([])
+
+    return x, dxdb, dxdtheta, dxdbo, dxdro
+
+
+def get_angles(b, theta, costheta, sintheta, bo, ro):
+
+    # Trivial cases
+    if bo <= ro - 1 + STARRY_COMPLETE_OCC_TOL:
+
+        # Complete occultation
+        return (
+            np.array([]),
+            np.array([]),
+            np.array([]),
+            FLUX_ZERO,
+        )
+
+    elif bo >= 1 + ro - STARRY_NO_OCC_TOL:
+
+        # No occultation
+        return (
+            np.array([]),
+            np.array([]),
+            np.array([]),
+            FLUX_SIMPLE_REFL,
+        )
+
+    # Hack. This grazing configuration leads to instabilities
+    # in the root solver. Let's avoid it.
+    if 1 - ro < bo < 1 - ro + STARRY_GRAZING_TOL:
+        bo = 1 - ro + STARRY_GRAZING_TOL
+
+    # Get the points of intersection between the occultor & terminator
+    # These are the roots to a quartic equation.
+    xo = bo * sintheta
+    yo = bo * costheta
+    x, _, _, _, _ = get_roots(b, theta, costheta, sintheta, bo, ro)
 
     # P-Q
     if len(x) == 0:

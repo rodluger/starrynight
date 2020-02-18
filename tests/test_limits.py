@@ -106,14 +106,12 @@ def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
     for i in range(len(bo)):
         N.precompute(b, theta, bo[i], ro)
         S.precompute(b, theta, bo[i], ro)
-        if hasattr(S, "P"):
+        if S.P is not None:
             # Sometimes we might be so close to an edge case
             # that the root finder doesn't find the intersection.
             # This is fine; the answer will still be approximately correct.
             err[i] = np.abs(N.P[2] - S.P[2])
             tmp[i] = N.P[0]
-            del N.P
-            del S.P
         if np.isnan(err[i]):
             err[i] = 1.0
     assert np.all(err < tol), "{}".format(np.max(err))
@@ -214,7 +212,7 @@ def test_P_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
     for i in tqdm(range(len(bo))):
         N.precompute(b, theta, bo[i], ro)
         S.precompute(b, theta, bo[i], ro)
-        if hasattr(S, "P"):
+        if S.P is not None:
             # Sometimes we might be so close to an edge case
             # that the root finder doesn't find the intersection.
             # This is fine; the answer will still be approximately correct.
@@ -222,8 +220,6 @@ def test_P_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
             err[i] = max(
                 np.max(np.abs(N.P[:2] - S.P[:2])), np.max(np.abs(N.P[3:] - S.P[3:]))
             )
-            del N.P
-            del S.P
         if np.isnan(err[i]):
             err[i] = 1.0
 
