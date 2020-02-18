@@ -4,10 +4,9 @@ import pytest
 
 # Settings
 seed = 0
-nruns = 1000
-res = 999
+nruns = 100
 atol = 1e-2
-res = 4999
+res = 999
 ydeg = 1
 y = [1, 1, 1, 1]
 
@@ -38,13 +37,6 @@ args = [get_args() for n in range(nruns)]
     "b,theta,bo,ro", args,
 )
 def test_mc(b, theta, bo, ro):
-
-    from starrynight.viz import visualize
-    import matplotlib.pyplot as plt
-
-    visualize(b, theta, bo, ro)
-    plt.show()
-
     assert np.allclose(
         N.flux(y, b, theta, bo, ro), B.flux(y, b, theta, bo, ro), atol=atol
     )
