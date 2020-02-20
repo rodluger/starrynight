@@ -14,8 +14,7 @@ TODO: root finding
 
 from numerical import Numerical
 from starrynight import StarryNight
-from starrynight.linear import pal
-from starrynight.special import dE, dF
+from starrynight.special import ellip
 from starrynight.primitive import compute_J, compute_H
 import numpy as np
 import pytest
@@ -134,9 +133,9 @@ def test_J_high_l(tol=1e-15):
         s2 = s1 ** 2
         c1 = np.cos(x)
         q2 = 1 - np.minimum(1.0, s2 / k2[i])
-        dF_val = dF(x, km2)
-        dE_val = dE(x, km2)
-        J = compute_J(ydeg + 1, k2[i], km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
+        # TODO: Update to new function syntax
+        F, E, _, _ = ellip(kappa, k2[i])
+        J = compute_J(ydeg + 1, k2[i], km2, kappa, s1, s2, c1, q2, E, F)
         func = (
             lambda phi, v: np.sin(phi) ** (2 * v)
             * (max(0, 1 - km2 * np.sin(phi) ** 2)) ** 1.5

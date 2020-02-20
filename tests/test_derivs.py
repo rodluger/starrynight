@@ -1,37 +1,86 @@
 import numpy as np
+from starrynight.special import J
+from starrynight.primitive import compute_Q
 from starrynight.geometry import get_roots
-from starrynight.utils import *
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
-def roots(b, theta, bo, ro):
-    # Get the roots using the starry function
-    costheta = np.cos(theta)
-    sintheta = np.sin(theta)
-    x, dxdb, dxdtheta, dxdbo, dxdro = get_roots(b, theta, costheta, sintheta, bo, ro)
+def test_Q():
+    ydeg = 3
+    eps = 1e-8
+    lam = np.array([0.3, 1.5])
 
-    # Sort them
-    i = np.argsort(x)
-    x = np.array(x)[i]
-    dxdb = np.array(dxdb)[i]
-    dxdtheta = np.array(dxdtheta)[i]
-    dxdbo = np.array(dxdbo)[i]
-    dxdro = np.array(dxdro)[i]
+    # Analytic
+    Q, dQdlam = compute_Q(ydeg, lam, gradient=True)
 
-    # Pad the arrays so they all have the same shape
-    npad = 4 - len(x)
-    x = np.pad(x, ((0, npad),), constant_values=np.nan)
-    dxdb = np.pad(dxdb, ((0, npad),), constant_values=np.nan)
-    dxdtheta = np.pad(dxdtheta, ((0, npad),), constant_values=np.nan)
-    dxdbo = np.pad(dxdbo, ((0, npad),), constant_values=np.nan)
-    dxdro = np.pad(dxdro, ((0, npad),), constant_values=np.nan)
+    # Numerical
+    dQdlam_num = np.zeros_like(dQdlam)
+    Q1 = compute_Q(ydeg, lam - np.array([eps, 0]))
+    Q2 = compute_Q(ydeg, lam + np.array([eps, 0]))
+    dQdlam_num[:, 0] = (Q2 - Q1) / (2 * eps)
+    Q1 = compute_Q(ydeg, lam - np.array([0, eps]))
+    Q2 = compute_Q(ydeg, lam + np.array([0, eps]))
+    dQdlam_num[:, 1] = (Q2 - Q1) / (2 * eps)
 
-    return x, dxdb, dxdtheta, dxdbo, dxdro
+    assert np.allclose(dQdlam, dQdlam_num)
 
 
-def todo_root_derivs(plot=False):
+def test_J():
+    N = 5
+    eps = 1e-8
+    kappa = np.array([0.3, 1.5])
+    k2 = 0.5
+
+    # Analytic
+    val, (dJdk2, dJdkappa) = J(N, k2, kappa, gradient=True)
+
+    # Numerical
+    dJdkappa_num = np.zeros_like(dJdkappa)
+    Q1 = J(N, k2, kappa - np.array([eps, 0]))
+    Q2 = J(N, k2, kappa + np.array([eps, 0]))
+    dJdkappa_num[:, 0] = (Q2 - Q1) / (2 * eps)
+    Q1 = J(N, k2, kappa - np.array([0, eps]))
+    Q2 = J(N, k2, kappa + np.array([0, eps]))
+    dJdkappa_num[:, 1] = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dJdkappa, dJdkappa_num)
+
+    Q1 = J(N, k2 - eps, kappa)
+    Q2 = J(N, k2 + eps, kappa)
+    dJdk2_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dJdk2, dJdk2_num)
+
+
+def test_roots(plot=False):
     """Test the derivatives of the roots of the quartic equation."""
+
+    def roots(b, theta, bo, ro):
+        """Wrapper that sorts and pads the roots."""
+        # Get the roots using the starry function
+        costheta = np.cos(theta)
+        sintheta = np.sin(theta)
+        x, (dxdb, dxdtheta, dxdbo, dxdro) = get_roots(
+            b, theta, costheta, sintheta, bo, ro, gradient=True
+        )
+
+        # Sort them
+        i = np.argsort(x)
+        x = np.array(x)[i]
+        dxdb = np.array(dxdb)[i]
+        dxdtheta = np.array(dxdtheta)[i]
+        dxdbo = np.array(dxdbo)[i]
+        dxdro = np.array(dxdro)[i]
+
+        # Pad the arrays so they all have the same shape
+        npad = 4 - len(x)
+        x = np.pad(x, ((0, npad),), constant_values=np.nan)
+        dxdb = np.pad(dxdb, ((0, npad),), constant_values=np.nan)
+        dxdtheta = np.pad(dxdtheta, ((0, npad),), constant_values=np.nan)
+        dxdbo = np.pad(dxdbo, ((0, npad),), constant_values=np.nan)
+        dxdro = np.pad(dxdro, ((0, npad),), constant_values=np.nan)
+
+        return x, dxdb, dxdtheta, dxdbo, dxdro
+
     # Number of data points
     ns = 1000
 

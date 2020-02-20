@@ -1,9 +1,9 @@
-from .configdefaults import config
-from .special import hyp2f1, dE, dF, J
+from .special import hyp2f1, J, ellip
 from .utils import *
 from .vieta import Vieta
-from .linear import pal
+from .linear import dP2
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 __ALL__ = ["compute_P", "compute_Q", "comput_T"]
@@ -19,7 +19,7 @@ def compute_U(vmax, s1):
     containing the values of this function from v = 0 to v = vmax.
 
     """
-    U = config.np.empty(vmax + 1)
+    U = np.empty(vmax + 1)
     U[0] = pairdiff(s1)
     term = s1 ** 2
     for v in range(1, vmax + 1):
@@ -31,7 +31,7 @@ def compute_U(vmax, s1):
 def compute_I(nmax, kappa, s1, c1):
 
     # Lower boundary
-    I = config.np.empty(nmax + 1)
+    I = np.empty(nmax + 1)
     I[0] = 0.5 * pairdiff(kappa)
 
     # Recurse upward
@@ -59,9 +59,9 @@ def _compute_W_indef(nmax, s2, q2, q3):
     recursion (always stable).
 
     """
-    W = config.np.empty(nmax + 1)
+    W = np.empty(nmax + 1)
 
-    if config.np.abs(1 - q2) < 0.5:
+    if np.abs(1 - q2) < 0.5:
 
         # Setup
         invs2 = 1 / s2
@@ -106,9 +106,7 @@ def _compute_W_indef(nmax, s2, q2, q3):
 
 def compute_W(nmax, s2, q2, q3):
     return pairdiff(
-        config.np.array(
-            [_compute_W_indef(nmax, s2[i], q2[i], q3[i]) for i in range(len(s2))]
-        )
+        np.array([_compute_W_indef(nmax, s2[i], q2[i], q3[i]) for i in range(len(s2))])
     )
 
 
@@ -121,15 +119,15 @@ def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
     
     """
     # Boundary conditions
-    z = s1 * c1 * config.np.sqrt(q2)
+    z = s1 * c1 * np.sqrt(q2)
     resid = km2 * pairdiff(z)
     f0 = (1 / 3) * (2 * (2 - km2) * dE + (km2 - 1) * dF + resid)
     fN = J(nmax, k2, kappa)
 
     # Set up the tridiagonal problem
-    a = config.np.empty(nmax - 1)
-    b = config.np.empty(nmax - 1)
-    c = config.np.empty(nmax - 1)
+    a = np.empty(nmax - 1)
+    b = np.empty(nmax - 1)
+    c = np.empty(nmax - 1)
     term = k2 * z * q2 ** 2
 
     for i, v in enumerate(range(2, nmax + 1)):
@@ -144,15 +142,11 @@ def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
     c[-1] -= fN
 
     # Construct the tridiagonal matrix
-    A = (
-        config.np.diag(a, 0)
-        + config.np.diag(b[1:], -1)
-        + config.np.diag(config.np.ones(nmax - 2), 1)
-    )
+    A = np.diag(a, 0) + np.diag(b[1:], -1) + np.diag(np.ones(nmax - 2), 1)
 
     # Solve
-    soln = config.np.linalg.solve(A, c)
-    return config.np.concatenate(([f0], soln, [fN]))
+    soln = np.linalg.solve(A, c)
+    return np.concatenate(([f0], soln, [fN]))
 
 
 def K(I, delta, u, v):
@@ -167,36 +161,39 @@ def L(J, k, delta, u, v, t):
     )
 
 
-def compute_H(uvmax, xi):
+def compute_H(uvmax, xi, gradient=False):
 
-    c = config.np.cos(xi)
-    s = config.np.sin(xi)
+    c = np.cos(xi)
+    s = np.sin(xi)
     cs = c * s
     cc = c ** 2
     ss = s ** 2
 
-    H = config.np.empty((uvmax + 1, uvmax + 1))
-    T = config.np.empty((uvmax + 1, uvmax + 1, len(xi)))
+    H = np.empty((uvmax + 1, uvmax + 1))
+    dH = np.empty((uvmax + 1, uvmax + 1, len(xi)))
     H[0, 0] = pairdiff(xi)
-    T[0, 0] = 1
+    dH[0, 0] = 1
     H[1, 0] = pairdiff(s)
-    T[1, 0] = c
+    dH[1, 0] = c
     H[0, 1] = -pairdiff(c)
-    T[0, 1] = s
+    dH[0, 1] = s
     H[1, 1] = -0.5 * pairdiff(cc)
-    T[1, 1] = cs
+    dH[1, 1] = cs
 
     for u in range(2):
         for v in range(2, uvmax + 1 - u):
-            H[u, v] = (-pairdiff(T[u, v - 2] * cs) + (v - 1) * H[u, v - 2]) / (u + v)
-            T[u, v] = T[u, v - 2] * ss
+            H[u, v] = (-pairdiff(dH[u, v - 2] * cs) + (v - 1) * H[u, v - 2]) / (u + v)
+            dH[u, v] = dH[u, v - 2] * ss
 
     for u in range(2, uvmax + 1):
         for v in range(uvmax + 1 - u):
-            H[u, v] = (pairdiff(T[u - 2, v] * cs) + (u - 1) * H[u - 2, v]) / (u + v)
-            T[u, v] = T[u - 2, v] * cc
+            H[u, v] = (pairdiff(dH[u - 2, v] * cs) + (u - 1) * H[u - 2, v]) / (u + v)
+            dH[u, v] = dH[u - 2, v] * cc
 
-    return H
+    if gradient:
+        return H, dH
+    else:
+        return H
 
 
 def _compute_T2_indef(b, xi):
@@ -204,72 +201,67 @@ def _compute_T2_indef(b, xi):
     Note: requires b >= 0.
     
     """
-    s = config.np.sin(xi)
-    c = config.np.cos(xi)
+    s = np.sin(xi)
+    c = np.cos(xi)
     t = s / c
-    sgn = config.np.sign(s)
-    bc = config.np.sqrt(1 - b ** 2)
+    sgn = np.sign(s)
+    bc = np.sqrt(1 - b ** 2)
     bbc = b * bc
 
     # Special cases
     if xi == 0:
-        return -(config.np.arctan((2 * b ** 2 - 1) / (2 * bbc)) + bbc) / 3
-    elif xi == 0.5 * config.np.pi:
-        return (0.5 * config.np.pi - config.np.arctan(b / bc)) / 3
-    elif xi == config.np.pi:
-        return (0.5 * config.np.pi + bbc) / 3
-    elif xi == 1.5 * config.np.pi:
-        return (0.5 * config.np.pi + config.np.arctan(b / bc) + 2 * bbc) / 3
+        return -(np.arctan((2 * b ** 2 - 1) / (2 * bbc)) + bbc) / 3
+    elif xi == 0.5 * np.pi:
+        return (0.5 * np.pi - np.arctan(b / bc)) / 3
+    elif xi == np.pi:
+        return (0.5 * np.pi + bbc) / 3
+    elif xi == 1.5 * np.pi:
+        return (0.5 * np.pi + np.arctan(b / bc) + 2 * bbc) / 3
 
     # Figure out the offset
-    if xi < 0.5 * config.np.pi:
+    if xi < 0.5 * np.pi:
         delta = 0
-    elif xi < config.np.pi:
-        delta = config.np.pi
-    elif xi < 1.5 * config.np.pi:
+    elif xi < np.pi:
+        delta = np.pi
+    elif xi < 1.5 * np.pi:
         delta = 2 * bbc
     else:
-        delta = config.np.pi + 2 * bbc
+        delta = np.pi + 2 * bbc
 
     # We're done
     return (
-        config.np.arctan(b * t)
-        - sgn
-        * (
-            config.np.arctan(((s / (1 + c)) ** 2 + 2 * b ** 2 - 1) / (2 * bbc))
-            + bbc * c
-        )
+        np.arctan(b * t)
+        - sgn * (np.arctan(((s / (1 + c)) ** 2 + 2 * b ** 2 - 1) / (2 * bbc)) + bbc * c)
         + delta
     ) / 3
 
 
 def compute_P(ydeg, bo, ro, kappa):
     """Compute the P integral."""
-
     # Basic variables
     delta = (bo - ro) / (2 * ro)
     k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
-    k = config.np.sqrt(k2)
+    k = np.sqrt(k2)
     km2 = 1.0 / k2
     fourbr15 = (4 * bo * ro) ** 1.5
     k3fourbr15 = k ** 3 * fourbr15
-    tworo = config.np.empty(ydeg + 4)
+    tworo = np.empty(ydeg + 4)
     tworo[0] = 1.0
     for i in range(1, ydeg + 4):
         tworo[i] = tworo[i - 1] * 2 * ro
 
     # Pre-compute the helper integrals
     x = 0.5 * kappa
-    s1 = config.np.sin(x)
+    s1 = np.sin(x)
     s2 = s1 ** 2
-    c1 = config.np.cos(x)
-    q2 = 1 - config.np.minimum(1.0, s2 / k2)
+    c1 = np.cos(x)
+    q2 = 1 - np.minimum(1.0, s2 / k2)
     q3 = q2 ** 1.5
-
     U = compute_U(2 * ydeg + 5, s1)
     I = compute_I(ydeg + 3, kappa, s1, c1)
     W = compute_W(ydeg, s2, q2, q3)
 
+    # Compute the elliptic integrals
     if k2 == 1:
 
         # TODO: This is a special case in which the J integral reduces
@@ -278,20 +270,19 @@ def compute_P(ydeg, bo, ro, kappa):
         # where cosine has constant sign.
         #
         #   H = compute_H(3 + 2 * ydeg + 2, 0.5 * kappa)
-        #   J = config.np.array([H[3, 2 * v] for v in range(ydeg + 2)])
+        #   J = np.array([H[3, 2 * v] for v in range(ydeg + 2)])
         #
-        dF_val = dF(x, 1 - 1e-12)
-        dE_val = dE(x, 1 - 1e-12)
-        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
+        # The expressions for the elliptic integrals also simplify.
+        F, E, RF, RD, RJ, RF0, RD0, RJ0 = ellip(bo, ro, kappa, 1 + 1e-12)
+        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, E, F)
 
     else:
 
-        dF_val = dF(x, km2)
-        dE_val = dE(x, km2)
-        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, dE_val, dF_val)
+        F, E, RF, RD, RJ, RF0, RD0, RJ0 = ellip(bo, ro, kappa, k2)
+        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, E, F)
 
-    P = config.np.zeros((ydeg + 1) ** 2)
-
+    # Now populate the P array
+    P = np.zeros((ydeg + 1) ** 2)
     n = 0
     for l in range(ydeg + 1):
         for m in range(-l, l + 1):
@@ -309,14 +300,7 @@ def compute_P(ydeg, bo, ro, kappa):
                 if l == 1:
 
                     # Same as in starry, but using expression from Pal (2012)
-                    # Note there's a difference of pi/2 between Pal's `phi` and ours
-                    for i in range(0, len(kappa), 2):
-                        P[2] += pal(
-                            bo,
-                            ro,
-                            kappa[i] - config.np.pi,
-                            kappa[i + 1] - config.np.pi,
-                        )
+                    P[2] = dP2(bo, ro, k2, kappa, RF, RD, RJ, RF0, RD0, RJ0)
 
                 elif l % 2 == 0:
 
@@ -393,18 +377,21 @@ def compute_P(ydeg, bo, ro, kappa):
     return P
 
 
-def compute_Q(ydeg, lam):
+def compute_Q(ydeg, lam, gradient=False):
 
     # Pre-compute H
-    H = compute_H(ydeg + 2, lam)
+    if gradient:
+        H, dH = compute_H(ydeg + 2, lam, gradient=True)
+    else:
+        H = compute_H(ydeg + 2, lam)
 
     # Allocate
-    Q = config.np.zeros((ydeg + 1) ** 2)
-    dQdlam = config.np.zeros(((ydeg + 1) ** 2, len(lam)))
+    Q = np.zeros((ydeg + 1) ** 2)
+    dQdlam = np.zeros(((ydeg + 1) ** 2, len(lam)))
 
     # Note that the linear term is special
     Q[2] = pairdiff(lam) / 3
-    dQdlam[2] = config.np.ones_like(lam) / 3
+    dQdlam[2] = np.ones_like(lam) / 3
 
     # Easy!
     n = 0
@@ -413,17 +400,21 @@ def compute_Q(ydeg, lam):
             mu = l - m
             nu = l + m
             if nu % 2 == 0:
+
                 Q[n] = H[(mu + 4) // 2, nu // 2]
 
-                dQdlam[n] = config.np.cos(lam) ** ((mu + 4) // 2) * config.np.sin(
-                    lam
-                ) ** (nu // 2)
+                if gradient:
+                    dQdlam[n] = dH[(mu + 4) // 2, nu // 2]
 
             n += 1
 
-    dQdlam *= config.np.repeat([1, -1], len(lam) // 2).reshape(1, -1)
+    # Enforce alternating signs for (lower, upper) limits
+    dQdlam *= np.repeat([-1, 1], len(lam) // 2).reshape(1, -1)
 
-    return Q
+    if gradient:
+        return Q, dQdlam
+    else:
+        return Q
 
 
 def compute_T(ydeg, b, theta, xi):
@@ -432,8 +423,8 @@ def compute_T(ydeg, b, theta, xi):
     H = compute_H(ydeg + 2, xi)
 
     # Vars
-    ct = config.np.cos(theta)
-    st = config.np.sin(theta)
+    ct = np.cos(theta)
+    st = np.sin(theta)
     ttinvb = st / (b * ct)
     invbtt = ct / (b * st)
     b32 = (1 - b ** 2) ** 1.5
@@ -441,17 +432,15 @@ def compute_T(ydeg, b, theta, xi):
     bst = b * st
 
     # Recurse
-    T = config.np.zeros((ydeg + 1) ** 2)
+    T = np.zeros((ydeg + 1) ** 2)
 
     # Case 2 (special)
-    T[2] = pairdiff(
-        [config.np.sign(b) * _compute_T2_indef(config.np.abs(b), x) for x in xi]
-    )
+    T[2] = pairdiff([np.sign(b) * _compute_T2_indef(np.abs(b), x) for x in xi])
 
     # Special limit: sin(theta) = 0
-    if config.np.abs(st) < STARRY_T_TOL:
+    if np.abs(st) < STARRY_T_TOL:
 
-        sgnct = config.np.sign(ct)
+        sgnct = np.sign(ct)
         n = 0
         for l in range(ydeg + 1):
             for m in range(-l, l + 1):
@@ -474,9 +463,9 @@ def compute_T(ydeg, b, theta, xi):
         return T
 
     # Special limit: cos(theta) = 0
-    elif config.np.abs(ct) < STARRY_T_TOL:
+    elif np.abs(ct) < STARRY_T_TOL:
 
-        sgnst = config.np.sign(st)
+        sgnst = np.sign(st)
         n = 0
         for l in range(ydeg + 1):
             for m in range(-l, l + 1):

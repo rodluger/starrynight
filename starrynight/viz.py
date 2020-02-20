@@ -1,38 +1,36 @@
-from .configdefaults import config
 from .geometry import get_angles
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc
+import numpy as np
 
 
 def visualize(b, theta, bo, ro, res=4999):
 
     # Find angles of intersection
-    kappa, lam, xi, code = get_angles(
-        b, theta, config.np.cos(theta), config.np.sin(theta), bo, ro
-    )
-    phi = kappa - config.np.pi / 2
+    kappa, lam, xi, code = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
+    phi = kappa - np.pi / 2
     print(code)
 
     # Equation of half-ellipse
-    x = config.np.linspace(-1, 1, 1000)
-    y = b * config.np.sqrt(1 - x ** 2)
-    x_t = x * config.np.cos(theta) - y * config.np.sin(theta)
-    y_t = x * config.np.sin(theta) + y * config.np.cos(theta)
+    x = np.linspace(-1, 1, 1000)
+    y = b * np.sqrt(1 - x ** 2)
+    x_t = x * np.cos(theta) - y * np.sin(theta)
+    y_t = x * np.sin(theta) + y * np.cos(theta)
 
     # Shaded regions
-    p = config.np.linspace(-1, 1, res)
-    xpt, ypt = config.np.meshgrid(p, p)
+    p = np.linspace(-1, 1, res)
+    xpt, ypt = np.meshgrid(p, p)
     cond1 = xpt ** 2 + (ypt - bo) ** 2 < ro ** 2  # inside occultor
     cond2 = xpt ** 2 + ypt ** 2 < 1  # inside occulted
-    xr = xpt * config.np.cos(theta) + ypt * config.np.sin(theta)
-    yr = -xpt * config.np.sin(theta) + ypt * config.np.cos(theta)
-    cond3 = yr > b * config.np.sqrt(1 - xr ** 2)  # above terminator
-    img_day_occ = config.np.zeros_like(xpt)
+    xr = xpt * np.cos(theta) + ypt * np.sin(theta)
+    yr = -xpt * np.sin(theta) + ypt * np.cos(theta)
+    cond3 = yr > b * np.sqrt(1 - xr ** 2)  # above terminator
+    img_day_occ = np.zeros_like(xpt)
     img_day_occ[cond1 & cond2 & cond3] = 1
-    img_night_occ = config.np.zeros_like(xpt)
+    img_night_occ = np.zeros_like(xpt)
     img_night_occ[cond1 & cond2 & ~cond3] = 1
-    img_night = config.np.zeros_like(xpt)
+    img_night = np.zeros_like(xpt)
     img_night[~cond1 & cond2 & ~cond3] = 1
 
     # Plot
@@ -51,7 +49,7 @@ def visualize(b, theta, bo, ro, res=4999):
     # Labels
     for i in range(len(phi)):
         ax[0].annotate(
-            r"$\xi_{} = {:.1f}^\circ$".format(i + 1, xi[i] * 180 / config.np.pi),
+            r"$\xi_{} = {:.1f}^\circ$".format(i + 1, xi[i] * 180 / np.pi),
             xy=(0, 0),
             xycoords="axes fraction",
             xytext=(5, 25 - i * 20),
@@ -60,7 +58,7 @@ def visualize(b, theta, bo, ro, res=4999):
             color="C0",
         )
         ax[1].annotate(
-            r"$\phi_{} = {:.1f}^\circ$".format(i + 1, phi[i] * 180 / config.np.pi),
+            r"$\phi_{} = {:.1f}^\circ$".format(i + 1, phi[i] * 180 / np.pi),
             xy=(0, 0),
             xycoords="axes fraction",
             xytext=(5, 25 - i * 20),
@@ -70,7 +68,7 @@ def visualize(b, theta, bo, ro, res=4999):
         )
     for i in range(len(lam)):
         ax[2].annotate(
-            r"$\lambda_{} = {:.1f}^\circ$".format(i + 1, lam[i] * 180 / config.np.pi),
+            r"$\lambda_{} = {:.1f}^\circ$".format(i + 1, lam[i] * 180 / np.pi),
             xy=(0, 0),
             xycoords="axes fraction",
             xytext=(5, 25 - i * 20),
@@ -116,18 +114,12 @@ def visualize(b, theta, bo, ro, res=4999):
 
             # T
             # This is the *actual* angle along the ellipse
-            xi_p = config.np.arctan(config.np.abs(b) * config.np.tan(xi))
-            xi_p[xi_p < 0] += config.np.pi
-            if config.np.abs(b) < 1e-4:
+            xi_p = np.arctan(np.abs(b) * np.tan(xi))
+            xi_p[xi_p < 0] += np.pi
+            if np.abs(b) < 1e-4:
                 ax[0].plot(
-                    [
-                        config.np.cos(xi[k]) * config.np.cos(theta),
-                        config.np.cos(xi[k + 1]) * config.np.cos(theta),
-                    ],
-                    [
-                        config.np.cos(xi[k]) * config.np.sin(theta),
-                        config.np.cos(xi[k + 1]) * config.np.sin(theta),
-                    ],
+                    [np.cos(xi[k]) * np.cos(theta), np.cos(xi[k + 1]) * np.cos(theta),],
+                    [np.cos(xi[k]) * np.sin(theta), np.cos(xi[k + 1]) * np.sin(theta),],
                     color="r",
                     lw=2,
                     zorder=3,
@@ -139,10 +131,10 @@ def visualize(b, theta, bo, ro, res=4999):
                 arc = Arc(
                     (0, 0),
                     2,
-                    2 * config.np.abs(b),
-                    theta * 180 / config.np.pi,
-                    config.np.sign(b) * xi_p[k + 1] * 180 / config.np.pi,
-                    config.np.sign(b) * xi_p[k] * 180 / config.np.pi,
+                    2 * np.abs(b),
+                    theta * 180 / np.pi,
+                    np.sign(b) * xi_p[k + 1] * 180 / np.pi,
+                    np.sign(b) * xi_p[k] * 180 / np.pi,
                     color="r",
                     lw=2,
                     zorder=3,
@@ -155,8 +147,8 @@ def visualize(b, theta, bo, ro, res=4999):
                 2 * ro,
                 2 * ro,
                 0,
-                phi[k] * 180 / config.np.pi,
-                phi[k + 1] * 180 / config.np.pi,
+                phi[k] * 180 / np.pi,
+                phi[k + 1] * 180 / np.pi,
                 color="r",
                 lw=2,
                 zorder=3,
@@ -171,8 +163,8 @@ def visualize(b, theta, bo, ro, res=4999):
             2,
             2,
             0,
-            lam[0] * 180 / config.np.pi,
-            lam[1] * 180 / config.np.pi,
+            lam[0] * 180 / np.pi,
+            lam[1] * 180 / np.pi,
             color="r",
             lw=2,
             zorder=3,
@@ -181,8 +173,8 @@ def visualize(b, theta, bo, ro, res=4999):
 
     # Draw axes
     ax[0].plot(
-        [-config.np.cos(theta), config.np.cos(theta)],
-        [-config.np.sin(theta), config.np.sin(theta)],
+        [-np.cos(theta), np.cos(theta)],
+        [-np.sin(theta), np.sin(theta)],
         color="k",
         ls="--",
         lw=0.5,
@@ -206,18 +198,18 @@ def visualize(b, theta, bo, ro, res=4999):
 
         # xi angle
         ax[0].plot(
-            [0, config.np.cos(config.np.sign(b) * xi_i + theta)],
-            [0, config.np.sin(config.np.sign(b) * xi_i + theta)],
+            [0, np.cos(np.sign(b) * xi_i + theta)],
+            [0, np.sin(np.sign(b) * xi_i + theta)],
             color="C0",
             lw=1,
         )
 
         # tangent line
-        x0 = config.np.cos(xi_i) * config.np.cos(theta)
-        y0 = config.np.cos(xi_i) * config.np.sin(theta)
+        x0 = np.cos(xi_i) * np.cos(theta)
+        y0 = np.cos(xi_i) * np.sin(theta)
         ax[0].plot(
-            [x0, config.np.cos(config.np.sign(b) * xi_i + theta)],
-            [y0, config.np.sin(config.np.sign(b) * xi_i + theta)],
+            [x0, np.cos(np.sign(b) * xi_i + theta)],
+            [y0, np.sin(np.sign(b) * xi_i + theta)],
             color="k",
             ls="--",
             lw=0.5,
@@ -225,23 +217,23 @@ def visualize(b, theta, bo, ro, res=4999):
 
         # mark the polar angle
         ax[0].plot(
-            [config.np.cos(config.np.sign(b) * xi_i + theta)],
-            [config.np.sin(config.np.sign(b) * xi_i + theta)],
+            [np.cos(np.sign(b) * xi_i + theta)],
+            [np.sin(np.sign(b) * xi_i + theta)],
             "C0o",
             ms=4,
             zorder=4,
         )
 
         # draw and label the angle arc
-        if config.np.sin(xi_i) != 0:
-            angle = sorted([theta, config.np.sign(b) * xi_i + theta])
+        if np.sin(xi_i) != 0:
+            angle = sorted([theta, np.sign(b) * xi_i + theta])
             arc = Arc(
                 (0, 0),
                 sz[i],
                 sz[i],
                 0,
-                angle[0] * 180 / config.np.pi,
-                angle[1] * 180 / config.np.pi,
+                angle[0] * 180 / np.pi,
+                angle[1] * 180 / np.pi,
                 color="C0",
                 lw=0.5,
             )
@@ -249,13 +241,13 @@ def visualize(b, theta, bo, ro, res=4999):
             ax[0].annotate(
                 r"$\xi_{}$".format(i + 1),
                 xy=(
-                    0.5 * sz[i] * config.np.cos(0.5 * config.np.sign(b) * xi_i + theta),
-                    0.5 * sz[i] * config.np.sin(0.5 * config.np.sign(b) * xi_i + theta),
+                    0.5 * sz[i] * np.cos(0.5 * np.sign(b) * xi_i + theta),
+                    0.5 * sz[i] * np.sin(0.5 * np.sign(b) * xi_i + theta),
                 ),
                 xycoords="data",
                 xytext=(
-                    7 * config.np.cos(0.5 * config.np.sign(b) * xi_i + theta),
-                    7 * config.np.sin(0.5 * config.np.sign(b) * xi_i + theta),
+                    7 * np.cos(0.5 * np.sign(b) * xi_i + theta),
+                    7 * np.sin(0.5 * np.sign(b) * xi_i + theta),
                 ),
                 textcoords="offset points",
                 ha="center",
@@ -267,18 +259,14 @@ def visualize(b, theta, bo, ro, res=4999):
         # points of intersection?
         tol = 1e-7
         for phi_i in phi:
-            x_phi = ro * config.np.cos(phi_i)
-            y_phi = bo + ro * config.np.sin(phi_i)
-            x_xi = config.np.cos(theta) * config.np.cos(xi_i) - b * config.np.sin(
-                theta
-            ) * config.np.sin(xi_i)
-            y_xi = config.np.sin(theta) * config.np.cos(xi_i) + b * config.np.cos(
-                theta
-            ) * config.np.sin(xi_i)
-            if config.np.abs(y_phi - y_xi) < tol and config.np.abs(x_phi - x_xi) < tol:
+            x_phi = ro * np.cos(phi_i)
+            y_phi = bo + ro * np.sin(phi_i)
+            x_xi = np.cos(theta) * np.cos(xi_i) - b * np.sin(theta) * np.sin(xi_i)
+            y_xi = np.sin(theta) * np.cos(xi_i) + b * np.cos(theta) * np.sin(xi_i)
+            if np.abs(y_phi - y_xi) < tol and np.abs(x_phi - x_xi) < tol:
                 ax[0].plot(
-                    [ro * config.np.cos(phi_i)],
-                    [bo + ro * config.np.sin(phi_i)],
+                    [ro * np.cos(phi_i)],
+                    [bo + ro * np.sin(phi_i)],
                     "C0o",
                     ms=4,
                     zorder=4,
@@ -290,18 +278,14 @@ def visualize(b, theta, bo, ro, res=4999):
 
         # points of intersection
         ax[1].plot(
-            [0, ro * config.np.cos(phi_i)],
-            [bo, bo + ro * config.np.sin(phi_i)],
+            [0, ro * np.cos(phi_i)],
+            [bo, bo + ro * np.sin(phi_i)],
             color="C0",
             ls="-",
             lw=1,
         )
         ax[1].plot(
-            [ro * config.np.cos(phi_i)],
-            [bo + ro * config.np.sin(phi_i)],
-            "C0o",
-            ms=4,
-            zorder=4,
+            [ro * np.cos(phi_i)], [bo + ro * np.sin(phi_i)], "C0o", ms=4, zorder=4,
         )
 
         # draw and label the angle arc
@@ -311,8 +295,8 @@ def visualize(b, theta, bo, ro, res=4999):
             sz[i],
             sz[i],
             0,
-            angle[0] * 180 / config.np.pi,
-            angle[1] * 180 / config.np.pi,
+            angle[0] * 180 / np.pi,
+            angle[1] * 180 / np.pi,
             color="C0",
             lw=0.5,
         )
@@ -320,13 +304,13 @@ def visualize(b, theta, bo, ro, res=4999):
         ax[1].annotate(
             r"${}\phi_{}$".format("-" if phi_i < 0 else "", i + 1),
             xy=(
-                0.5 * sz[i] * config.np.cos(0.5 * (phi_i % (2 * config.np.pi))),
-                bo + 0.5 * sz[i] * config.np.sin(0.5 * (phi_i % (2 * config.np.pi))),
+                0.5 * sz[i] * np.cos(0.5 * (phi_i % (2 * np.pi))),
+                bo + 0.5 * sz[i] * np.sin(0.5 * (phi_i % (2 * np.pi))),
             ),
             xycoords="data",
             xytext=(
-                7 * config.np.cos(0.5 * (phi_i % (2 * config.np.pi))),
-                7 * config.np.sin(0.5 * (phi_i % (2 * config.np.pi))),
+                7 * np.cos(0.5 * (phi_i % (2 * np.pi))),
+                7 * np.sin(0.5 * (phi_i % (2 * np.pi))),
             ),
             textcoords="offset points",
             ha="center",
@@ -342,14 +326,10 @@ def visualize(b, theta, bo, ro, res=4999):
 
         # points of intersection
         ax[2].plot(
-            [0, config.np.cos(lam_i)],
-            [0, config.np.sin(lam_i)],
-            color="C0",
-            ls="-",
-            lw=1,
+            [0, np.cos(lam_i)], [0, np.sin(lam_i)], color="C0", ls="-", lw=1,
         )
         ax[2].plot(
-            [config.np.cos(lam_i)], [config.np.sin(lam_i)], "C0o", ms=4, zorder=4,
+            [np.cos(lam_i)], [np.sin(lam_i)], "C0o", ms=4, zorder=4,
         )
 
         # draw and label the angle arc
@@ -359,20 +339,17 @@ def visualize(b, theta, bo, ro, res=4999):
             sz[i],
             sz[i],
             0,
-            angle[0] * 180 / config.np.pi,
-            angle[1] * 180 / config.np.pi,
+            angle[0] * 180 / np.pi,
+            angle[1] * 180 / np.pi,
             color="C0",
             lw=0.5,
         )
         ax[2].add_patch(arc)
         ax[2].annotate(
             r"${}\lambda_{}$".format("-" if lam_i < 0 else "", i + 1),
-            xy=(
-                0.5 * sz[i] * config.np.cos(0.5 * lam_i),
-                0.5 * sz[i] * config.np.sin(0.5 * lam_i),
-            ),
+            xy=(0.5 * sz[i] * np.cos(0.5 * lam_i), 0.5 * sz[i] * np.sin(0.5 * lam_i),),
             xycoords="data",
-            xytext=(7 * config.np.cos(0.5 * lam_i), 7 * config.np.sin(0.5 * lam_i),),
+            xytext=(7 * np.cos(0.5 * lam_i), 7 * np.sin(0.5 * lam_i),),
             textcoords="offset points",
             ha="center",
             va="center",
