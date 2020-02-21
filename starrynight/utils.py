@@ -66,4 +66,12 @@ def pairdiff(x):
     This is used to evaluate a (series of) definite integral(s) given
     the antiderivatives at each of the integration limits.
     """
-    return sum(-np.array(x)[::2] + np.array(x)[1::2])
+    if len(x) > 1:
+        if len(x) % 2 == 0:
+            return sum(-np.array(x)[::2] + np.array(x)[1::2])
+        else:
+            raise ValueError("Array length must be even.")
+    elif len(x) == 0:
+        return 0.0
+    else:
+        return x

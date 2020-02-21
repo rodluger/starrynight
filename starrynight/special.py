@@ -177,8 +177,6 @@ def ellip(bo, ro, kappa, k2):
         # Compute the elliptic integrals
         F = el2(tanphi, kc, 1, 1) * k
         E = kinv * (el2(tanphi, kc, 1, kc2) - kc2 * kinv * F)
-        RF = -F
-        RD = (E - F) * 3 * k2
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(kappa)):
@@ -188,8 +186,6 @@ def ellip(bo, ro, kappa, k2):
             elif kappa[i] > np.pi:
                 F[i] = 2 * K0 - F[i]
                 E[i] = 2 * E0 - E[i]
-                RF[i] *= -1
-                RD[i] *= -1
 
     else:
 
@@ -199,8 +195,6 @@ def ellip(bo, ro, kappa, k2):
         # Compute the elliptic integrals
         F = el2(tanphi, kcinv, 1, 1)
         E = el2(tanphi, kcinv, 1, kc2inv)
-        RF = -F
-        RD = (E - F) * 3 * k2
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(kappa)):
@@ -210,6 +204,10 @@ def ellip(bo, ro, kappa, k2):
             elif kappa[i] > np.pi:
                 F[i] += 2 * K0
                 E[i] += 2 * E0
+
+    # Carlson integrals
+    RF = -F
+    RD = (E - F) * 3 * k2
 
     # TODO: Code up the integral of the third kind
     phi = (kappa - np.pi) % (2 * np.pi)
@@ -234,19 +232,13 @@ def ellip(bo, ro, kappa, k2):
         RJ = np.zeros_like(phi)
         RJ0 = 0.0
 
-    # Complete versions of the Carlson integrals
-    RF0 = -2 * K0
-    RD0 = 2 * (E0 - K0) * 3 * k2
+    # Add offsets to account for the limited domain
+    for i in range(len(kappa)):
+        if kappa[i] > 3 * np.pi:
+            RJ[i] += 2 * RJ0
+        elif kappa[i] > np.pi:
+            RJ[i] += RJ0
 
     # Return the definite elliptic integrals
-    return (
-        pairdiff(F),
-        pairdiff(E),
-        pairdiff(RF),
-        pairdiff(RD),
-        pairdiff(RJ),
-        RF0,
-        RD0,
-        RJ0,
-    )
+    return (pairdiff(F), pairdiff(E), pairdiff(RF), pairdiff(RD), pairdiff(RJ))
 

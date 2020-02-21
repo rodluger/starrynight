@@ -2,7 +2,7 @@ from .utils import *
 import numpy as np
 
 
-def dP2(bo, ro, k2, kappa, RF, RD, RJ, RF0, RD0, RJ0):
+def dP2(bo, ro, k2, kappa, RF, RD, RJ):
     """
     Returns the difference of a pair (or pairs) of Pal integrals for the
     P2 (linear) term. Specifically, returns the sum of
@@ -12,8 +12,16 @@ def dP2(bo, ro, k2, kappa, RF, RD, RJ, RF0, RD0, RJ0):
     for i = 0, 2, 4, ...
 
     """
+
+    # TODO: Special case
+    if bo == 0.0:
+        if ro < 1.0:
+            return (1 - (1 - ro ** 2) * np.sqrt(1 - ro ** 2)) * pairdiff(kappa) / 3.0
+        else:
+            return pairdiff(kappa) / 3.0
+
     # There's an offset between our angle and Pal's angle
-    phi = (kappa - np.pi) % (2 * np.pi)
+    phi = kappa - np.pi  #% (2 * np.pi)
 
     # TODO: Solve this case separately
     if np.abs(bo - (ro - 1)) < 1e-8:
@@ -32,23 +40,6 @@ def dP2(bo, ro, k2, kappa, RF, RD, RJ, RF0, RD0, RJ0):
     # Compute all the antiderivatives
     res = pal(bo, ro, k2, RF, RD, RJ, phi)
 
-    # The function in Pal (2012) is restricted to [0, 2pi]
-    # but our domain is [-pi/2, 2pi + pi/2]. We need to
-    # add an offset term to patch the discontinuous jumps.
-    if np.any(kappa < np.pi) or np.any(kappa > 3 * np.pi):
-        offset = pal(bo, ro, k2, RF0, RD0, RJ0, np.array([0, 2 * np.pi]))
-        for i, kn in enumerate(kappa):
-            if kn < np.pi:
-                if i % 2 == 0:
-                    res += offset
-                else:
-                    res -= offset
-            elif kn > 3 * np.pi:
-                if i % 2 == 0:
-                    res -= offset
-                else:
-                    res += offset
-
     return res
 
 
@@ -59,14 +50,6 @@ def pal(bo, ro, k2, RF, RD, RJ, phi):
     for an array of `phi` values.
 
     """
-
-    # Special case
-    if bo == 0.0:
-        if ro < 1.0:
-            return (1 - (1 - ro ** 2) * np.sqrt(1 - ro ** 2)) * pairdiff(phi) / 3.0
-        else:
-            return pairdiff(phi) / 3.0
-
     r2 = ro * ro
     b2 = bo * bo
     br = bo * ro
@@ -78,11 +61,18 @@ def pal(bo, ro, k2, RF, RD, RJ, phi):
     p0 = 4.0 - 7.0 * r2 - b2
 
     q2 = r2 + b2 + 2 * br * np.cos(phi)
-    sx = np.sin(phi / 2)
-    cx = np.cos(phi / 2)
 
     # Constant term
-    a0 = pairdiff(-np.arctan2(bmr * sx, bpr * cx))
+    if bo == ro:
+        a0 = 0
+    else:
+        sx = np.sin(phi / 2)
+        cx = np.cos(phi / 2)
+        a0 = pairdiff(
+            -np.arctan2(bmr * sx, bpr * cx)
+            - 2 * np.pi * np.sign(bmr) * (phi > 2 * np.pi)
+        )
+
     a1 = 0.5 * pairdiff(phi)
     a2 = pairdiff(np.sin(phi) * np.sqrt(1 - np.minimum(1.0, q2)))
     A = a0 + a1 + f23 * br * a2
@@ -102,11 +92,6 @@ def pal(bo, ro, k2, RF, RD, RJ, phi):
 
     else:
 
-        a3 = 2.0 * br * (np.cos(phi) + 1)
-        a4 = pairdiff(a3 * cx / (q2 * np.sqrt(q2)))
-        if bo < ro:
-            A -= 2.0 * a0
-        A -= 0.5 * np.pi * term * bpr * a4
         D = 0
 
     return (A + B * RF + C * RD + D * RJ) / 3.0

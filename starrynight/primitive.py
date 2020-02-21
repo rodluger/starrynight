@@ -273,12 +273,12 @@ def compute_P(ydeg, bo, ro, kappa):
         #   J = np.array([H[3, 2 * v] for v in range(ydeg + 2)])
         #
         # The expressions for the elliptic integrals also simplify.
-        F, E, RF, RD, RJ, RF0, RD0, RJ0 = ellip(bo, ro, kappa, 1 + 1e-12)
+        F, E, RF, RD, RJ = ellip(bo, ro, kappa, 1 + 1e-12)
         J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, E, F)
 
     else:
 
-        F, E, RF, RD, RJ, RF0, RD0, RJ0 = ellip(bo, ro, kappa, k2)
+        F, E, RF, RD, RJ = ellip(bo, ro, kappa, k2)
         J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, E, F)
 
     # Now populate the P array
@@ -300,7 +300,7 @@ def compute_P(ydeg, bo, ro, kappa):
                 if l == 1:
 
                     # Same as in starry, but using expression from Pal (2012)
-                    P[2] = dP2(bo, ro, k2, kappa, RF, RD, RJ, RF0, RD0, RJ0)
+                    P[2] = dP2(bo, ro, k2, kappa, RF, RD, RJ)
 
                 elif l % 2 == 0:
 
