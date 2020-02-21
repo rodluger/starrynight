@@ -300,7 +300,7 @@ def compute_P(ydeg, bo, ro, kappa):
                 if l == 1:
 
                     # Same as in starry, but using expression from Pal (2012)
-                    P[2] = dP2(bo, ro, k2, kappa, RF, RD, RJ)
+                    P[2] = dP2(bo, ro, k2, kappa, s1, s2, c1, RF, RD, RJ)
 
                 elif l % 2 == 0:
 

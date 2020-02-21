@@ -92,15 +92,28 @@ class Numerical(StarryNight):
 
         # NOTE: The abs prevents NaNs when the argument of the sqrt is
         # zero but floating point error causes it to be ~ -eps.
-        z = lambda x, y: np.sqrt(np.abs(1 - x ** 2 - y ** 2))
+        z = lambda x, y: np.maximum(1e-12, np.sqrt(np.abs(1 - x ** 2 - y ** 2)))
 
         if nu % 2 == 0:
             G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
         elif (l == 1) and (m == 0):
-            G = [
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * (-y),
-                lambda x, y: (1 - z(x, y) ** 3) / (3 * (1 - z(x, y) ** 2)) * x,
-            ]
+
+            def G0(x, y):
+                z_ = z(x, y)
+                if z_ > 1 - 1e-8:
+                    return -0.5 * y
+                else:
+                    return (1 - z_ ** 3) / (3 * (1 - z_ ** 2)) * (-y)
+
+            def G1(x, y):
+                z_ = z(x, y)
+                if z_ > 1 - 1e-8:
+                    return 0.5 * x
+                else:
+                    return (1 - z_ ** 3) / (3 * (1 - z_ ** 2)) * x
+
+            G = [G0, G1]
+
         elif (mu == 1) and (l % 2 == 0):
             G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
         elif (mu == 1) and (l % 2 != 0):

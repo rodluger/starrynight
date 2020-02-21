@@ -27,6 +27,15 @@ def test_Q():
 
 
 def test_J():
+    eps = 1e-8
+    kappa = np.array([0.3, 1.5])
+    k2 = 0.5
+
+    # TODO!
+    assert False
+
+
+def test_pal():
     N = 5
     eps = 1e-8
     kappa = np.array([0.3, 1.5])

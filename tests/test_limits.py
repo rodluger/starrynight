@@ -69,25 +69,17 @@ def test_Q_high_l(tol=1e-15):
 @pytest.mark.parametrize(
     "b,theta,bo,ro,tol,sign",
     [
-        [0.15, 0, 0, 0.4, 1e-10, "both"],  # bo ~ 0
-        [0.15, 0, 0.25, 0.25, 2e-6, "both"],  # bo ~ ro
+        [0.15, 0, 0, 0.4, 1e-6, "both"],  # bo ~ 0
+        [0.15, 0, 0.25, 0.25, 1e-10, "both"],  # bo ~ ro < 1
+        [0.15, 0, 0.5, 0.5, 1e-8, "both"],  # bo ~ ro = 0.5
+        [0.15, 1.57, 1.25, 1.25, 1e-6, "both"],  # bo ~ ro > 1
         [0.15, 1.57, 0.25, 1.25, 1e-8, "pos"],  # bo ~ ro - 1
-        [0.15, 1.57, 0.25, 0.75, 1e-7, "both"],  # bo ~ 1 - ro
+        [0.15, 1.57, 0.25, 0.75, 1e-6, "both"],  # bo ~ 1 - ro
+        [0.15, 1.57, 0.75, 0.25, 1e-6, "both"],  # bo ~ 1 - ro
     ],
 )
 def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
-    """Test the Pal (2012) term near the known singularities.
-    
-    Those are:
-
-        - ro = bo
-        - bo = ro + 1
-        - bo = ro - 1
-
-    TODO: Come up with better expressions in these limits, then 
-          decrease the test tolerance for these cases.
-
-    """
+    """Test the Pal (2012) term near the known singularities."""
     # Perturb the impact parameter about the given point
     dbo = np.logspace(minval, maxval, npts // 2)
     if sign == "neg":
@@ -101,7 +93,7 @@ def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
     S = StarryNight(1)
     N = Numerical(1)
     err = np.zeros_like(bo)
-    tmp = np.zeros_like(bo)
+    val = np.zeros_like(bo)
     for i in range(len(bo)):
         N.precompute(b, theta, bo[i], ro)
         S.precompute(b, theta, bo[i], ro)
@@ -110,7 +102,7 @@ def test_P2_edges(b, theta, bo, ro, tol, sign, minval=-15, maxval=-1, npts=100):
             # that the root finder doesn't find the intersection.
             # This is fine; the answer will still be approximately correct.
             err[i] = np.abs(N.P[2] - S.P[2])
-            tmp[i] = N.P[0]
+            val[i] = N.P[2]
         if np.isnan(err[i]):
             err[i] = 1.0
     assert np.all(err < tol), "{}".format(np.max(err))
@@ -133,8 +125,7 @@ def test_J_high_l(tol=1e-15):
         s2 = s1 ** 2
         c1 = np.cos(x)
         q2 = 1 - np.minimum(1.0, s2 / k2[i])
-        # TODO: Update to new function syntax
-        F, E, _, _ = ellip(kappa, k2[i])
+        F, E, _, _, _ = ellip(0.1, 0.1, kappa, k2[i])
         J = compute_J(ydeg + 1, k2[i], km2, kappa, s1, s2, c1, q2, E, F)
         func = (
             lambda phi, v: np.sin(phi) ** (2 * v)

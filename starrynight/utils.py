@@ -14,8 +14,14 @@ FLUX_TRIP_NIGHT_OCC = 9
 FLUX_QUAD_DAY_VIS = 10
 FLUX_QUAD_NIGHT_VIS = 11
 
-# Maximum number of iterations when computing `el2`
+# Maximum number of iterations when computing `el2` and `rj`
 STARRY_EL2_MAX_ITER = 100
+STARRY_CRJ_MAX_ITER = 100
+
+# Tolerances in `rj`
+STARRY_CRJ_LO_LIM = 2e-26
+STARRY_CRJ_HI_LIM = 3e24
+STARRY_CRJ_TOL = 2e-2
 
 # Maximum number of iterations & tolerance when computing 2F1
 STARRY_2F1_MAXITER = 200
@@ -56,8 +62,10 @@ STARRY_COMPLETE_OCC_TOL = 1e-8
 STARRY_NO_OCC_TOL = 1e-8
 STARRY_GRAZING_TOL = 1e-8
 
-# Tolerance for the Pal (2012) solver
-STARRY_PAL_BO_EQUALS_RO_TOL = 1e-6
+# Tolerance for the Pal (2012) solver, which is very unstable
+STARRY_PAL_BO_EQUALS_RO_TOL = 1e-3
+STARRY_PAL_BO_EQUALS_RO_MINUS_ONE_TOL = 1e-3
+STARRY_PAL_BO_EQUALS_ONE_MINUS_RO_TOL = 1e-3
 
 
 def pairdiff(x):
