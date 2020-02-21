@@ -153,6 +153,7 @@ def ellip(bo, ro, kappa, k2):
     kc2inv = 1 - k2inv
     kcinv = np.sqrt(kc2inv)
 
+    # Complete elliptic integrals (we'll need them to compute offsets below)
     if k2 < 1:
         K0 = float(ellipk(k2))
         E0 = float(ellipe(k2))
@@ -229,11 +230,11 @@ def ellip(bo, ro, kappa, k2):
 
         p = (ro * ro + bo * bo + 2 * ro * bo) / (ro * ro + bo * bo - 2 * ro * bo)
         RJ0 = -4.0 * carlson_rj(1 - 1 / k2, 0.0, 1.0, p)
-
     else:
         RJ = np.zeros_like(phi)
         RJ0 = 0.0
 
+    # Complete versions of the Carlson integrals
     RF0 = -2 * K0
     RD0 = 2 * (E0 - K0) * 3 * k2
 
