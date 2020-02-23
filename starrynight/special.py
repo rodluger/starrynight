@@ -294,9 +294,16 @@ def ellip(bo, ro, kappa, k2):
         E0 = float(ellipe(k2))
         E0 = np.sqrt(k2inv) * (E0 - (1 - k2) * K0)
         K0 *= np.sqrt(k2)
+        RJ0 = 0.0
     else:
         K0 = float(ellipk(k2inv))
         E0 = float(ellipe(k2inv))
+        if (bo != 0) and (bo != ro):
+            p0 = (ro * ro + bo * bo + 2 * ro * bo) / (ro * ro + bo * bo - 2 * ro * bo)
+            PI0 = float(ellippi(1 - p0, k2inv))
+            RJ0 = -12.0 / (1 - p0) * (PI0 - K0)
+        else:
+            RJ0 = 0.0
 
     if k2 < 1:
 
@@ -344,8 +351,7 @@ def ellip(bo, ro, kappa, k2):
     RF = -F
     RD = (E - F) * 3 * k2
 
-    # Carlson integral of the third kind
-    # Must compute this separately
+    # Carlson integral of the third kind; must compute this separately
     phi = (kappa - np.pi) % (2 * np.pi)
     p = (ro * ro + bo * bo + 2 * ro * bo * np.cos(phi)) / (
         ro * ro + bo * bo - 2 * ro * bo
@@ -358,21 +364,9 @@ def ellip(bo, ro, kappa, k2):
         for i in range(len(w)):
             RJ[i] = (np.cos(phi[i]) + 1) * cx[i] * rj(w[i], sx[i] * sx[i], 1.0, p[i])
 
-        # TODO: We should recycle the evaluation of PI in the regular starry
-        # code if possible. The following relation works, but it's not exactly
-        # what we want. I think we just need to massage it to get RJ0 in terms
-        # of PI0 and K0.
-        #
-        # if k2 < 1:
-        #   PI0 = float(ellippi(1 - p0, k2).real)
-        #   K0 = float(ellipk(k2).real)
-        #   rj(1 - k2, 0.0, 1.0, p0) = 3 * (PI0 - K0) / (1 - p0)
-        #
-        if (np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL) and (k2 > 1):
-            p0 = (ro * ro + bo * bo + 2 * ro * bo) / (ro * ro + bo * bo - 2 * ro * bo)
-            RJ0 = -4.0 * rj(1 - 1 / k2, 0.0, 1.0, p0)
+        # Add offsets to account for the limited domain
+        if RJ0 != 0.0:
             for i in range(len(w)):
-                # Add offsets to account for the limited domain
                 if kappa[i] > 3 * np.pi:
                     RJ[i] += 2 * RJ0
                 elif kappa[i] > np.pi:
