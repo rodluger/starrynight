@@ -49,44 +49,41 @@ def J(N, k2, kappa, gradient=False):
 
 
 def pal(bo, ro, kappa, gradient=False):
-    z = lambda x, y: np.maximum(1e-12, np.sqrt(np.abs(1 - x ** 2 - y ** 2)))
+    def func(phi):
+        c = np.cos(phi)
+        z = np.maximum(1e-12, 1 - ro ** 2 - bo ** 2 - 2 * bo * ro * c)
+        return (1.0 - z ** 1.5) / (1.0 - z) * (ro + bo * c) * ro / 3.0
 
-    def G0(x, y):
-        z_ = z(x, y)
-        if z_ > 1 - 1e-8:
-            return -0.5 * y
-        else:
-            return (1 - z_ ** 3) / (3 * (1 - z_ ** 2)) * (-y)
-
-    def G1(x, y):
-        z_ = z(x, y)
-        if z_ > 1 - 1e-8:
-            return 0.5 * x
-        else:
-            return (1 - z_ ** 3) / (3 * (1 - z_ ** 2)) * x
-
-    G = [G0, G1]
-    x = lambda phi: ro * np.cos(phi)
-    y = lambda phi: bo + ro * np.sin(phi)
-    dx = lambda phi: -ro * np.sin(phi)
-    dy = lambda phi: ro * np.cos(phi)
-    func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
-        x(theta), y(theta)
-    ) * dy(theta)
-    res, _ = quad(
-        func, kappa[0] - np.pi / 2, kappa[1] - np.pi / 2, epsabs=1e-12, epsrel=1e-12,
-    )
+    res, _ = quad(func, kappa[0] - np.pi, kappa[1] - np.pi, epsabs=1e-12, epsrel=1e-12,)
 
     if gradient:
         # Deriv w/ respect to kappa is analytic
-        dpaldkappa = (
-            0.5 * func(0.5 * kappa) * np.repeat([-1, 1], len(kappa) // 2).reshape(1, -1)
+        dpaldkappa = func(kappa - np.pi) * np.repeat([-1, 1], len(kappa) // 2).reshape(
+            1, -1
         )
 
         # Derivs w/ respect to b and r are tricky, need to integrate
-        # TODO!!!
-        dpaldbo = np.nan
-        dpaldro = np.nan
+        def func_bo(phi):
+            c = np.cos(phi)
+            z = np.maximum(1e-12, 1 - ro ** 2 - bo ** 2 - 2 * bo * ro * c)
+            P = (1.0 - z ** 1.5) / (1.0 - z) * (ro + bo * c) * ro / 3.0
+            q = 3.0 * z ** 0.5 / (1.0 - z ** 1.5) - 2.0 / (1.0 - z)
+            return P * ((bo + ro * c) * q + 1.0 / (bo + ro / c))
+
+        dpaldbo, _ = quad(
+            func_bo, kappa[0] - np.pi, kappa[1] - np.pi, epsabs=1e-12, epsrel=1e-12,
+        )
+
+        def func_ro(phi):
+            c = np.cos(phi)
+            z = np.maximum(1e-12, 1 - ro ** 2 - bo ** 2 - 2 * bo * ro * c)
+            P = (1.0 - z ** 1.5) / (1.0 - z) * (ro + bo * c) * ro / 3.0
+            q = 3.0 * z ** 0.5 / (1.0 - z ** 1.5) - 2.0 / (1.0 - z)
+            return P * ((ro + bo * c) * q + 1.0 / ro + 1.0 / (ro + bo * c))
+
+        dpaldro, _ = quad(
+            func_ro, kappa[0] - np.pi, kappa[1] - np.pi, epsabs=1e-12, epsrel=1e-12,
+        )
 
         return res, (dpaldbo, dpaldro, dpaldkappa)
 
@@ -115,7 +112,7 @@ def hyp2f1(a, b, c, z, gradient=False):
         return value
 
 
-def el2(x, kc, a, b):
+def el2(x, kc, a, b, gradient=False):
     """
     Vectorized implementation of the `el2` function from
     Bulirsch (1965). In this case, `x` is a *vector* of integration
@@ -179,6 +176,40 @@ def el2(x, kc, a, b):
     e[x < 0] = -e[x < 0]
 
     return e + c * z
+
+
+def EllipF(tanphi, k2, gradient=False):
+
+    kc2 = 1 - k2
+    F = el2(tanphi, np.sqrt(kc2), 1, 1)
+
+    if gradient:
+        E = EllipE(tanphi, k2)
+        p2 = (1 + tanphi ** 2) ** -1
+        q2 = p2 * tanphi ** 2
+        dFdtanphi = p2 * (1 - k2 * q2) ** -0.5
+        dFdk2 = 0.5 * (E / (k2 * kc2) - F / k2 - tanphi * dFdtanphi / kc2)
+        return F, (dFdtanphi, dFdk2)
+    else:
+        return F
+
+
+def EllipE(tanphi, k2, gradient=False):
+
+    kc2 = 1 - k2
+    E = el2(tanphi, np.sqrt(kc2), 1, kc2)
+
+    if gradient:
+
+        F = EllipF(tanphi, k2)
+        p2 = (1 + tanphi ** 2) ** -1
+        q2 = p2 * tanphi ** 2
+        dEdtanphi = p2 * (1 - k2 * q2) ** 0.5
+        dEdk2 = 0.5 * (E - F) / k2
+        return E, (dEdtanphi, dEdk2)
+
+    else:
+        return E
 
 
 def rj(x, y, z, p):
@@ -317,8 +348,8 @@ def ellip(bo, ro, kappa, k2):
         tanphi[arg <= -1] = -STARRY_HUGE_TAN
 
         # Compute the elliptic integrals
-        F = el2(tanphi, kc, 1, 1) * k
-        E = kinv * (el2(tanphi, kc, 1, kc2) - kc2 * kinv * F)
+        F = EllipF(tanphi, k2) * k
+        E = kinv * (EllipE(tanphi, k2) - kc2 * kinv * F)
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(kappa)):
@@ -335,8 +366,8 @@ def ellip(bo, ro, kappa, k2):
         tanphi = np.tan(kappa / 2)
 
         # Compute the elliptic integrals
-        F = el2(tanphi, kcinv, 1, 1)
-        E = el2(tanphi, kcinv, 1, kc2inv)
+        F = EllipF(tanphi, k2inv)  # el2(tanphi, kcinv, 1, 1)
+        E = EllipE(tanphi, k2inv)  # el2(tanphi, kcinv, 1, kc2inv)
 
         # Add offsets to account for the limited domain of `el2`
         for i in range(len(kappa)):

@@ -1,9 +1,81 @@
 import numpy as np
-from starrynight.special import J
+from starrynight.special import J, pal, EllipF, EllipE, el2
 from starrynight.primitive import compute_Q
 from starrynight.geometry import get_roots
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
+
+# DEBUG
+"""
+from mpmath import ellipf, ellipe
+
+eps = 1e-8
+
+
+tanphi = 0.5
+phi = np.arctan(tanphi)
+k2_arr = np.linspace(0, 0.99, 1000)
+
+
+F = np.array([float(ellipf(np.arctan(tanphi), x).real) for x in k2_arr])
+dFdk2_num = np.gradient(F) / np.gradient(k2_arr)
+
+
+p2 = (1 + tanphi ** 2) ** -1
+q2 = p2 * tanphi ** 2
+s = p2 * tanphi
+
+E = np.array([EllipE(np.array([tanphi]), x)[0] for x in k2_arr])
+kc2 = 1 - k2_arr
+dFdk2 = 0.5 * (E / (k2_arr * kc2) - F / k2_arr - s / kc2 * (1 - k2_arr * q2) ** -0.5)
+
+plt.figure()
+plt.plot(k2_arr, dFdk2_num, lw=2)
+plt.plot(k2_arr, dFdk2, lw=1)
+
+plt.show()
+quit()"""
+
+
+def test_E():
+    eps = 1e-8
+    k2 = 0.75
+    tanphi = np.array([0.75])
+
+    # Analytic
+    E, (dEdtanphi, dEdk2) = EllipE(tanphi, k2, gradient=True)
+
+    # Numerical
+    Q1 = EllipE(tanphi - eps, k2)
+    Q2 = EllipE(tanphi + eps, k2)
+    dEdtanphi_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dEdtanphi, dEdtanphi_num)
+
+    Q1 = EllipE(tanphi, k2 - eps)
+    Q2 = EllipE(tanphi, k2 + eps)
+    dEdk2_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dEdk2, dEdk2_num)
+
+
+def test_F():
+    eps = 1e-8
+    k2 = 0.75
+    tanphi = np.array([0.75])
+
+    # Analytic
+    F, (dFdtanphi, dFdk2) = EllipF(tanphi, k2, gradient=True)
+
+    # Numerical
+    Q1 = EllipF(tanphi - eps, k2)
+    Q2 = EllipF(tanphi + eps, k2)
+    dFdtanphi_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dFdtanphi, dFdtanphi_num)
+
+    Q1 = EllipF(tanphi, k2 - eps)
+    Q2 = EllipF(tanphi, k2 + eps)
+    dFdk2_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dFdk2, dFdk2_num)
 
 
 def test_Q():
@@ -26,16 +98,37 @@ def test_Q():
     assert np.allclose(dQdlam, dQdlam_num)
 
 
-def test_J():
+def test_pal():
     eps = 1e-8
     kappa = np.array([0.3, 1.5])
-    k2 = 0.5
+    bo = 0.25
+    ro = 0.1
 
-    # TODO!
-    assert False
+    # Analytic
+    val, (dpaldbo, dpaldro, dpaldkappa) = pal(bo, ro, kappa, gradient=True)
+
+    # Numerical
+    dpaldkappa_num = np.zeros_like(dpaldkappa)
+    Q1 = pal(bo, ro, kappa - np.array([eps, 0]))
+    Q2 = pal(bo, ro, kappa + np.array([eps, 0]))
+    dpaldkappa_num[:, 0] = (Q2 - Q1) / (2 * eps)
+    Q1 = pal(bo, ro, kappa - np.array([0, eps]))
+    Q2 = pal(bo, ro, kappa + np.array([0, eps]))
+    dpaldkappa_num[:, 1] = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dpaldkappa, dpaldkappa_num)
+
+    Q1 = pal(bo - eps, ro, kappa)
+    Q2 = pal(bo + eps, ro, kappa)
+    dpaldbo_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dpaldbo, dpaldbo_num)
+
+    Q1 = pal(bo, ro - eps, kappa)
+    Q2 = pal(bo, ro + eps, kappa)
+    dpaldro_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dpaldro, dpaldro_num)
 
 
-def test_pal():
+def test_J():
     N = 5
     eps = 1e-8
     kappa = np.array([0.3, 1.5])
