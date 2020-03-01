@@ -51,7 +51,9 @@ def J(N, k2, kappa, gradient=False):
 def pal(bo, ro, kappa, gradient=False):
     def func(phi):
         c = np.cos(phi)
-        z = np.maximum(1e-12, 1 - ro ** 2 - bo ** 2 - 2 * bo * ro * c)
+        z = np.minimum(
+            1 - 1e-12, np.maximum(1e-12, 1 - ro ** 2 - bo ** 2 - 2 * bo * ro * c)
+        )
         return (1.0 - z ** 1.5) / (1.0 - z) * (ro + bo * c) * ro / 3.0
 
     res, _ = quad(func, kappa[0] - np.pi, kappa[1] - np.pi, epsabs=1e-12, epsrel=1e-12,)
@@ -308,6 +310,17 @@ def rj(x, y, z, p):
         )
 
 
+def EllipJ(kappa, k2, p):
+    phi = (kappa - np.pi) % (2 * np.pi)
+    cx = np.cos(phi / 2)
+    sx = np.sin(phi / 2)
+    w = 1 - cx ** 2 / k2
+    J = np.zeros_like(phi)
+    for i in range(len(w)):
+        J[i] = (np.cos(phi[i]) + 1) * cx[i] * rj(w[i], sx[i] * sx[i], 1.0, p[i])
+    return J
+
+
 def ellip(bo, ro, kappa, k2):
 
     # Helper variables
@@ -382,27 +395,30 @@ def ellip(bo, ro, kappa, k2):
     RF = -F
     RD = (E - F) * 3 * k2
 
-    # Carlson integral of the third kind; must compute this separately
-    phi = (kappa - np.pi) % (2 * np.pi)
-    p = (ro * ro + bo * bo + 2 * ro * bo * np.cos(phi)) / (
-        ro * ro + bo * bo - 2 * ro * bo
-    )
-    cx = np.cos(phi / 2)
-    sx = np.sin(phi / 2)
-    w = 1 - cx ** 2 / k2
-    RJ = np.zeros_like(phi)
+    # Must compute RJ separately
     if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
-        for i in range(len(w)):
-            RJ[i] = (np.cos(phi[i]) + 1) * cx[i] * rj(w[i], sx[i] * sx[i], 1.0, p[i])
+        p = (ro * ro + bo * bo - 2 * ro * bo * np.cos(kappa)) / (
+            ro * ro + bo * bo - 2 * ro * bo
+        )
+        RJ = EllipJ(kappa, k2, p)
 
-        # Add offsets to account for the limited domain
+        # Add offsets to account for the limited domain of `rj`
         if RJ0 != 0.0:
-            for i in range(len(w)):
+            for i in range(len(kappa)):
                 if kappa[i] > 3 * np.pi:
                     RJ[i] += 2 * RJ0
                 elif kappa[i] > np.pi:
                     RJ[i] += RJ0
 
-    # Return the definite elliptic integrals
-    return (pairdiff(F), pairdiff(E), pairdiff(RF), pairdiff(RD), pairdiff(RJ))
+    else:
+        RJ = np.zeros_like(kappa)
+
+    # Compute the *definite* elliptic integrals
+    F = pairdiff(F)
+    E = pairdiff(E)
+    RF = pairdiff(RF)
+    RD = pairdiff(RD)
+    RJ = pairdiff(RJ)
+
+    return F, E, RF, RD, RJ
 

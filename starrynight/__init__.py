@@ -5,6 +5,7 @@ warnings.simplefilter("ignore")
 starry.config.quiet = True
 starry.config.lazy = True
 
+from . import _c_ops as c
 from .starrynight import *
 from .viz import visualize
 from .starrynight_version import __version__

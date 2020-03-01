@@ -68,6 +68,10 @@ STARRY_PAL_BO_EQUALS_RO_MINUS_ONE_TOL = 1e-3
 STARRY_PAL_BO_EQUALS_ONE_MINUS_RO_TOL = 1e-3
 
 
+def parity(i):
+    return -1 if (i % 2) == 0 else 1
+
+
 def pairdiff(x):
     """Return the sum over pairwise differences of an array.
 

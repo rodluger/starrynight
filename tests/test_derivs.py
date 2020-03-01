@@ -1,89 +1,91 @@
 import numpy as np
-from starrynight.special import J, pal, EllipF, EllipE, el2, rj
+from starrynight.special import J, pal, EllipF, EllipE, EllipJ, el2, rj
 from starrynight.primitive import compute_Q
 from starrynight.geometry import get_roots
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # DEBUG
-from mpmath import ellipf, ellipe, ellippi
+if __name__ == "__main__":
 
-phi = 1.3
-bo = 0.95
-ro = 0.1
+    from mpmath import ellipf, ellipe, ellippi
 
+    phi = 1.3
+    bo = 0.95
+    ro = 0.1
 
-# What starry computes anyways
-k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
-k = np.sqrt(k2)
-kinv = 1 / k
-k2inv = 1 / k2
-kc2 = 1 - k2
-tanphi = np.tan([phi])
-if k2 < 1:
-    F = EllipF(tanphi, k2)[0] * k
-    E = kinv * (EllipE(tanphi, k2)[0] - kc2 * kinv * F)
-else:
-    F = EllipF(tanphi, k2inv)[0]
-    E = EllipE(tanphi, k2inv)[0]
-p = (ro * ro + bo * bo + 2 * ro * bo * np.cos(phi)) / (ro * ro + bo * bo - 2 * ro * bo)
-cx = np.cos(phi / 2)
-sx = np.sin(phi / 2)
-w = 1 - cx ** 2 / k2
-RJ = (np.cos(phi) + 1) * cx * rj(w, sx * sx, 1.0, p)
-
-#
-
-# Deriv with respect to n
-n = -4 * bo * ro / (ro - bo) ** 2
-phip = (phi - np.pi) / 2
-kp = np.sqrt(1 / k2)
-kp2 = 1 / k2
-tanphi_ = np.array([-cx / (k * np.sqrt(w))])
-F_ = k * EllipF(tanphi_, k2)[0]  # = ellipf(phip, kp2)
-E_ = kinv * (EllipE(tanphi_, k2)[0] - kc2 * kinv * F_)  # = ellipe(phip, kp2)
-PI_ = -n * RJ / 6 + F_  # = ellippi(n, phip, kp2)
-s2 = np.sin(phip) ** 2
-s_2 = np.sin(2 * phip)
-dPIdn = (
-    1
-    / (2 * (kp2 - n) * (n - 1))
-    * (
-        E_
-        + (kp2 - n) / n * F_
-        + (n * n - kp2) / n * PI_
-        - n * (1 - kp2 * s2) ** 0.5 * s_2 / (2 * (1 - n * s2))
+    # What starry computes anyways
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+    k = np.sqrt(k2)
+    kinv = 1 / k
+    k2inv = 1 / k2
+    kc2 = 1 - k2
+    tanphi = np.tan([phi])
+    if k2 < 1:
+        F = EllipF(tanphi, k2)[0] * k
+        E = kinv * (EllipE(tanphi, k2)[0] - kc2 * kinv * F)
+    else:
+        F = EllipF(tanphi, k2inv)[0]
+        E = EllipE(tanphi, k2inv)[0]
+    p = (ro * ro + bo * bo + 2 * ro * bo * np.cos(phi)) / (
+        ro * ro + bo * bo - 2 * ro * bo
     )
-)
-eps = 1e-8
-dPIdn_num = float(
-    ellippi(n + eps, phip, kp2).real - ellippi(n - eps, phip, kp2).real
-) / (2 * eps)
-print(dPIdn, dPIdn_num)
+    cx = np.cos(phi / 2)
+    sx = np.sin(phi / 2)
+    w = 1 - cx ** 2 / k2
+    RJ = (np.cos(phi) + 1) * cx * rj(w, sx * sx, 1.0, p)
 
-# Deriv with respect to k2
-m = kp2
-dPIdm = (
-    1
-    / (2 * (n - m))
-    * (1 / (m - 1) * E_ + PI_ - m * s_2 / (2 * (m - 1) * np.sqrt(1 - m * s2)))
-)
-eps = 1e-8
-dPIdm_num = float(
-    ellippi(n, phip, kp2 + eps).real - ellippi(n, phip, kp2 - eps).real
-) / (2 * eps)
-print(dPIdm, dPIdm_num)
+    #
 
+    # Deriv with respect to n
+    n = -4 * bo * ro / (ro - bo) ** 2
+    phip = (phi - np.pi) / 2
+    kp = np.sqrt(1 / k2)
+    kp2 = 1 / k2
+    tanphi_ = np.array([-cx / (k * np.sqrt(w))])
+    F_ = k * EllipF(tanphi_, k2)[0]  # = ellipf(phip, kp2)
+    E_ = kinv * (EllipE(tanphi_, k2)[0] - kc2 * kinv * F_)  # = ellipe(phip, kp2)
+    PI_ = -n * RJ / 6 + F_  # = ellippi(n, phip, kp2)
+    s2 = np.sin(phip) ** 2
+    s_2 = np.sin(2 * phip)
+    dPIdn = (
+        1
+        / (2 * (kp2 - n) * (n - 1))
+        * (
+            E_
+            + (kp2 - n) / n * F_
+            + (n * n - kp2) / n * PI_
+            - n * (1 - kp2 * s2) ** 0.5 * s_2 / (2 * (1 - n * s2))
+        )
+    )
+    eps = 1e-8
+    dPIdn_num = float(
+        ellippi(n + eps, phip, kp2).real - ellippi(n - eps, phip, kp2).real
+    ) / (2 * eps)
+    print(dPIdn, dPIdn_num)
 
-# Deriv with respect to phip
-dPIdphip = (1 - m * s2) ** -0.5 * (1 - n * s2) ** -1
-eps = 1e-8
-dPIdphip_num = float(
-    ellippi(n, phip + eps, kp2).real - ellippi(n, phip - eps, kp2).real
-) / (2 * eps)
-print(dPIdphip, dPIdphip_num)
+    # Deriv with respect to k2
+    m = kp2
+    dPIdm = (
+        1
+        / (2 * (n - m))
+        * (1 / (m - 1) * E_ + PI_ - m * s_2 / (2 * (m - 1) * np.sqrt(1 - m * s2)))
+    )
+    eps = 1e-8
+    dPIdm_num = float(
+        ellippi(n, phip, kp2 + eps).real - ellippi(n, phip, kp2 - eps).real
+    ) / (2 * eps)
+    print(dPIdm, dPIdm_num)
 
-quit()
+    # Deriv with respect to phip
+    dPIdphip = (1 - m * s2) ** -0.5 * (1 - n * s2) ** -1
+    eps = 1e-8
+    dPIdphip_num = float(
+        ellippi(n, phip + eps, kp2).real - ellippi(n, phip - eps, kp2).real
+    ) / (2 * eps)
+    print(dPIdphip, dPIdphip_num)
+
+    quit()
 
 
 def test_E():

@@ -5,3 +5,6 @@ starrynight/starrynight_version.py
 *.egg-info
 __pycache__
 .ipynb_checkpoints
+build
+var
+*.so
