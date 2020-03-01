@@ -112,7 +112,7 @@ def hyp2f1(a, b, c, z, gradient=False):
         return value
 
 
-def el2(x, kc, a, b, gradient=False):
+def el2(x, kc, a, b):
     """
     Vectorized implementation of the `el2` function from
     Bulirsch (1965). In this case, `x` is a *vector* of integration
