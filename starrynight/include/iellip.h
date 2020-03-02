@@ -241,7 +241,7 @@ T rj(const T& x_, const T& y_, const T& z_, const T& p_) {
 }
 
 /**
-Incomplete elliptic integral of the first kind.
+Vectorized incomplete elliptic integral of the first kind.
 
 */
 template <class T> 
@@ -251,7 +251,7 @@ inline Vector<T> F(const Vector<T>& tanphi, const T& k2) {
 }
 
 /**
-Incomplete elliptic integral of the first kind (with gradient).
+Vectorized incomplete elliptic integral of the first kind (with gradient).
 
 */
 template <class T, int N>
@@ -284,7 +284,7 @@ inline Vector<ADScalar<T, N>> F(const Vector<ADScalar<T, N>>& tanphi, const ADSc
 }
 
 /**
-Incomplete elliptic integral of the second kind.
+Vectorized incomplete elliptic integral of the second kind.
 
 */
 template <typename T> 
@@ -294,7 +294,7 @@ inline Vector<T> E(const Vector<T>& tanphi, const T& k2) {
 }
 
 /**
-Incomplete elliptic integral of the second kind (with gradient).
+Vectorized incomplete elliptic integral of the second kind (with gradient).
 
 */
 template <class T, int N>
@@ -328,7 +328,7 @@ inline Vector<ADScalar<T, N>> E(const Vector<ADScalar<T, N>>& tanphi, const ADSc
 /**
 Modified incomplete elliptic integral of the third kind.
 
-For kappa in [-pi, pi], this integral is proportional to the Carlson elliptic integral RJ:
+This integral is proportional to the Carlson elliptic integral RJ:
 
   PI' = -2 sin^3(phi) * RJ(cos^2 phi, 1 - k^2 sin^2 phi, 1, 1 - n sin^2 phi)
 
@@ -347,31 +347,62 @@ term (2) in the primitive integral P, based on the expressions in Pal (2012).
 Note that when 1 - k^2 sin^2 phi < 0, the integral is complex and the implementation
 here is wrong; however, these cases are not encountered in practice!
 
+Note also that unlike `E` and `F`, which return vectors, this returns a scalar, equal
+to the sum of the pairwise differences of the integrals corresponding to each value
+of kappa. This is the quantity we end up using anyways, and it's easier to define
+derivatives with respect to it.
+
 */
 template <typename T> 
-inline Vector<T> PIprime(const Vector<T>& kappa, const T& k2, const Vector<T>& p) {
+inline T PIprime(const Vector<T>& kappa, const T& k2, const Vector<T>& p, const T& PIprime0) {
     size_t K = kappa.size();
-    T phi, cp, cx, sx, w;
-    Vector<T> result(K);
+    T phi, cp, cx, sx, w, val;
+    T result = 0.0;
+    int sgn = -1;
     for (size_t k = 0; k < K; ++k) {
 
         // Normalize phi to the range [0, 2pi]
-        phi = fmod(kappa(k) - pi<T>(), 2 * pi<T>());
-        if (kappa(k) < pi<T>()) phi += 2 * pi<T>();
+        phi = kappa(k);
+        while (phi < 0) phi += 2 * pi<T>();
+        while (phi > 2 * pi<T>()) phi -= 2 * pi<T>();
 
+        // Compute the Carlson integrals
         cp = cos(phi);
         cx = cos(0.5 * phi);
         sx = sin(0.5 * phi);
         w = 1.0 - cx * cx / k2;
-        result(k) = (1.0 + cp) * cx * rj(w, sx * sx, 1.0, p(k));
+        val = (1.0 + cp) * cx * rj(w, sx * sx, 1.0, p(k));
+    
+        // Now compute the *definite* integral
+        // Add offsets to account for the limited domain of `rj`
+        if (kappa(k) > 3 * pi<T>()) {
+            result += sgn * (2 * PIprime0 + val);
+        } else if (kappa(k) > pi<T>()) {
+            result += sgn * (PIprime0 + val);
+        } else {
+          result += sgn * val;
+        }
+        sgn *= -1;
+
     }
+
     return result;
+}
+
+template <typename T, int N> 
+inline ADScalar<T, N> PIprime(const Vector<ADScalar<T, N>>& kappa, const ADScalar<T, N>& k2, const Vector<ADScalar<T, N>>& p, const ADScalar<T, N>& PIprime0) {
+
+  // TODO!!!
+  ADScalar<T, N> result;
+  result = 0.0;
+  return result;
+
 }
 
 /**
 Computes the three incomplete elliptic integrals used in starry: F, E, and PI' (see above).
 
-Note that kappa must be in the range [0, 4 pi].
+Note that kappa must be in the range [0, 4 pi]
 
 */
 template <typename T>
@@ -479,21 +510,7 @@ inline Vector<T> ellip(const T& bo, const T& ro, const Vector<T>& kappa, const T
         );
 
         // Compute the incomplete elliptic integral
-        Vector<T> PIprimev = PIprime(kappa, k2, p);
-
-        // Compute the *definite* integral
-        // Add offsets to account for the limited domain of `rj`
-        int sgn = -1;
-        for (size_t i = 0; i < K; ++i) {
-            if (kappa(i) > 3 * pi<T>()) {
-                result(2) += sgn * (2 * PIprime0 + PIprimev(i));
-            } else if (kappa(i) > pi<T>()) {
-                result(2) += sgn * (PIprime0 + PIprimev(i));
-            } else {
-              result(2) += sgn * PIprimev(i);
-            }
-            sgn *= -1;
-        }
+        result(2) = PIprime(kappa, k2, p, PIprime0);
 
     }
 

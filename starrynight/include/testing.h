@@ -133,8 +133,24 @@ m.def("dEdk2", [](const Vector<double> &tanphi, const double &k2) {
 });
 
 // Modified incomplete elliptic integral of the third kind
-m.def("PIprime", [](const Vector<double> &kappa, const double &k2, const Vector<double>& p) {
-    return PIprime(kappa, k2, p);
+m.def("dPIprimedkappa", [](const double& kappa_, const double& k2_, const double& p_) {
+    
+    ADScalar<double, 3> k2, PIprime0;
+    Vector<ADScalar<double, 3>> kappa(1), p(1);
+    kappa(0).value() = kappa_;
+    kappa(0).derivatives() = Vector<double>::Unit(3, 0);
+    k2.value() = k2_;
+    k2.derivatives() = Vector<double>::Unit(3, 1);
+    p(0).value() = p_;
+    p(0).derivatives() = Vector<double>::Unit(3, 2);
+
+    // DEBUG
+    PIprime0.value() = 0.0;
+    PIprime0.derivatives().setZero();
+
+    auto result = PIprime(kappa, k2, p, PIprime0);
+    return result.derivatives()(0);
+
 });
 
 // All three integrals
@@ -143,6 +159,7 @@ m.def("ellip", [](const double& bo, const double& ro, const Vector<double> &kapp
     double k2 = (1 - ro * ro - bo * bo + 2 * bo * ro) / (4 * bo * ro);
     if (k2 > 1) k2 = 1.0 / k2;
     double p0 = (ro * ro + bo * bo + 2 * ro * bo) / (ro * ro + bo * bo - 2 * ro * bo);
+
 
     double F0 = CEL(k2, 1.0, 1.0, 1.0);
     double E0 = CEL(k2, 1.0, 1.0, 1.0 - k2);

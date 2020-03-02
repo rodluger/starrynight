@@ -55,82 +55,53 @@ def test_dEdk2(phi, k2):
 
 
 def test_PIprime():
-    # Params
-    kappa = np.linspace(-np.pi, np.pi, 100)
-    bo = 0.9
+
+    # Params (note this integral is used only when k2 > 1)
+    bo = 0.5
     ro = 0.2
-    p = (ro * ro + bo * bo - 2 * ro * bo * np.cos(kappa)) / (
-        ro * ro + bo * bo - 2 * ro * bo
-    )
-    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+    kappa = np.linspace(0, 4 * np.pi, 500)
 
-    # Starry expression
-    F1 = c.PIprime(kappa, k2, p)
-
-    # Compute it from RJ
-    phi = kappa / 2
+    # Helper vars
     n = -4 * bo * ro / (ro - bo) ** 2
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
     kp2 = 1 / k2
-    F2 = (
-        -2.0
-        * np.sin(phi) ** 3
-        * np.array(
-            [
-                float(
-                    elliprj(
-                        np.cos(phi_i) ** 2,
-                        1 - kp2 * np.sin(phi_i) ** 2,
-                        1,
-                        1 - n * np.sin(phi_i) ** 2,
-                    ).real
-                )
-                for phi_i in phi
-            ]
+
+    # Compute
+    PIp1 = np.zeros_like(kappa)
+    PIp2 = np.zeros_like(kappa)
+    for k in range(len(kappa)):
+
+        # Our version (note the - sign undoes the "pairdiff" op)
+        _, _, PIp1[k] = -c.ellip(bo, ro, [kappa[k]])
+
+        # Computed from the Legendre form
+        PIp2[k] = (
+            6
+            / n
+            * float((ellipf(kappa[k] / 2, kp2) - ellippi(n, kappa[k] / 2, kp2)).real)
         )
-    )
 
-    # Compute it from PI and F
-    F3 = np.array(
-        [
-            6 / n * float((ellipf(phi_i, kp2) - ellippi(n, phi_i, kp2)).real)
-            for phi_i in phi
-        ]
-    )
-
-    F1[1 - kp2 * np.sin(phi) ** 2 < 0] = np.nan
-    F2[1 - kp2 * np.sin(phi) ** 2 < 0] = np.nan
-    F3[1 - kp2 * np.sin(phi) ** 2 < 0] = np.nan
-
-    assert np.allclose(F1, F2, equal_nan=True)
-    assert np.allclose(F1, F3, equal_nan=True)
+    assert np.allclose(PIp1, PIp2)
 
 
 if __name__ == "__main__":
 
     # DEBUG
-    import starrynight
-
-    bo = 0.5
-    ro = 0.2
-
+    k2 = 1.5
     kappa = np.linspace(0, 4 * np.pi, 100)
-
-    F1 = np.zeros_like(kappa)
-    E1 = np.zeros_like(kappa)
-    PIp1 = np.zeros_like(kappa)
-    F2 = np.zeros_like(kappa)
-    E2 = np.zeros_like(kappa)
-    PIp2 = np.zeros_like(kappa)
+    phi = kappa / 2
 
     for k in range(len(kappa)):
 
-        # HACK: Undo the "pairdiff" op
-        F1[k], E1[k], PIp1[k] = -c.ellip(bo, ro, [kappa[k]])
+        F1[k] = c.dFdtanphi(np.tan([phi]), k2)[0]
 
-        F2[k], E2[k], PIp2[k] = starrynight.special.ellip(bo, ro, np.array([kappa[k]]))
+        eps = 1e-8
+        phi1 = np.arctan(np.tan(phi) - eps)
+        phi2 = np.arctan(np.tan(phi) + eps)
+        F2[k] = float((ellipf(phi2, k2) - ellipf(phi1, k2)).real / (2 * eps))
 
     import matplotlib.pyplot as plt
 
-    plt.plot(kappa, PIp1)
-    plt.plot(kappa, PIp2)
+    plt.plot(kappa, F1)
+    plt.plot(kappa, F2)
     plt.show()
