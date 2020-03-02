@@ -4,6 +4,9 @@
 
 */
 
+// DEBUG MODE
+#define STARRY_DEBUG 1
+
 // Includes
 #include <pybind11/eigen.h>
 #include <pybind11/embed.h>
@@ -22,14 +25,8 @@ PYBIND11_MODULE(_c_ops, m) {
   using namespace starry::utils;
   using namespace starry::iellip;
 
-  // Incomplete elliptic integral of the first kind
-  m.def("F", [](const Vector<double> &tanphi, const double &k2) {
-    return F(tanphi, k2);
-  });
-
-  // Incomplete elliptic integral of the second kind
-  m.def("E", [](const Vector<double> &tanphi, const double &k2) {
-    return E(tanphi, k2);
-  });
+# ifdef STARRY_DEBUG
+#   include "testing.h"
+# endif
 
 }

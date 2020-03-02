@@ -21,8 +21,12 @@ namespace starry {
 namespace iellip {
 
 using std::abs;
-using utils::mach_eps;
-using utils::pi;
+using namespace utils;
+
+
+template <class T> inline Vector<T> F(const Vector<T>& tanphi, const T& k2);
+template <class T> inline Vector<T> E(const Vector<T>& tanphi, const T& k2);
+
 
 /**
 Vectorized implementation of the `el2` function from
@@ -32,14 +36,20 @@ so it's much faster to evaluate all values of `x` at once!
 
 */
 
-template <typename V, typename T> V el2(const V& x_, T kc, T a, T b) {
+template <typename T> 
+Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
+
+    // Make copies
+    T kc = kc_;
+    T a = a_;
+    T b = b_;
 
     if (kc == 0)
         throw std::runtime_error("Elliptic integral el2 did not converge because k = 1.");
 
     // We declare these params as vectors, 
     // but operate on them as arrays (because Eigen...)
-    V c_, d_, p_, y_, f_, l_, g_, q_;
+    Vector<T> c_, d_, p_, y_, f_, l_, g_, q_;
     f_ = x_ * 0;
     l_ = x_ * 0;
     auto x = x_.array();
@@ -104,34 +114,97 @@ template <typename V, typename T> V el2(const V& x_, T kc, T a, T b) {
         throw std::runtime_error("Elliptic integral el2 did not converge.");
 
     l = (y  < 0).select(1.0 + l, l);
-    q = (atan(m / y) + M_PI * l) * a / m;
+    q = (atan(m / y) + pi<T>() * l) * a / m;
     q = (x < 0).select(-q, q);
     return (q + c * z).matrix();
 
 }
 
 
+
 /**
-Incomplete elliptic integral of the first kind
+Incomplete elliptic integral of the first kind.
 
 */
-template <typename V, typename T> V F(const V& tanphi, T k2) {
-
-    T kc2 = 1 - k2;
-    return el2(tanphi, sqrt(kc2), T(1.0), T(1.0));
-  
+template <class T> 
+inline Vector<T> F(const Vector<T>& tanphi, const T& k2) {
+  T kc2 = 1 - k2;
+  return el2(tanphi, sqrt(kc2), T(1.0), T(1.0));
 }
 
-
 /**
-Incomplete elliptic integral of the second kind
+Incomplete elliptic integral of the first kind (with gradient).
 
 */
-template <typename V, typename T> V E(const V& tanphi, T k2) {
+template <class T, int N>
+inline Vector<ADScalar<T, N>> F(const Vector<ADScalar<T, N>>& tanphi, const ADScalar<T, N>& k2, const Vector<T>& F_value, const Vector<T>& E_value) {
+  
+  // Grab values
+  size_t K = tanphi.size();
+  T k2_value = k2.value();
+  Vector<T> tanphi_value(K);
+  for (size_t k = 0; k < K; ++k)
+    tanphi_value(k) = tanphi(k).value();
+  
+  // Compute derivatives analytically
+  Vector<T> p2(K), q2(K), t2(K), dFdtanphi(K), dFdk2(K);
+  T kc2 = 1 - k2_value;
+  t2.array() = tanphi_value.array() * tanphi_value.array();
+  p2.array() = 1.0 / (1.0 + t2.array());
+  q2.array() = p2.array() * t2.array();
+  dFdtanphi.array() = p2.array() * pow(1.0 - k2_value * q2.array(), -0.5);
+  dFdk2.array() = 0.5 * (E_value.array() / (k2_value * kc2) - F_value.array() / k2_value - tanphi_value.array() * dFdtanphi.array() / kc2);
 
+  // Populate the autodiff vector and return
+  Vector<ADScalar<T, N>> result(K);
+  for (size_t k = 0; k < K; ++k) {
+    result(k).value() = F_value(k);
+    result(k).derivatives() = dFdtanphi(k) * tanphi(k).derivatives() + dFdk2(k) * k2.derivatives();
+  }
+  return result;
+
+}
+
+/**
+Incomplete elliptic integral of the second kind.
+
+*/
+template <typename T> 
+inline Vector<T> E(const Vector<T>& tanphi, const T& k2) {
     T kc2 = 1 - k2;
     return el2(tanphi, sqrt(kc2), T(1.0), kc2);
+}
+
+/**
+Incomplete elliptic integral of the second kind (with gradient).
+
+*/
+template <class T, int N>
+inline Vector<ADScalar<T, N>> E(const Vector<ADScalar<T, N>>& tanphi, const ADScalar<T, N>& k2, const Vector<T>& F_value, const Vector<T>& E_value) {
+
+  // Grab values
+  size_t K = tanphi.size();
+  T k2_value = k2.value();
+  Vector<T> tanphi_value(K);
+  for (size_t k = 0; k < K; ++k)
+    tanphi_value(k) = tanphi(k).value();
   
+  // Compute derivatives analytically
+  Vector<T> p2(K), q2(K), t2(K), dEdtanphi(K), dEdk2(K);
+  t2.array() = tanphi_value.array() * tanphi_value.array();
+  p2.array() = 1.0 / (1.0 + t2.array());
+  q2.array() = p2.array() * t2.array();
+  dEdtanphi.array() = p2.array() * pow(1.0 - k2_value * q2.array(), 0.5);
+  dEdk2.array() = 0.5 * (E_value.array() - F_value.array()) / k2_value;
+
+  // Populate the autodiff vector and return
+  Vector<ADScalar<T, N>> result(K);
+  for (size_t k = 0; k < K; ++k) {
+    result(k).value() = E_value(k);
+    result(k).derivatives() = dEdtanphi(k) * tanphi(k).derivatives() + dEdk2(k) * k2.derivatives();
+  }
+  return result;
+
 }
 
 
