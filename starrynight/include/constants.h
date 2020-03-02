@@ -63,6 +63,9 @@ namespace constants {
 // Tolerance for various functions that calculate phi, xi, and lam
 #define STARRY_ANGLE_TOL  1e-13
 
+// Nudge k^2 away from 1 when it gets this close
+#define STARRY_K2_ONE_TOL 1e-12
+
 /*
 Hacks. Determining the integration paths close to the singular
 points of the occultation is quite hard, and the solution can

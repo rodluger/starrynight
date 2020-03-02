@@ -67,6 +67,9 @@ STARRY_PAL_BO_EQUALS_RO_TOL = 1e-3
 STARRY_PAL_BO_EQUALS_RO_MINUS_ONE_TOL = 1e-3
 STARRY_PAL_BO_EQUALS_ONE_MINUS_RO_TOL = 1e-3
 
+# Nudge k^2 away from 1 when it gets this close
+STARRY_K2_ONE_TOL = 1e-12
+
 
 def parity(i):
     return -1 if (i % 2) == 0 else 1

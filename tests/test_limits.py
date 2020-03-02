@@ -114,7 +114,10 @@ def test_J_high_l(tol=1e-15):
     ydeg = 20
     tol = 1e-12
     kappa = np.array([np.pi / 2, np.pi / 2 + 1])
-    k2 = np.logspace(-2, 2, 100)
+
+    ro = 0.2
+    bo = np.linspace(0, ro + 1, 100)
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
 
     # Compare to numerical integration
     erel = np.zeros_like(k2)
@@ -125,8 +128,8 @@ def test_J_high_l(tol=1e-15):
         s2 = s1 ** 2
         c1 = np.cos(x)
         q2 = 1 - np.minimum(1.0, s2 / k2[i])
-        F, E, _, _, _ = ellip(0.1, 0.1, kappa, k2[i])
-        J = compute_J(ydeg + 1, k2[i], km2, kappa, s1, s2, c1, q2, E, F)
+        F, E, _, = ellip(bo[i], ro, kappa)
+        J = compute_J(ydeg + 1, k2[i], km2, kappa, s1, s2, c1, q2, F, E)
         func = (
             lambda phi, v: np.sin(phi) ** (2 * v)
             * (max(0, 1 - km2 * np.sin(phi) ** 2)) ** 1.5

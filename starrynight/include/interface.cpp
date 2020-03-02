@@ -15,7 +15,12 @@
 #include <pybind11/stl.h>
 #include <iostream>
 #include "utils.h"
-#include "iellip.h"
+
+# ifdef STARRY_DEBUG
+#   include "ellip.h"
+#   include "iellip.h"
+# endif
+
 namespace py = pybind11;
 
 // Register the Python module

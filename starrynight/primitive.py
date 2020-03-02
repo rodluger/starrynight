@@ -110,7 +110,7 @@ def compute_W(nmax, s2, q2, q3):
     )
 
 
-def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dE, dF):
+def compute_J(nmax, k2, km2, kappa, s1, s2, c1, q2, dF, dE):
     """
     Return the array J[0 .. nmax], computed recursively using
     a tridiagonal solver and a lower boundary condition
@@ -262,24 +262,8 @@ def compute_P(ydeg, bo, ro, kappa):
     W = compute_W(ydeg, s2, q2, q3)
 
     # Compute the elliptic integrals
-    if k2 == 1:
-
-        # TODO: This is a special case in which the J integral reduces
-        # to H[3, 2v]. However, the cosine term changes signs over the
-        # interval, so we need to subdivide the integral into regions
-        # where cosine has constant sign.
-        #
-        #   H = compute_H(3 + 2 * ydeg + 2, 0.5 * kappa)
-        #   J = np.array([H[3, 2 * v] for v in range(ydeg + 2)])
-        #
-        # The expressions for the elliptic integrals also simplify.
-        F, E, RF, RD, RJ = ellip(bo, ro, kappa, 1 + 1e-12)
-        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, E, F)
-
-    else:
-
-        F, E, RF, RD, RJ = ellip(bo, ro, kappa, k2)
-        J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, E, F)
+    F, E, PIprime = ellip(bo, ro, kappa)
+    J = compute_J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, F, E)
 
     # Now populate the P array
     P = np.zeros((ydeg + 1) ** 2)
@@ -300,7 +284,7 @@ def compute_P(ydeg, bo, ro, kappa):
                 if l == 1:
 
                     # Same as in starry, but using expression from Pal (2012)
-                    P[2] = dP2(bo, ro, k2, kappa, s1, s2, c1, RF, RD, RJ)
+                    P[2] = dP2(bo, ro, k2, kappa, s1, s2, c1, F, E, PIprime)
 
                 elif l % 2 == 0:
 

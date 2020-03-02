@@ -5,7 +5,7 @@ import numpy as np
 TWOTHIRDS = 2.0 / 3.0
 
 
-def dP2(bo, ro, k2, kappa, s1, s2, c1, RF, RD, RJ):
+def dP2(bo, ro, k2, kappa, s1, s2, c1, F, E, PIprime):
     """
     Returns the difference of a pair (or pairs) of Pal integrals for the
     P2 (linear) term. Specifically, returns the sum of
@@ -63,14 +63,17 @@ def dP2(bo, ro, k2, kappa, s1, s2, c1, RF, RD, RJ):
     a2 = -2.0 * pairdiff(s1 * c1 * np.sqrt(1 - np.minimum(1.0, q2)))
     A = a0 + a1 + TWOTHIRDS * br * a2
 
+    # Carlson RD term
+    C = -2 * TWOTHIRDS * br * p0 * term * k2
+
     # Carlson RF term
     fac = -bpr / bmr
-    B = ((1.0 + 2.0 * r2 * r2 - 4.0 * r2) + TWOTHIRDS * br * (p0 + 5 * br) + fac) * term
+    B = (
+        -((1.0 + 2.0 * r2 * r2 - 4.0 * r2) + TWOTHIRDS * br * (p0 + 5 * br) + fac)
+        * term
+    ) - C
 
-    # Carlson RD term
-    C = -TWOTHIRDS * TWOTHIRDS * br * p0 * term
-
-    # Carlson RJ term
+    # Carlson PIprime term
     D = -TWOTHIRDS * fac / d2 * term * br
 
-    return (A + B * RF + C * RD + D * RJ) / 3.0
+    return (A + B * F + C * E + D * PIprime) / 3.0

@@ -321,16 +321,21 @@ def EllipJ(kappa, k2, p):
     return J
 
 
-def ellip(bo, ro, kappa, k2):
+def ellip(bo, ro, kappa):
 
     # Helper variables
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+    if np.abs(1 - k2) < STARRY_K2_ONE_TOL:
+        if k2 == 1.0:
+            k2 = 1 + STARRY_K2_ONE_TOL
+        elif k2 < 1.0:
+            k2 = 1.0 - STARRY_K2_ONE_TOL
+        else:
+            k2 = 1.0 + STARRY_K2_ONE_TOL
     k = np.sqrt(k2)
     k2inv = 1 / k2
     kinv = np.sqrt(k2inv)
     kc2 = 1 - k2
-    kc = np.sqrt(kc2)
-    kc2inv = 1 - k2inv
-    kcinv = np.sqrt(kc2inv)
 
     # Complete elliptic integrals (we'll need them to compute offsets below)
     if k2 < 1:
@@ -391,10 +396,6 @@ def ellip(bo, ro, kappa, k2):
                 F[i] += 2 * K0
                 E[i] += 2 * E0
 
-    # Carlson integrals
-    RF = -F
-    RD = (E - F) * 3 * k2
-
     # Must compute RJ separately
     if np.abs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL:
         p = (ro * ro + bo * bo - 2 * ro * bo * np.cos(kappa)) / (
@@ -416,9 +417,6 @@ def ellip(bo, ro, kappa, k2):
     # Compute the *definite* elliptic integrals
     F = pairdiff(F)
     E = pairdiff(E)
-    RF = pairdiff(RF)
-    RD = pairdiff(RD)
-    RJ = pairdiff(RJ)
+    PIprime = pairdiff(RJ)
 
-    return F, E, RF, RD, RJ
-
+    return F, E, PIprime

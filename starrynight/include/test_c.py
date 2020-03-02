@@ -1,5 +1,5 @@
 from starrynight import c
-from mpmath import ellipf, ellipe, ellippi, elliprj
+from mpmath import ellipk, ellipf, ellipe, ellippi, elliprj
 import numpy as np
 import pytest
 
@@ -103,3 +103,34 @@ def test_PIprime():
 
     assert np.allclose(F1, F2, equal_nan=True)
     assert np.allclose(F1, F3, equal_nan=True)
+
+
+if __name__ == "__main__":
+
+    # DEBUG
+    import starrynight
+
+    bo = 0.5
+    ro = 0.2
+
+    kappa = np.linspace(0, 4 * np.pi, 100)
+
+    F1 = np.zeros_like(kappa)
+    E1 = np.zeros_like(kappa)
+    PIp1 = np.zeros_like(kappa)
+    F2 = np.zeros_like(kappa)
+    E2 = np.zeros_like(kappa)
+    PIp2 = np.zeros_like(kappa)
+
+    for k in range(len(kappa)):
+
+        # HACK: Undo the "pairdiff" op
+        F1[k], E1[k], PIp1[k] = -c.ellip(bo, ro, [kappa[k]])
+
+        F2[k], E2[k], PIp2[k] = starrynight.special.ellip(bo, ro, np.array([kappa[k]]))
+
+    import matplotlib.pyplot as plt
+
+    plt.plot(kappa, PIp1)
+    plt.plot(kappa, PIp2)
+    plt.show()

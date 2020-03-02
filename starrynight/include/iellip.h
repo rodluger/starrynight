@@ -344,6 +344,9 @@ It can also be written in terms of the Legendre forms:
 This integral is only used in the expression for computing the linear limb darkening
 term (2) in the primitive integral P, based on the expressions in Pal (2012).
 
+Note that when 1 - k^2 sin^2 phi < 0, the integral is complex and the implementation
+here is wrong; however, these cases are not encountered in practice!
+
 */
 template <typename T> 
 inline Vector<T> PIprime(const Vector<T>& kappa, const T& k2, const Vector<T>& p) {
@@ -363,6 +366,139 @@ inline Vector<T> PIprime(const Vector<T>& kappa, const T& k2, const Vector<T>& p
         result(k) = (1.0 + cp) * cx * rj(w, sx * sx, 1.0, p(k));
     }
     return result;
+}
+
+/**
+Computes the three incomplete elliptic integrals used in starry: F, E, and PI' (see above).
+
+Note that kappa must be in the range [0, 4 pi].
+
+*/
+template <typename T>
+inline Vector<T> ellip(const T& bo, const T& ro, const Vector<T>& kappa, const T& F0_, const T& E0_, const T& PIprime0_) {
+
+    // Helper variables
+    size_t K = kappa.size();
+    T k2 = (1 - ro * ro - bo * bo + 2 * bo * ro) / (4 * bo * ro);
+    T k = sqrt(k2);
+    T k2inv = 1 / k2;
+    T kinv = sqrt(k2inv);
+    T kc2 = 1 - k2;
+
+    // Complete elliptic integrals (we'll need them to compute offsets below)
+    T F0, E0, PIprime0;
+    if (k2 < 1) {
+        F0 = k * F0_;
+        E0 = kinv * (E0_ - (1 - k2) * F0_);
+        PIprime0 = 0.0;
+    } else {
+        F0 = F0_;
+        E0 = E0_;
+        if ((bo != 0) && (bo != ro)) {
+            T p0 = (ro * ro + bo * bo + 2 * ro * bo) / (ro * ro + bo * bo - 2 * ro * bo);
+            PIprime0 = -12.0 / (1 - p0) * (PIprime0_ - F0_);
+        } else {
+            PIprime0 = 0.0;
+        }
+    }
+
+    // This will store F, E, and PI'
+    Vector<T> result(3);
+    result.setZero();
+
+    // Compute F and E
+    if (k2 < 1) {
+
+        // Analytic continuation from (17.4.15-16) in Abramowitz & Stegun
+        // A better format is here: https://dlmf.nist.gov/19.7#ii
+
+        // Helper variables
+        Vector<T> arg(K), arg2(K), tanphi(K);
+        arg.array() = kinv * sin(0.5 * kappa.array());
+        arg2.array() = 1.0 - arg.array() * arg.array();
+        arg2.array() = (arg2.array() < 1e-12).select(1e-12, arg2.array());
+        tanphi.array() = arg.array() * pow(arg2.array(), -0.5);
+
+        // Compute the incomplete elliptic integrals
+        Vector<T> Fv = F(tanphi, k2) * k;
+        Vector<T> Ev = kinv * (E(tanphi, k2) - kc2 * kinv * Fv);
+
+        // Compute the *definite* integrals
+        // Add offsets to account for the limited domain of `el2`
+        int sgn = -1;
+        for (size_t i = 0; i < K; ++i) {
+            if (kappa(i) > 3 * pi<T>()) {
+                result(0) += sgn * (4 * F0 + Fv(i));
+                result(1) += sgn * (4 * E0 + Ev(i));
+            } else if (kappa(i) > pi<T>()) {
+                result(0) += sgn * (2 * F0 - Fv(i));
+                result(1) += sgn * (2 * E0 - Ev(i));
+            } else {
+                result(0) += sgn * Fv(i);
+                result(1) += sgn * Ev(i);
+            }
+            sgn *= -1;
+        }
+
+    } else {
+
+        // Helper variables
+        Vector<T> tanphi(K);
+        tanphi.array() = tan(0.5 * kappa.array());
+
+        // Compute the incomplete elliptic integrals
+        Vector<T> Fv = F(tanphi, k2inv);
+        Vector<T> Ev = E(tanphi, k2inv);
+
+        // Compute the *definite* integrals
+        // Add offsets to account for the limited domain of `el2`
+        int sgn = -1;
+        for (size_t i = 0; i < K; ++i) {
+            if (kappa(i) > 3 * pi<T>()) {
+                result(0) += sgn * (4 * F0 + Fv(i));
+                result(1) += sgn * (4 * E0 + Ev(i));
+            } else if (kappa(i) > pi<T>()) {
+                result(0) += sgn * (2 * F0 + Fv(i));
+                result(1) += sgn * (2 * E0 + Ev(i));
+            } else {
+                result(0) += sgn * Fv(i);
+                result(1) += sgn * Ev(i);
+            }
+            sgn *= -1;
+        }
+
+    }
+
+    // Compute PIprime
+    if (fabs(bo - ro) > STARRY_PAL_BO_EQUALS_RO_TOL) {
+
+        // Helper variables
+        Vector<T> p(K);
+        p.array() = (ro * ro + bo * bo - 2 * ro * bo * cos(kappa.array())) / (
+            ro * ro + bo * bo - 2 * ro * bo
+        );
+
+        // Compute the incomplete elliptic integral
+        Vector<T> PIprimev = PIprime(kappa, k2, p);
+
+        // Compute the *definite* integral
+        // Add offsets to account for the limited domain of `rj`
+        int sgn = -1;
+        for (size_t i = 0; i < K; ++i) {
+            if (kappa(i) > 3 * pi<T>()) {
+                result(2) += sgn * (2 * PIprime0 + PIprimev(i));
+            } else if (kappa(i) > pi<T>()) {
+                result(2) += sgn * (PIprime0 + PIprimev(i));
+            } else {
+              result(2) += sgn * PIprimev(i);
+            }
+            sgn *= -1;
+        }
+
+    }
+
+    return result;
+
 }
 
 } // namespace iellip
