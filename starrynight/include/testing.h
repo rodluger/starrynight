@@ -131,3 +131,8 @@ m.def("dEdk2", [](const Vector<double> &tanphi, const double &k2) {
     return result;
 
 });
+
+// Modified incomplete elliptic integral of the third kind
+m.def("PIprime", [](const Vector<double> &kappa, const double &k2, const Vector<double>& p) {
+    return PIprime(kappa, k2, p);
+});

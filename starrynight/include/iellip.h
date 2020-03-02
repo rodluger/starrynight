@@ -28,6 +28,7 @@ template <class T> inline Vector<T> F(const Vector<T>& tanphi, const T& k2);
 template <class T> inline Vector<T> E(const Vector<T>& tanphi, const T& k2);
 
 
+
 /**
 Vectorized implementation of the `el2` function from
 Bulirsch (1965). In this case, `x` is a *vector* of integration
@@ -35,7 +36,6 @@ limits. The halting condition does not depend on the value of `x`,
 so it's much faster to evaluate all values of `x` at once!
 
 */
-
 template <typename T> 
 Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
 
@@ -120,7 +120,125 @@ Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
 
 }
 
+/**
+Scalar implementation of the Carlson elliptic integral RJ.
 
+Based on
+    
+    Bille Carlson,
+    Computing Elliptic Integrals by Duplication,
+    Numerische Mathematik,
+    Volume 33, 1979, pages 1-16.
+
+    Bille Carlson, Elaine Notis,
+    Algorithm 577, Algorithms for Incomplete Elliptic Integrals,
+    ACM Transactions on Mathematical Software,
+    Volume 7, Number 3, pages 398-403, September 1981
+    
+    https://people.sc.fsu.edu/~jburkardt/f77_src/toms577/toms577.f
+
+*/
+template <typename T> 
+T rj(const T& x_, const T& y_, const T& z_, const T& p_) {
+    
+    // Constants
+    const T C1 = 3.0 / 14.0;
+    const T C2 = 1.0 / 3.0;
+    const T C3 = 3.0 / 22.0;
+    const T C4 = 3.0 / 26.0;
+
+    // Make copies
+    T x = x_;
+    T y = y_;
+    T z = z_;
+    T p = p_;
+
+    // Limit checks
+    if (x < STARRY_CRJ_LO_LIM)
+        x = STARRY_CRJ_LO_LIM;
+    else if (x > STARRY_CRJ_HI_LIM)
+        x = STARRY_CRJ_HI_LIM;
+
+    if (y < STARRY_CRJ_LO_LIM)
+        y = STARRY_CRJ_LO_LIM;
+    else if (y > STARRY_CRJ_HI_LIM)
+        y = STARRY_CRJ_HI_LIM;
+
+    if (z < STARRY_CRJ_LO_LIM)
+        z = STARRY_CRJ_LO_LIM;
+    else if (z > STARRY_CRJ_HI_LIM)
+        z = STARRY_CRJ_HI_LIM;
+
+    if (p < STARRY_CRJ_LO_LIM)
+        p = STARRY_CRJ_LO_LIM;
+    else if (p > STARRY_CRJ_HI_LIM)
+        p = STARRY_CRJ_HI_LIM;
+
+    T xn = x;
+    T yn = y;
+    T zn = z;
+    T pn = p;
+    T sigma = 0.0;
+    T power4 = 1.0;
+
+    T mu, invmu;
+    T xndev, yndev, zndev, pndev;
+    T eps;
+    T ea, eb, ec, e2, e3, s1, s2, s3, value;
+    T xnroot, ynroot, znroot;
+    T lam, alpha, beta;
+
+    for (int k = 0; k < STARRY_CRJ_MAX_ITER; ++k) {
+
+        mu = 0.2 * (xn + yn + zn + pn + pn);
+        invmu = 1.0 / mu;
+        xndev = (mu - xn) * invmu;
+        yndev = (mu - yn) * invmu;
+        zndev = (mu - zn) * invmu;
+        pndev = (mu - pn) * invmu;
+        eps = max(max(max(abs(xndev), abs(yndev)), abs(zndev)), abs(pndev));
+
+        if (eps < STARRY_CRJ_TOL) {
+
+            ea = xndev * (yndev + zndev) + yndev * zndev;
+            eb = xndev * yndev * zndev;
+            ec = pndev * pndev;
+            e2 = ea - 3.0 * ec;
+            e3 = eb + 2.0 * pndev * (ea - ec);
+            s1 = 1.0 + e2 * (-C1 + 0.75 * C3 * e2 - 1.5 * C4 * e3);
+            s2 = eb * (0.5 * C2 + pndev * (-C3 - C3 + pndev * C4));
+            s3 = pndev * ea * (C2 - pndev * C3) - C2 * pndev * ec;
+            value = 3.0 * sigma + power4 * (s1 + s2 + s3) / (mu * sqrt(mu));
+            return value;
+
+        }
+
+        xnroot = sqrt(xn);
+        ynroot = sqrt(yn);
+        znroot = sqrt(zn);
+        lam = xnroot * (ynroot + znroot) + ynroot * znroot;
+        alpha = pn * (xnroot + ynroot + znroot) + xnroot * ynroot * znroot;
+        alpha = alpha * alpha;
+        beta = pn * (pn + lam) * (pn + lam);
+        if (alpha < beta)
+            sigma += power4 * acos(sqrt(alpha / beta)) / sqrt(beta - alpha);
+        else if (alpha > beta)
+            sigma += power4 * acosh(sqrt(alpha / beta)) / sqrt(alpha - beta);
+        else
+            sigma = sigma + power4 / sqrt(beta);
+
+        power4 *= 0.25;
+        xn = 0.25 * (xn + lam);
+        yn = 0.25 * (yn + lam);
+        zn = 0.25 * (zn + lam);
+        pn = 0.25 * (pn + lam);
+
+    }
+    
+    // Bad...
+    throw std::runtime_error("Elliptic integral rj did not converge.");
+
+}
 
 /**
 Incomplete elliptic integral of the first kind.
@@ -207,6 +325,45 @@ inline Vector<ADScalar<T, N>> E(const Vector<ADScalar<T, N>>& tanphi, const ADSc
 
 }
 
+/**
+Modified incomplete elliptic integral of the third kind.
+
+For kappa in [-pi, pi], this integral is proportional to the Carlson elliptic integral RJ:
+
+  PI' = -2 sin^3(phi) * RJ(cos^2 phi, 1 - k^2 sin^2 phi, 1, 1 - n sin^2 phi)
+
+where
+
+  phi = kappa / 2
+  n = -4 b r / (r - b)^2
+
+It can also be written in terms of the Legendre forms:
+
+  PI' = 6 / n * (F(phi, k^2) - PI(phi, n, k^2))
+
+This integral is only used in the expression for computing the linear limb darkening
+term (2) in the primitive integral P, based on the expressions in Pal (2012).
+
+*/
+template <typename T> 
+inline Vector<T> PIprime(const Vector<T>& kappa, const T& k2, const Vector<T>& p) {
+    size_t K = kappa.size();
+    T phi, cp, cx, sx, w;
+    Vector<T> result(K);
+    for (size_t k = 0; k < K; ++k) {
+
+        // Normalize phi to the range [0, 2pi]
+        phi = fmod(kappa(k) - pi<T>(), 2 * pi<T>());
+        if (kappa(k) < pi<T>()) phi += 2 * pi<T>();
+
+        cp = cos(phi);
+        cx = cos(0.5 * phi);
+        sx = sin(0.5 * phi);
+        w = 1.0 - cx * cx / k2;
+        result(k) = (1.0 + cp) * cx * rj(w, sx * sx, 1.0, p(k));
+    }
+    return result;
+}
 
 } // namespace iellip
 } // namespace starry
