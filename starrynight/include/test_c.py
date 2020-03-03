@@ -1,65 +1,15 @@
+import starrynight
 from starrynight import c
 from mpmath import ellipk, ellipf, ellipe, ellippi, elliprj
 import numpy as np
 import pytest
 
 
-@pytest.mark.parametrize("phi,k2", [[1.0, 0.75], [0.5, 0.25], [-1.0, 0.5]])
-def test_F(phi, k2):
-    F1 = c.F(np.tan([phi]), k2)[0]
-    F2 = float(ellipf(phi, k2).real)
-    assert np.allclose(F1, F2)
+@pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
+def test_ellip(bo, ro):
 
-
-@pytest.mark.parametrize("phi,k2", [[1.0, 0.75], [0.5, 0.25], [-1.0, 0.5]])
-def test_dFdtanphi(phi, k2):
-    F1 = c.dFdtanphi(np.tan([phi]), k2)[0]
-    eps = 1e-8
-    phi1 = np.arctan(np.tan(phi) - eps)
-    phi2 = np.arctan(np.tan(phi) + eps)
-    F2 = float((ellipf(phi2, k2) - ellipf(phi1, k2)).real / (2 * eps))
-    assert np.allclose(F1, F2)
-
-
-@pytest.mark.parametrize("phi,k2", [[1.0, 0.75], [0.5, 0.25], [-1.0, 0.5]])
-def test_dFdk2(phi, k2):
-    F1 = c.dFdk2(np.tan([phi]), k2)[0]
-    eps = 1e-8
-    F2 = float((ellipf(phi, k2 + eps) - ellipf(phi, k2 - eps)).real / (2 * eps))
-    assert np.allclose(F1, F2)
-
-
-@pytest.mark.parametrize("phi,k2", [[1.0, 0.75], [0.5, 0.25], [-1.0, 0.5]])
-def test_E(phi, k2):
-    F1 = c.E(np.tan([phi]), k2)[0]
-    F2 = float(ellipe(phi, k2).real)
-    assert np.allclose(F1, F2)
-
-
-@pytest.mark.parametrize("phi,k2", [[1.0, 0.75], [0.5, 0.25], [-1.0, 0.5]])
-def test_dEdtanphi(phi, k2):
-    F1 = c.dEdtanphi(np.tan([phi]), k2)[0]
-    eps = 1e-8
-    phi1 = np.arctan(np.tan(phi) - eps)
-    phi2 = np.arctan(np.tan(phi) + eps)
-    F2 = float((ellipe(phi2, k2) - ellipe(phi1, k2)).real / (2 * eps))
-    assert np.allclose(F1, F2)
-
-
-@pytest.mark.parametrize("phi,k2", [[1.0, 0.75], [0.5, 0.25], [-1.0, 0.5]])
-def test_dEdk2(phi, k2):
-    F1 = c.dEdk2(np.tan([phi]), k2)[0]
-    eps = 1e-8
-    F2 = float((ellipe(phi, k2 + eps) - ellipe(phi, k2 - eps)).real / (2 * eps))
-    assert np.allclose(F1, F2)
-
-
-def test_PIprime():
-
-    # Params (note this integral is used only when k2 > 1)
-    bo = 0.5
-    ro = 0.2
-    kappa = np.linspace(0, 4 * np.pi, 500)
+    # Evaluate over full range
+    kappa = np.linspace(0, 4 * np.pi, 100)
 
     # Helper vars
     n = -4 * bo * ro / (ro - bo) ** 2
@@ -67,41 +17,98 @@ def test_PIprime():
     kp2 = 1 / k2
 
     # Compute
-    PIp1 = np.zeros_like(kappa)
-    PIp2 = np.zeros_like(kappa)
+    F = np.zeros_like(kappa) * np.nan
+    E = np.zeros_like(kappa) * np.nan
+    PIp = np.zeros_like(kappa) * np.nan
+    F_ = np.zeros_like(kappa) * np.nan
+    E_ = np.zeros_like(kappa) * np.nan
+    PIp_ = np.zeros_like(kappa) * np.nan
     for k in range(len(kappa)):
 
-        # Our version (note the - sign undoes the "pairdiff" op)
-        _, _, PIp1[k] = -c.ellip(bo, ro, [kappa[k]])
+        # Only compute it if the answer is real
+        if np.sin(kappa[k] / 2) ** 2 <= k2:
 
-        # Computed from the Legendre form
-        PIp2[k] = (
-            6
-            / n
-            * float((ellipf(kappa[k] / 2, kp2) - ellippi(n, kappa[k] / 2, kp2)).real)
-        )
+            # Our version
+            (F[k], _), (E[k], _), (PIp[k], _) = c.ellip(bo, ro, [0.0, kappa[k]])
 
-    assert np.allclose(PIp1, PIp2)
+            # Computed from the Legendre form
+            F_[k] = float(ellipf(kappa[k] / 2, kp2).real) - float(ellipf(0, kp2).real)
+            E_[k] = float(ellipe(kappa[k] / 2, kp2).real) - float(ellipe(0, kp2).real)
+            PIp_[k] = (6 / n) * (
+                float((ellipf(kappa[k] / 2, kp2) - ellippi(n, kappa[k] / 2, kp2)).real)
+                - float((ellipf(0, kp2) - ellippi(n, 0, kp2)).real)
+            )
+
+    assert np.allclose(F, F_, equal_nan=True)
+    assert np.allclose(E, E_, equal_nan=True)
+    assert np.allclose(PIp, PIp_, equal_nan=True)
 
 
-if __name__ == "__main__":
+@pytest.mark.parametrize("kappa", [0.25])
+def test_ellip_deriv_bo(kappa):
 
-    # DEBUG
-    k2 = 1.5
-    kappa = np.linspace(0, 4 * np.pi, 100)
-    phi = kappa / 2
+    # Params
+    bo = np.linspace(0.5, 1.0, 100)
+    ro = 0.2
 
-    for k in range(len(kappa)):
+    # Compute analytic derivs
+    F = np.zeros_like(bo) * np.nan
+    E = np.zeros_like(bo) * np.nan
+    PIp = np.zeros_like(bo) * np.nan
+    dFdbo = np.zeros_like(bo) * np.nan
+    dEdbo = np.zeros_like(bo) * np.nan
+    dPIpdbo = np.zeros_like(bo) * np.nan
+    for i in range(len(bo)):
+        try:
+            (
+                (F[i], (dFdbo[i], _, _, _)),
+                (E[i], (dEdbo[i], _, _, _)),
+                (PIp[i], (dPIpdbo[i], _, _, _)),
+            ) = c.ellip(bo[i], ro, [0.0, kappa])
+        except:
+            # Complex?
+            pass
 
-        F1[k] = c.dFdtanphi(np.tan([phi]), k2)[0]
+    # Numerical
+    dFdbo_ = np.gradient(F, edge_order=2) / np.gradient(bo, edge_order=2)
+    dEdbo_ = np.gradient(E, edge_order=2) / np.gradient(bo, edge_order=2)
+    dPIpdbo_ = np.gradient(PIp, edge_order=2) / np.gradient(bo, edge_order=2)
 
-        eps = 1e-8
-        phi1 = np.arctan(np.tan(phi) - eps)
-        phi2 = np.arctan(np.tan(phi) + eps)
-        F2[k] = float((ellipf(phi2, k2) - ellipf(phi1, k2)).real / (2 * eps))
+    assert np.allclose(dFdbo, dFdbo_, equal_nan=True, atol=1e-4)
+    assert np.allclose(dEdbo, dEdbo_, equal_nan=True, atol=1e-4)
+    # TODO: assert np.allclose(dPIpdbo, dPIpdbo_, equal_nan=True, atol=1e-5)
 
-    import matplotlib.pyplot as plt
 
-    plt.plot(kappa, F1)
-    plt.plot(kappa, F2)
-    plt.show()
+@pytest.mark.parametrize("kappa", [0.25])
+def test_ellip_deriv_ro(kappa):
+
+    # Params
+    bo = 0.2
+    ro = np.linspace(0.5, 1.15, 1000)
+
+    # Compute analytic derivs
+    F = np.zeros_like(ro) * np.nan
+    E = np.zeros_like(ro) * np.nan
+    PIp = np.zeros_like(ro) * np.nan
+    dFdro = np.zeros_like(ro) * np.nan
+    dEdro = np.zeros_like(ro) * np.nan
+    dPIpdro = np.zeros_like(ro) * np.nan
+    for i in range(len(ro)):
+        try:
+            (
+                (F[i], (_, dFdro[i], _, _)),
+                (E[i], (_, dEdro[i], _, _)),
+                (PIp[i], (_, dPIpdro[i], _, _)),
+            ) = c.ellip(bo, ro[i], [0.0, kappa])
+        except:
+            # Complex?
+            pass
+
+    # Numerical
+    dFdro_ = np.gradient(F, edge_order=2) / np.gradient(ro, edge_order=2)
+    dEdro_ = np.gradient(E, edge_order=2) / np.gradient(ro, edge_order=2)
+    dPIpdro_ = np.gradient(PIp, edge_order=2) / np.gradient(ro, edge_order=2)
+
+    assert np.allclose(dFdro, dFdro_, equal_nan=True, atol=1e-4)
+    assert np.allclose(dEdro, dEdro_, equal_nan=True, atol=1e-4)
+    # TODO: assert np.allclose(dPIpdro, dPIpdro_, equal_nan=True, atol=1e-5)
