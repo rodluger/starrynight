@@ -50,6 +50,9 @@ T pairdiff(const Vector<T>& array) {
     }
 }
 
+/**
+  Integrand of the P_2 term, for numerical integration.
+*/
 template <typename T> 
 T P2_integrand(const T& bo, const T& ro, const T& phi) {
   T c = cos(phi);
@@ -59,6 +62,9 @@ T P2_integrand(const T& bo, const T& ro, const T& phi) {
   return (1.0 - z * sqrt(z)) / (1.0 - z) * (ro + bo * c) * ro / 3.0;
 }
 
+/**
+  Derivative of the integrand of the P_2 term, for numerical integration.
+*/
 template <typename T> 
 T dP2dbo_integrand(const T& bo, const T& ro, const T& phi) {
   T c = cos(phi);
@@ -70,6 +76,9 @@ T dP2dbo_integrand(const T& bo, const T& ro, const T& phi) {
   return P * ((bo + ro * c) * q + 1.0 / (bo + ro / c));
 }
 
+/**
+  Derivative of the integrand of the P_2 term, for numerical integration.
+*/
 template <typename T> 
 T dP2dro_integrand(const T& bo, const T& ro, const T& phi) {
   T c = cos(phi);
@@ -82,6 +91,8 @@ T dP2dro_integrand(const T& bo, const T& ro, const T& phi) {
 }
 
 /**
+  Numerical version of the Pal integrals (P2), used in cases where
+  the analytic expression is numerically unstable.
 
 */
 template <typename T> 
@@ -113,12 +124,9 @@ T P2_numerical(const T& bo, const T& ro, const Vector<T>& kappa) {
 }
 
 /**
-  Returns the difference of a pair (or pairs) of Pal integrals for the
-  P2 (linear) term. Specifically, returns the sum of
+  The P2 term from Pal (2012). This is the definite primitive integral of the 
+  linear limb darkening term.
 
-        P2(bo, ro, kappa[i + 1]) - P2(bo, ro, kappa[i])
-
-  for i = 0, 2, 4, ...
 */
 template <typename T> 
 T P2(const T& bo, const T& ro, const T& k2, const Vector<T>& kappa, const Vector<T>& s1, 
@@ -200,6 +208,64 @@ T P2(const T& bo, const T& ro, const T& k2, const Vector<T>& kappa, const Vector
     return (A + B * F + C * E + D * PIp) / 3.0;
 
 }
+
+/**
+  Integrand of the J_N term, for numerical integration.
+*/
+template <typename T> 
+T J_integrand(const int N, const T& k2, const T& phi) {
+  T s2 = sin(phi);
+  s2 *= s2;
+  T term = 1 - s2 / k2;
+  if (term < 0) term = 0;
+  return pow(s2, N) * term * sqrt(term);
+}
+
+/**
+  Derivative of the integrand of the J_N term, for numerical integration.
+*/
+template <typename T> 
+T dJdk2_integrand(const int N, const T& k2, const T& phi) {
+  T s2 = sin(phi);
+  s2 *= s2;
+  T term = 1 - s2 / k2;
+  if (term < 0) term = 0;
+  return (1.5 / (k2 * k2)) * pow(s2, N + 1) * sqrt(term);
+}
+
+/**
+  The J helper integral evaluated numerically. The expression for the terms in
+  J is analytic from recursion relations, but gets unstable for high `n`. We
+  evaluate J for `n = 0` (analytically) `n = nmax` (numerically) and solve the
+  problem with a forward & backward pass to improve numerical stability.
+
+*/
+template <typename T> 
+T J_numerical(const int N, const T& k2, const Vector<T>& kappa) {
+
+  using Scalar = typename T::Scalar;
+  size_t K = kappa.size();
+
+  std::function<Scalar(Scalar)> f = [N, k2](Scalar phi) { return J_integrand(N, k2.value(), phi); };
+  std::function<Scalar(Scalar)> dfdk2 = [N, k2](Scalar phi) { return dJdk2_integrand(N, k2.value(), phi); };
+  
+  // Compute the function value
+  T res = 0.0;
+  for (size_t i = 0; i < K; i += 2)
+    res.value() += QUAD.integrate(0.5 * kappa(i).value(), 0.5 * kappa(i + 1).value(), f);
+
+  // Compute the derivatives.
+  // Deriv wrt kappa is easy; need to integrate for k2
+  for (size_t i = 0; i < K; i += 2) {
+    res.derivatives() += f(0.5 * kappa(i + 1).value()) * kappa(i + 1).derivatives(); 
+    res.derivatives() -= f(0.5 * kappa(i).value()) * kappa(i).derivatives();
+    res.derivatives() += k2.derivatives() * QUAD.integrate(0.5 * kappa(i).value(), 0.5 * kappa(i + 1).value(), dfdk2);
+  }
+
+  return res;
+
+}
+
 
 } // namespace special
 } // namespace starry

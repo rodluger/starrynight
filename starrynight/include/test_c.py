@@ -1,4 +1,3 @@
-import starrynight
 from starrynight import c
 from mpmath import ellipf, ellipe, ellippi
 import numpy as np
@@ -163,43 +162,6 @@ def test_ellip_deriv_kappa(bo, ro):
     assert np.allclose(dPIpdkappa[1:-1], dPIpdkappa_[1:-1], equal_nan=True, atol=1e-4)
 
 
-@pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
-def test_P2(bo, ro):
-
-    # Evaluate over full range
-    kappa = np.linspace(0, 4 * np.pi, 100)
-
-    # Helper variables
-    n = -4 * bo * ro / (ro - bo) ** 2
-    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
-    kp2 = 1 / k2
-
-    # Compute
-    P2 = np.zeros_like(kappa) * np.nan
-    P2_ = np.zeros_like(kappa) * np.nan
-    for k in range(len(kappa)):
-
-        # Only compute it if the answer is real
-        if np.sin(kappa[k] / 2) ** 2 <= k2:
-
-            P2[k], _ = c.P2(bo, ro, np.array([0, kappa[k]]))
-
-            s1 = np.sin(np.array([0, kappa[k]]) / 2)
-            s2 = s1 ** 2
-            c1 = np.cos(np.array([0, kappa[k]]) / 2)
-            F = float(ellipf(kappa[k] / 2, kp2).real) - float(ellipf(0, kp2).real)
-            E = float(ellipe(kappa[k] / 2, kp2).real) - float(ellipe(0, kp2).real)
-            PIp = (6 / n) * (
-                float((ellipf(kappa[k] / 2, kp2) - ellippi(n, kappa[k] / 2, kp2)).real)
-                - float((ellipf(0, kp2) - ellippi(n, 0, kp2)).real)
-            )
-            P2_[k] = starrynight.linear.dP2(
-                bo, ro, k2, np.array([0, kappa[k]]), s1, s2, c1, F, E, PIp
-            )
-
-    assert np.allclose(P2, P2_, equal_nan=True)
-
-
 def test_quad():
     assert np.allclose(np.exp(1) - np.exp(0), c.quad(np.exp, 0.0, 1.0))
 
@@ -240,3 +202,31 @@ def test_P2_numerical(bo, ro):
     assert np.allclose(dP2dbo, dP2dbo_, equal_nan=True)
     assert np.allclose(dP2dro, dP2dro_, equal_nan=True)
     assert np.allclose(dP2dkappa, dP2dkappa_, equal_nan=True)
+
+
+@pytest.mark.parametrize("N,bo,ro", [[20, 0.5, 0.2], [20, 0.9, 0.2]])
+def test_J_numerical(N, bo, ro):
+
+    # Strictly testing the derivatives here
+
+    # Sample values
+    kappa = np.array([0.3, 1.5])
+    eps = 1e-8
+
+    # Analytic
+    _, (dJdbo, dJdro, _, dJdkappa) = c.J_numerical(N, bo, ro, kappa)
+
+    # Numerical
+    Q1, _ = c.J_numerical(N, bo, ro, kappa - np.array([0, eps]))
+    Q2, _ = c.J_numerical(N, bo, ro, kappa + np.array([0, eps]))
+    dJdkappa_num = (Q2 - Q1) / (2 * eps)
+
+    Q1, _ = c.J_numerical(N, bo - eps, ro, kappa)
+    Q2, _ = c.J_numerical(N, bo + eps, ro, kappa)
+    dJdbo_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dJdbo, dJdbo_num)
+
+    Q1, _ = c.J_numerical(N, bo, ro - eps, kappa)
+    Q2, _ = c.J_numerical(N, bo, ro + eps, kappa)
+    dJdro_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dJdro, dJdro_num)
