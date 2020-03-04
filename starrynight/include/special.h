@@ -9,6 +9,7 @@
 
 #include "constants.h"
 #include "utils.h"
+#include "quad.h"
 #include <cmath>
 
 namespace starry {
@@ -16,6 +17,7 @@ namespace special {
 
 using std::abs;
 using namespace utils;
+using namespace quad;
 
 /**
 
@@ -48,13 +50,66 @@ T pairdiff(const Vector<T>& array) {
     }
 }
 
+template <typename T> 
+T P2_integrand(const T& bo, const T& ro, const T& phi) {
+  T c = cos(phi);
+  T z = 1 - ro * ro - bo * bo - 2 * bo * ro * c;
+  if (z < 1e-12) z = 1e-12;
+  if (z > 1 - 1e-12) z = 1 - 1e-12;
+  return (1.0 - z * sqrt(z)) / (1.0 - z) * (ro + bo * c) * ro / 3.0;
+}
+
+template <typename T> 
+T dP2dbo_integrand(const T& bo, const T& ro, const T& phi) {
+  T c = cos(phi);
+  T z = 1 - ro * ro - bo * bo - 2 * bo * ro * c;
+  if (z < 1e-12) z = 1e-12;
+  if (z > 1 - 1e-12) z = 1 - 1e-12;
+  T P = (1.0 - z * sqrt(z)) / (1.0 - z) * (ro + bo * c) * ro / 3.0;
+  T q = 3.0 * sqrt(z) / (1.0 - z * sqrt(z)) - 2.0 / (1.0 - z);
+  return P * ((bo + ro * c) * q + 1.0 / (bo + ro / c));
+}
+
+template <typename T> 
+T dP2dro_integrand(const T& bo, const T& ro, const T& phi) {
+  T c = cos(phi);
+  T z = 1 - ro * ro - bo * bo - 2 * bo * ro * c;
+  if (z < 1e-12) z = 1e-12;
+  if (z > 1 - 1e-12) z = 1 - 1e-12;
+  T P = (1.0 - z * sqrt(z)) / (1.0 - z) * (ro + bo * c) * ro / 3.0;
+  T q = 3.0 * sqrt(z) / (1.0 - z * sqrt(z)) - 2.0 / (1.0 - z);
+  return P * ((ro + bo * c) * q + 1.0 / ro + 1.0 / (ro + bo * c));
+}
+
 /**
 
 */
 template <typename T> 
 T P2_numerical(const T& bo, const T& ro, const Vector<T>& kappa) {
-  // TODO!!!
-  return 0.0;
+
+    using Scalar = typename T::Scalar;
+    size_t K = kappa.size();
+
+    std::function<Scalar(Scalar)> f = [bo, ro](Scalar phi) { return P2_integrand(bo.value(), ro.value(), phi); };
+    std::function<Scalar(Scalar)> dfdbo = [bo, ro](Scalar phi) { return dP2dbo_integrand(bo.value(), ro.value(), phi); };
+    std::function<Scalar(Scalar)> dfdro = [bo, ro](Scalar phi) { return dP2dro_integrand(bo.value(), ro.value(), phi); };
+    
+    // Compute the function value
+    T res = 0.0;
+    for (size_t i = 0; i < K; i += 2)
+      res.value() += QUAD.integrate(kappa(i).value() - pi<Scalar>(), kappa(i + 1).value() - pi<Scalar>(), f);
+
+    // Compute the derivatives.
+    // Deriv wrt kappa is easy; need to integrate for the other two
+    for (size_t i = 0; i < K; i += 2) {
+      res.derivatives() += f(kappa(i + 1).value() - pi<Scalar>()) * kappa(i + 1).derivatives(); 
+      res.derivatives() -= f(kappa(i).value() - pi<Scalar>()) * kappa(i).derivatives();
+      res.derivatives() += bo.derivatives() * QUAD.integrate(kappa(i).value() - pi<Scalar>(), kappa(i + 1).value() - pi<Scalar>(), dfdbo);
+      res.derivatives() += ro.derivatives() * QUAD.integrate(kappa(i).value() - pi<Scalar>(), kappa(i + 1).value() - pi<Scalar>(), dfdro);
+    }
+
+    return res;
+
 }
 
 /**

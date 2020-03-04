@@ -543,6 +543,12 @@ class IncompleteEllipticIntegrals {
           F0.value() = k.value() * CEL(k2.value(), 1.0, 1.0, 1.0);
           E0.value() = kinv.value() * (CEL(k2.value(), 1.0, 1.0, 1.0 - k2.value()) - (1.0 - k2.value()) * kinv.value() * F0.value());
           if (bo != ro) {
+            // TODO: I don't think this offset term is needed when k2 < 1. PIp0 only comes
+            // into play if successive terms in kappa span either side of the discontinuities
+            // at kappa = pi and kappa = 3 pi (otherwise, the PIp0 terms cancel).
+            // In any event, our expression for P2 isn't even valid in these cases, as it
+            // disagrees with numerical integration. We should investigate this, but I suspect
+            // we can just set PIp0 to zero here and skip all the overhead with no adverse effects.
             PIp0 = -4 * k2.value() * k.value() * rj(0.0, 1 - k2.value(), 1.0, 1.0 / ((ro - bo) * (ro - bo)).value());
           } else {
             PIp0 = 0.0;

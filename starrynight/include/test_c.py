@@ -198,3 +198,45 @@ def test_P2(bo, ro):
             )
 
     assert np.allclose(P2, P2_, equal_nan=True)
+
+
+def test_quad():
+    assert np.allclose(np.exp(1) - np.exp(0), c.quad(np.exp, 0.0, 1.0))
+
+
+@pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.9, 0.2]])
+def test_P2_numerical(bo, ro):
+
+    # NOTE: See comment in `iellip.h` about how our expression for
+    # P2 isn't valid when successive terms in kappa span either side
+    # of the discontinuities at pi and 3 pi. Let's just not worry about
+    # that here.
+    kappa = np.linspace(0, np.pi, 100, endpoint=False)
+
+    # Helper variables
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+
+    # Compute
+    P2 = np.zeros_like(kappa) * np.nan
+    P2_ = np.zeros_like(kappa) * np.nan
+    dP2dbo = np.zeros_like(kappa) * np.nan
+    dP2dro = np.zeros_like(kappa) * np.nan
+    dP2dkappa = np.zeros_like(kappa) * np.nan
+    dP2dbo_ = np.zeros_like(kappa) * np.nan
+    dP2dro_ = np.zeros_like(kappa) * np.nan
+    dP2dkappa_ = np.zeros_like(kappa) * np.nan
+    for k in range(len(kappa)):
+
+        # Only compute it if the answer is real
+        if np.sin(kappa[k] / 2) ** 2 <= k2:
+            P2[k], (dP2dbo[k], dP2dro[k], _, dP2dkappa[k]) = c.P2_numerical(
+                bo, ro, np.array([0, kappa[k]])
+            )
+            P2_[k], (dP2dbo_[k], dP2dro_[k], _, dP2dkappa_[k]) = c.P2(
+                bo, ro, np.array([0, kappa[k]])
+            )
+
+    assert np.allclose(P2, P2_, equal_nan=True)
+    assert np.allclose(dP2dbo, dP2dbo_, equal_nan=True)
+    assert np.allclose(dP2dro, dP2dro_, equal_nan=True)
+    assert np.allclose(dP2dkappa, dP2dkappa_, equal_nan=True)

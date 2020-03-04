@@ -13,12 +13,14 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/functional.h>
 #include <iostream>
 #include "utils.h"
 #include "ellip.h"
 
 #include "iellip.h"
 #include "special.h"
+#include "quad.h"
 
 namespace py = pybind11;
 
@@ -29,6 +31,7 @@ PYBIND11_MODULE(_c_ops, m) {
   using namespace starry::utils;
   using namespace starry::iellip;
   using namespace starry::special;
+  using namespace starry::quad;
 
 # ifdef STARRY_DEBUG
 #   include "testing.h"

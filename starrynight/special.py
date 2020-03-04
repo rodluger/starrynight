@@ -49,6 +49,11 @@ def J(N, k2, kappa, gradient=False):
 
 
 def pal(bo, ro, kappa, gradient=False):
+
+    # TODO
+    if len(kappa) != 2:
+        raise NotImplementedError("TODO!")
+
     def func(phi):
         c = np.cos(phi)
         z = np.minimum(
