@@ -81,7 +81,7 @@ def test_ellip_deriv_bo(kappa):
 
     assert np.allclose(dFdbo[1:-1], dFdbo_[1:-1], equal_nan=True, atol=1e-6)
     assert np.allclose(dEdbo[1:-1], dEdbo_[1:-1], equal_nan=True, atol=1e-6)
-    # TODO: assert np.allclose(dPIpdbo, dPIpdbo_, equal_nan=True, atol=1e-4)
+    assert np.allclose(dPIpdbo[1:-1], dPIpdbo_[1:-1], equal_nan=True, atol=1e-4)
 
 
 @pytest.mark.parametrize("kappa", [0.25, 1.25, 2.25])
@@ -121,4 +121,43 @@ def test_ellip_deriv_ro(kappa):
 
     assert np.allclose(dFdro[1:-1], dFdro_[1:-1], equal_nan=True, atol=1e-6)
     assert np.allclose(dEdro[1:-1], dEdro_[1:-1], equal_nan=True, atol=1e-6)
-    # TODO: assert np.allclose(dPIpdro, dPIpdro_, equal_nan=True, atol=1e-4)
+    assert np.allclose(dPIpdro[1:-1], dPIpdro_[1:-1], equal_nan=True, atol=1e-4)
+
+
+@pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
+def test_ellip_deriv_kappa(bo, ro):
+
+    # Evaluate over full range
+    kappa = np.linspace(0, 4 * np.pi, 100)
+    eps = 1e-8
+
+    # Compute
+    dFdkappa = np.zeros_like(kappa) * np.nan
+    dEdkappa = np.zeros_like(kappa) * np.nan
+    dPIpdkappa = np.zeros_like(kappa) * np.nan
+    dFdkappa_ = np.zeros_like(kappa) * np.nan
+    dEdkappa_ = np.zeros_like(kappa) * np.nan
+    dPIpdkappa_ = np.zeros_like(kappa) * np.nan
+    for i in range(len(kappa)):
+        try:
+            # Analytic deriv
+            (
+                (_, (_, _, _, dFdkappa[i])),
+                (_, (_, _, _, dEdkappa[i])),
+                (_, (_, _, _, dPIpdkappa[i])),
+            ) = c.ellip(bo, ro, [0.0, kappa[i]])
+
+            # Numerical deriv
+            ((F1, _), (E1, _), (PIp1, _),) = c.ellip(bo, ro, [0.0, kappa[i] - eps])
+            ((F2, _), (E2, _), (PIp2, _),) = c.ellip(bo, ro, [0.0, kappa[i] + eps])
+            dFdkappa_[i] = (F2 - F1) / (2 * eps)
+            dEdkappa_[i] = (E2 - E1) / (2 * eps)
+            dPIpdkappa_[i] = (PIp2 - PIp1) / (2 * eps)
+
+        except:
+            # Complex?
+            pass
+
+    assert np.allclose(dFdkappa[1:-1], dFdkappa_[1:-1], equal_nan=True, atol=1e-6)
+    assert np.allclose(dEdkappa[1:-1], dEdkappa_[1:-1], equal_nan=True, atol=1e-6)
+    assert np.allclose(dPIpdkappa[1:-1], dPIpdkappa_[1:-1], equal_nan=True, atol=1e-4)

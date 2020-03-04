@@ -120,6 +120,26 @@ Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
 
 }
 
+
+/**
+  Autodiff-safe hyperbolic arc cosine.
+*/
+template <typename T> 
+T arccosh(const T& x) {
+  return acosh(x);
+}
+
+/**
+  Autodiff-safe hyperbolic arc cosine.
+*/
+template <typename T> 
+ADScalar<T, 4> arccosh(const ADScalar<T, 4>& x) {
+  ADScalar<T, 4> result;
+  result.value() = acosh(x.value());
+  result.derivatives() = x.derivatives() / sqrt(x.value() * x.value() - 1);
+  return result;
+}
+
 /**
   Scalar implementation of the Carlson elliptic integral RJ.
 
@@ -136,6 +156,9 @@ Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
       Volume 7, Number 3, pages 398-403, September 1981
       
       https://people.sc.fsu.edu/~jburkardt/f77_src/toms577/toms577.f
+
+  NOTE: This function has pretty poor numerical stability. We should code
+        up Bulirsch's `el3` instead.
 
 */
 template <typename T> 
@@ -196,7 +219,12 @@ T rj(const T& x_, const T& y_, const T& z_, const T& p_) {
         yndev = (mu - yn) * invmu;
         zndev = (mu - zn) * invmu;
         pndev = (mu - pn) * invmu;
-        eps = max(max(max(abs(xndev), abs(yndev)), abs(zndev)), abs(pndev));
+
+        // Poor man's `max`
+        eps = abs(xndev);
+        if (abs(yndev) > eps) eps = abs(yndev);
+        if (abs(zndev) > eps) eps = abs(zndev);
+        if (abs(pndev) > eps) eps = abs(pndev);
 
         if (eps < STARRY_CRJ_TOL) {
 
@@ -223,7 +251,7 @@ T rj(const T& x_, const T& y_, const T& z_, const T& p_) {
         if (alpha < beta)
             sigma += power4 * acos(sqrt(alpha / beta)) / sqrt(beta - alpha);
         else if (alpha > beta)
-            sigma += power4 * acosh(sqrt(alpha / beta)) / sqrt(alpha - beta);
+            sigma += power4 * arccosh(T(sqrt(alpha / beta))) / sqrt(alpha - beta);
         else
             sigma = sigma + power4 / sqrt(beta);
 
@@ -274,7 +302,6 @@ class IncompleteEllipticIntegrals {
     Vector<A> w;
 
     // Complete elliptic integrals
-    // Note that we don't actually need the derivs of PIp0; see below for details
     A F0;
     A E0;
     T PIp0;
@@ -308,6 +335,11 @@ class IncompleteEllipticIntegrals {
         ddtanphi = p2 / sqrt(1.0 - m * q2);
         ddm = 0.5 * (Ev(i).value() / (m * mc) - Fv(i).value() / m - tanphi(i) * ddtanphi / mc);
         Fv(i).derivatives() = ddtanphi * tanphi_(i).derivatives() + ddm * m_.derivatives();
+
+        // DEBUG
+        //std::cout << ddtanphi << ", " << tanphi_(i).derivatives().transpose()  << std::endl;
+
+
         ddtanphi = p2 * sqrt(1.0 - m * q2);
         ddm = 0.5 * (Ev(i).value() - Fv(i).value()) / m;
         Ev(i).derivatives() = ddtanphi * tanphi_(i).derivatives() + ddm * m_.derivatives();
@@ -407,6 +439,14 @@ class IncompleteEllipticIntegrals {
       This integral is only used in the expression for computing the linear limb darkening
       term (2) in the primitive integral P, based on the expressions in Pal (2012).
 
+      NOTE: We are currently autodiffing the Carlson RJ expression to get the 
+            derivative of this integral. The RJ function is already numerically
+            unstable, so autodiffing it is a **terrible** idea.
+
+      TODO: Code up the `el3` function from Bulirsch (1969), which is likely
+            *way* more stable, then code up its analytic derivatives. This won't
+            be fun, but I think it's necessary.
+
     */
     inline void compute_PIp() {
         
@@ -417,12 +457,7 @@ class IncompleteEllipticIntegrals {
         }
 
         // Helper variables
-        T val;
-        T dvaldn, dvaldk2, dvaldkappa;
-        T dPIdn, dPIdk2, dPIdkappa, dFdk2, dFdkappa;
-
-        A n = -4 * bo * ro / ((ro - bo) * (ro - bo));
-
+        A val;
 
         // Compute the integrals
         int sgn = -1;
@@ -432,35 +467,16 @@ class IncompleteEllipticIntegrals {
             if (w(i).value() >= 0) {
 
               // Compute the integral, valid for -pi < kappa < pi
-              val = (1.0 - coskap(i).value()) * cosphi(i).value() * rj(w(i).value(), sinphi(i).value() * sinphi(i).value(), 1.0, p(i).value());
+              val = (1.0 - coskap(i)) * cosphi(i) * rj(w(i), A(sinphi(i) * sinphi(i)), A(1.0), p(i));
 
               // Add offsets to account for the limited domain of `rj`
               if (kappa(i) > 3 * pi<T>()) {
-                  val += 2 * PIp0;
+                  PIp += sgn * (2 * PIp0 + val);
               } else if (kappa(i) > pi<T>()) {
-                  val += PIp0;
+                  PIp += sgn * (PIp0 + val);
+              } else {
+                  PIp += sgn * val;
               }
-
-              // Derivatives. We compute these from the derivatives of the equivalent quantity
-              //
-              //    6 / n * (F(kappa / 2, k^2) - PI(kappa / 2, n, k^2))
-              //
-              // since that's easier. Note that this means we don't need the derivatives of PIp0.
-
-              dPIdn = 0.0; // TODO
-              dPIdk2 = 0.0;
-              dPIdkappa = 0.0;
-              dFdk2 = 0.0;
-              dFdkappa = 0.0;
-
-              dvaldn = -(val + 6 * dPIdn) / n.value();
-              dvaldk2 = 6 / n.value() * (dPIdk2 - dFdk2);
-              dvaldkappa = 6 / n.value() * (dPIdkappa - dFdkappa);
-
-              // The integral value
-              PIp.value() += sgn * val;
-
-              PIp.derivatives() += sgn * (dvaldn * n.derivatives() + dvaldk2 * k2.derivatives() + dvaldkappa * kappa(i).derivatives());
 
             } else {
               
@@ -510,11 +526,19 @@ class IncompleteEllipticIntegrals {
         p.array() = (ro * ro + bo * bo - 2 * ro * bo * coskap.array()) / (ro * ro + bo * bo - 2 * ro * bo);
         w.array() = 1.0 - cosphi.array() * cosphi.array() / k2;
 
-        // TODO: Nudge k2 away from 1
+        // Nudge k2 away from 1 for stability
+        if (abs(1 - k2.value()) < STARRY_K2_ONE_TOL) {
+          if (k2 == 1.0) 
+            k2 = 1 + STARRY_K2_ONE_TOL;
+          else if (k2 < 1.0)
+            k2 = 1 - STARRY_K2_ONE_TOL;
+          else
+            k2 = 1 + STARRY_K2_ONE_TOL;
+        }
 
         // Complete elliptic integrals
-        if (k2 < 1) {
-          
+        if (k2.value() < 1) {
+
           // Values
           F0.value() = k.value() * CEL(k2.value(), 1.0, 1.0, 1.0);
           E0.value() = kinv.value() * (CEL(k2.value(), 1.0, 1.0, 1.0 - k2.value()) - (1.0 - k2.value()) * kinv.value() * F0.value());
