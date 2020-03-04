@@ -15,11 +15,10 @@
 #include <pybind11/stl.h>
 #include <iostream>
 #include "utils.h"
+#include "ellip.h"
 
-# ifdef STARRY_DEBUG
-#   include "ellip.h"
-#   include "iellip.h"
-# endif
+#include "iellip.h"
+#include "special.h"
 
 namespace py = pybind11;
 
@@ -29,6 +28,7 @@ PYBIND11_MODULE(_c_ops, m) {
   // Import some useful stuff
   using namespace starry::utils;
   using namespace starry::iellip;
+  using namespace starry::special;
 
 # ifdef STARRY_DEBUG
 #   include "testing.h"

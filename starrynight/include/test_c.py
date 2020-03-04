@@ -1,6 +1,6 @@
 import starrynight
 from starrynight import c
-from mpmath import ellipk, ellipf, ellipe, ellippi, elliprj
+from mpmath import ellipf, ellipe, ellippi
 import numpy as np
 import pytest
 
@@ -60,7 +60,11 @@ def test_ellip_deriv_bo(kappa):
     dEdbo_ = np.zeros_like(bo) * np.nan
     dPIpdbo_ = np.zeros_like(bo) * np.nan
     for i in range(len(bo)):
-        try:
+
+        # Only compute it if the answer is real
+        k2 = (1 - ro ** 2 - bo[i] ** 2 + 2 * bo[i] * ro) / (4 * bo[i] * ro)
+        if np.sin(kappa / 2) ** 2 <= k2:
+
             # Analytic deriv
             (
                 (_, (dFdbo[i], _, _, _)),
@@ -74,10 +78,6 @@ def test_ellip_deriv_bo(kappa):
             dFdbo_[i] = (F2 - F1) / (2 * eps)
             dEdbo_[i] = (E2 - E1) / (2 * eps)
             dPIpdbo_[i] = (PIp2 - PIp1) / (2 * eps)
-
-        except:
-            # Complex?
-            pass
 
     assert np.allclose(dFdbo[1:-1], dFdbo_[1:-1], equal_nan=True, atol=1e-6)
     assert np.allclose(dEdbo[1:-1], dEdbo_[1:-1], equal_nan=True, atol=1e-6)
@@ -100,7 +100,11 @@ def test_ellip_deriv_ro(kappa):
     dEdro_ = np.zeros_like(ro) * np.nan
     dPIpdro_ = np.zeros_like(ro) * np.nan
     for i in range(len(ro)):
-        try:
+
+        # Only compute it if the answer is real
+        k2 = (1 - ro[i] ** 2 - bo ** 2 + 2 * bo * ro[i]) / (4 * bo * ro[i])
+        if np.sin(kappa / 2) ** 2 <= k2:
+
             # Analytic deriv
             (
                 (_, (_, dFdro[i], _, _)),
@@ -114,10 +118,6 @@ def test_ellip_deriv_ro(kappa):
             dFdro_[i] = (F2 - F1) / (2 * eps)
             dEdro_[i] = (E2 - E1) / (2 * eps)
             dPIpdro_[i] = (PIp2 - PIp1) / (2 * eps)
-
-        except:
-            # Complex?
-            pass
 
     assert np.allclose(dFdro[1:-1], dFdro_[1:-1], equal_nan=True, atol=1e-6)
     assert np.allclose(dEdro[1:-1], dEdro_[1:-1], equal_nan=True, atol=1e-6)
@@ -139,7 +139,11 @@ def test_ellip_deriv_kappa(bo, ro):
     dEdkappa_ = np.zeros_like(kappa) * np.nan
     dPIpdkappa_ = np.zeros_like(kappa) * np.nan
     for i in range(len(kappa)):
-        try:
+
+        # Only compute it if the answer is real
+        k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+        if np.sin(kappa[i] / 2) ** 2 <= k2:
+
             # Analytic deriv
             (
                 (_, (_, _, _, dFdkappa[i])),
@@ -154,10 +158,43 @@ def test_ellip_deriv_kappa(bo, ro):
             dEdkappa_[i] = (E2 - E1) / (2 * eps)
             dPIpdkappa_[i] = (PIp2 - PIp1) / (2 * eps)
 
-        except:
-            # Complex?
-            pass
-
     assert np.allclose(dFdkappa[1:-1], dFdkappa_[1:-1], equal_nan=True, atol=1e-6)
     assert np.allclose(dEdkappa[1:-1], dEdkappa_[1:-1], equal_nan=True, atol=1e-6)
     assert np.allclose(dPIpdkappa[1:-1], dPIpdkappa_[1:-1], equal_nan=True, atol=1e-4)
+
+
+@pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
+def test_P2(bo, ro):
+
+    # Evaluate over full range
+    kappa = np.linspace(0, 4 * np.pi, 100)
+
+    # Helper variables
+    n = -4 * bo * ro / (ro - bo) ** 2
+    k2 = (1 - ro ** 2 - bo ** 2 + 2 * bo * ro) / (4 * bo * ro)
+    kp2 = 1 / k2
+
+    # Compute
+    P2 = np.zeros_like(kappa) * np.nan
+    P2_ = np.zeros_like(kappa) * np.nan
+    for k in range(len(kappa)):
+
+        # Only compute it if the answer is real
+        if np.sin(kappa[k] / 2) ** 2 <= k2:
+
+            P2[k], _ = c.P2(bo, ro, np.array([0, kappa[k]]))
+
+            s1 = np.sin(np.array([0, kappa[k]]) / 2)
+            s2 = s1 ** 2
+            c1 = np.cos(np.array([0, kappa[k]]) / 2)
+            F = float(ellipf(kappa[k] / 2, kp2).real) - float(ellipf(0, kp2).real)
+            E = float(ellipe(kappa[k] / 2, kp2).real) - float(ellipe(0, kp2).real)
+            PIp = (6 / n) * (
+                float((ellipf(kappa[k] / 2, kp2) - ellippi(n, kappa[k] / 2, kp2)).real)
+                - float((ellipf(0, kp2) - ellippi(n, 0, kp2)).real)
+            )
+            P2_[k] = starrynight.linear.dP2(
+                bo, ro, k2, np.array([0, kappa[k]]), s1, s2, c1, F, E, PIp
+            )
+
+    assert np.allclose(P2, P2_, equal_nan=True)

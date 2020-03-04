@@ -68,10 +68,13 @@ def dP2(bo, ro, k2, kappa, s1, s2, c1, F, E, PIprime):
 
     # Carlson RF term
     fac = -bpr / bmr
-    B = (
-        -((1.0 + 2.0 * r2 * r2 - 4.0 * r2) + TWOTHIRDS * br * (p0 + 5 * br) + fac)
-        * term
-    ) - C
+    B = -(
+        (
+            ((1.0 + 2.0 * r2 * r2 - 4.0 * r2) + TWOTHIRDS * br * (p0 + 5 * br) + fac)
+            * term
+        )
+        + C
+    )
 
     # Carlson PIprime term
     D = -TWOTHIRDS * fac / d2 * term * br
