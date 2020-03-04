@@ -257,8 +257,8 @@ T J_numerical(const int N, const T& k2, const Vector<T>& kappa) {
   // Compute the derivatives.
   // Deriv wrt kappa is easy; need to integrate for k2
   for (size_t i = 0; i < K; i += 2) {
-    res.derivatives() += f(0.5 * kappa(i + 1).value()) * kappa(i + 1).derivatives(); 
-    res.derivatives() -= f(0.5 * kappa(i).value()) * kappa(i).derivatives();
+    res.derivatives() += 0.5 * f(0.5 * kappa(i + 1).value()) * kappa(i + 1).derivatives(); 
+    res.derivatives() -= 0.5 * f(0.5 * kappa(i).value()) * kappa(i).derivatives();
     res.derivatives() += k2.derivatives() * QUAD.integrate(0.5 * kappa(i).value(), 0.5 * kappa(i + 1).value(), dfdk2);
   }
 

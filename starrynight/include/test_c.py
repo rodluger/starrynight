@@ -221,6 +221,7 @@ def test_J_numerical(N, bo, ro):
     Q1, _ = c.J_numerical(N, bo, ro, kappa - np.array([0, eps]))
     Q2, _ = c.J_numerical(N, bo, ro, kappa + np.array([0, eps]))
     dJdkappa_num = (Q2 - Q1) / (2 * eps)
+    assert np.allclose(dJdkappa, dJdkappa_num)
 
     Q1, _ = c.J_numerical(N, bo - eps, ro, kappa)
     Q2, _ = c.J_numerical(N, bo + eps, ro, kappa)
