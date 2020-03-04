@@ -266,6 +266,46 @@ T J_numerical(const int N, const T& k2, const Vector<T>& kappa) {
 
 }
 
+/**
+  The Gauss hypergeometric function 2F1.
+
+*/
+template <typename T> 
+T hyp2f1(const T& a_, const T& b_, const T& c_, const T& z) {
+  
+  // Compute the value
+  T a = a_;
+  T b = b_;
+  T c = c_;
+  T term = a * b * z / c;
+  T value = 1.0 + term;
+  int n = 1;
+  while ((abs(term) > STARRY_2F1_MAXTOL) && (n < STARRY_2F1_MAXITER)) {
+    a += 1;
+    b += 1;
+    c += 1;
+    n += 1;
+    term *= a * b * z / c / n;
+    value += term;
+  }
+  if ((n == STARRY_2F1_MAXITER) && (abs(term) > STARRY_2F1_MINTOL)) {
+    throw std::runtime_error("Series for 2F1 did not converge.");
+  }
+  return value;
+}
+
+/**
+  The Gauss hypergeometric function 2F1 and its z derivative.
+
+*/
+template <typename T, int N> 
+ADScalar<T, N> hyp2f1(const T& a, const T& b, const T&c, const ADScalar<T, N>& z) {
+    ADScalar<T, N> F;
+    F.value() = hyp2f1(a, b, c, z.value());
+    F.derivatives() = z.derivatives() * a * b / c * hyp2f1(a + 1, b + 1, c + 1, z.value());
+    return F;
+}
+
 
 } // namespace special
 } // namespace starry

@@ -90,7 +90,7 @@ m.def("quad", [](const std::function<double(double)> &f, const double& a, const 
     return QUAD.integrate(a, b, f);
 });
 
-// P2 term (numerical)
+// J term (numerical)
 m.def("J_numerical", [](const int N, const double& bo_, const double& ro_, const Vector<double>& kappa_) {
     
     // For testing purposes, require two elements in kappa
@@ -115,4 +115,16 @@ m.def("J_numerical", [](const int N, const double& bo_, const double& ro_, const
     
     return py::make_tuple(result.value(), result.derivatives());
 
+});
+
+// Gauss 2F1
+m.def("hyp2f1", [](const double& a, const double& b, const double& c, const double& z_) {
+    
+    // Seed the derivatives
+    ADScalar<double, 1> z;
+    z.value() = z_;
+    z.derivatives() = Vector<double>::Unit(1, 0);
+
+    ADScalar<double, 1> result = hyp2f1(a, b, c, z);
+    return py::make_tuple(result.value(), result.derivatives());
 });

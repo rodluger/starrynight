@@ -1,5 +1,6 @@
 from starrynight import c
 from mpmath import ellipf, ellipe, ellippi
+from scipy.special import hyp2f1
 import numpy as np
 import pytest
 
@@ -230,3 +231,21 @@ def test_J_numerical(N, bo, ro):
     Q2, _ = c.J_numerical(N, bo, ro + eps, kappa)
     dJdro_num = (Q2 - Q1) / (2 * eps)
     assert np.allclose(dJdro, dJdro_num)
+
+
+def test_hyp2f1():
+    # This expression is only used in the range z = [-0.5, 0.5]
+    nmax = 20
+    z = np.linspace(-0.5, 0.5, 1000)
+    F = np.zeros_like(z)
+    dFdz = np.zeros_like(z)
+    for i in range(len(z)):
+        F[i], dFdz[i] = c.hyp2f1(-0.5, nmax + 1, nmax + 2, z[i])
+    assert np.allclose(F, hyp2f1(-0.5, nmax + 1, nmax + 2, z))
+    assert np.allclose(
+        dFdz, np.gradient(F, edge_order=2) / np.gradient(z, edge_order=2), atol=1e-6
+    )
+
+
+if __name__ == "__main__":
+    test_hyp2f1()

@@ -35,7 +35,8 @@ namespace constants {
 
 // Maximum number of iterations & tolerance when computing 2F1
 #define STARRY_2F1_MAXITER  200
-#define STARRY_2F1_TOL  1e-15
+#define STARRY_2F1_MAXTOL  1e-15
+#define STARRY_2F1_MINTOL  1e-12
 
 // Square root of the desired precision in `el2`
 #define STARRY_EL2_CA  1e-8
