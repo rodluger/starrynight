@@ -274,9 +274,10 @@ class IncompleteEllipticIntegrals {
     Vector<A> w;
 
     // Complete elliptic integrals
+    // Note that we don't actually need the derivs of PIp0; see below for details
     A F0;
     A E0;
-    A PIp0;
+    T PIp0;
 
     // Vectorized output
     Vector<A> Fv;
@@ -416,7 +417,12 @@ class IncompleteEllipticIntegrals {
         }
 
         // Helper variables
-        A val;
+        T val;
+        T dvaldn, dvaldk2, dvaldkappa;
+        T dPIdn, dPIdk2, dPIdkappa, dFdk2, dFdkappa;
+
+        A n = -4 * bo * ro / ((ro - bo) * (ro - bo));
+
 
         // Compute the integrals
         int sgn = -1;
@@ -425,17 +431,36 @@ class IncompleteEllipticIntegrals {
             
             if (w(i).value() >= 0) {
 
-              // TODO: derivs
-              val = (1.0 - coskap(i)) * cosphi(i) * rj(w(i).value(), sinphi(i).value() * sinphi(i).value(), 1.0, p(i).value());
+              // Compute the integral, valid for -pi < kappa < pi
+              val = (1.0 - coskap(i).value()) * cosphi(i).value() * rj(w(i).value(), sinphi(i).value() * sinphi(i).value(), 1.0, p(i).value());
 
               // Add offsets to account for the limited domain of `rj`
               if (kappa(i) > 3 * pi<T>()) {
-                  PIp += sgn * (2 * PIp0 + val);
+                  val += 2 * PIp0;
               } else if (kappa(i) > pi<T>()) {
-                  PIp += sgn * (PIp0 + val);
-              } else {
-                PIp += sgn * val;
+                  val += PIp0;
               }
+
+              // Derivatives. We compute these from the derivatives of the equivalent quantity
+              //
+              //    6 / n * (F(kappa / 2, k^2) - PI(kappa / 2, n, k^2))
+              //
+              // since that's easier. Note that this means we don't need the derivatives of PIp0.
+
+              dPIdn = 0.0; // TODO
+              dPIdk2 = 0.0;
+              dPIdkappa = 0.0;
+              dFdk2 = 0.0;
+              dFdkappa = 0.0;
+
+              dvaldn = -(val + 6 * dPIdn) / n.value();
+              dvaldk2 = 6 / n.value() * (dPIdk2 - dFdk2);
+              dvaldkappa = 6 / n.value() * (dPIdkappa - dFdkappa);
+
+              // The integral value
+              PIp.value() += sgn * val;
+
+              PIp.derivatives() += sgn * (dvaldn * n.derivatives() + dvaldk2 * k2.derivatives() + dvaldkappa * kappa(i).derivatives());
 
             } else {
               
@@ -489,27 +514,34 @@ class IncompleteEllipticIntegrals {
 
         // Complete elliptic integrals
         if (k2 < 1) {
-
+          
+          // Values
           F0.value() = k.value() * CEL(k2.value(), 1.0, 1.0, 1.0);
           E0.value() = kinv.value() * (CEL(k2.value(), 1.0, 1.0, 1.0 - k2.value()) - (1.0 - k2.value()) * kinv.value() * F0.value());
           if (bo != ro) {
-            PIp0.value() = -4 * k2.value() * k.value() * rj(0.0, 1 - k2.value(), 1.0, 1.0 / ((ro - bo) * (ro - bo)).value());
+            PIp0 = -4 * k2.value() * k.value() * rj(0.0, 1 - k2.value(), 1.0, 1.0 / ((ro - bo) * (ro - bo)).value());
           } else {
-            PIp0.value() = 0.0;
+            PIp0 = 0.0;
           }
-          // TODO: derivs
+          
+          // Derivatives
+          F0.derivatives() = 0.5 / k2.value() * (E0.value() / (1 - k2.value()) - F0.value()) * k2.derivatives();
+          E0.derivatives() = 0.5 / k2.value() * (E0.value() - F0.value()) * k2.derivatives();
 
         } else {
 
+          // Values
           F0.value() = CEL(k2inv.value(), 1.0, 1.0, 1.0);
           E0.value() = CEL(k2inv.value(), 1.0, 1.0, 1.0 - k2inv.value());
           if ((bo != 0) && (bo != ro)) {
-              PIp0.value() = -12.0 / (1 - p0.value()) * (CEL(k2inv.value(), p0.value(), 1.0, 1.0) - F0.value());
+              PIp0 = -12.0 / (1 - p0.value()) * (CEL(k2inv.value(), p0.value(), 1.0, 1.0) - F0.value());
           } else {
-              PIp0.value() = 0.0;
+              PIp0 = 0.0;
           }
 
-          // TODO: derivs
+          // Derivatives
+          F0.derivatives() = 0.5 / k2inv.value() * (E0.value() / (1 - k2inv.value()) - F0.value()) * k2inv.derivatives();
+          E0.derivatives() = 0.5 / k2inv.value() * (E0.value() - F0.value()) * k2inv.derivatives();
 
         }
 
