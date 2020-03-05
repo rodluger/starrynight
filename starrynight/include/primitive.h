@@ -120,7 +120,7 @@ class Vieta {
 
 */
 template <typename T> 
-inline Vector<T> U(const int vmax, Vector<T>& s1) {
+inline Vector<T> U(const int vmax, const Vector<T>& s1) {
     Vector<T> result(vmax + 1);
     result(0) = pairdiff(s1);
     Vector<T> term(s1.size());
@@ -137,14 +137,14 @@ inline Vector<T> U(const int vmax, Vector<T>& s1) {
 
 */
 template <typename T> 
-inline Vector<T> I(const int nmax, Vector<T>& kappa, Vector<T>& s1, Vector<T>& c1) {
+inline Vector<T> I(const int nmax, const Vector<T>& kappa, const Vector<T>& s1, const Vector<T>& c1) {
     Vector<T> result(nmax + 1);
     result(0) = 0.5 * pairdiff(kappa);
     Vector<T> s2(s1.size()), term(s1.size());
     s2.array() = s1.array() * s1.array();
-    term.array() = s1.array() * s2.array();
+    term.array() = s1.array() * c1.array();
     for (int v = 1; v < nmax + 1; ++v){
-        result(v) = (1.0 / (2 * v)) * ((2 * v - 1) * result(v - 1) - pairdiff(term));
+        result(v) = (1.0 / (2.0 * v)) * ((2 * v - 1) * result(v - 1) - pairdiff(term));
         term.array() *= s2.array();
     }
     return result;
@@ -166,14 +166,19 @@ inline Vector<T> I(const int nmax, Vector<T>& kappa, Vector<T>& s1, Vector<T>& c
 
 */
 template <typename T> 
-inline Vector<T> W_indef(const int nmax, const T& s2, const T& q2, const T& q3) {
+inline Vector<T> W_indef(const int nmax, const T& s2_, const T& q2, const T& q3) {
     Vector<T> result(nmax + 1);
+
+    // TODO: Is this instability encountered in practice? 
+    // If so, find the limiting value of W when s2 = 0.
+    T s2 = s2_;
+    if (abs(s2) < 1e-8) s2 = (s2 > 0) ? T(1e-8) : T(-1e-8);
 
     if (abs(1 - q2) < 0.5) {
 
         // Setup
         T invs2 = 1 / s2;
-        T z = (1 - q2) * invs2;
+        T z = (1.0 - q2) * invs2;
         T s2nmax = pow(s2, nmax);
         T x = q2 * q3 * s2nmax;
 
@@ -181,15 +186,15 @@ inline Vector<T> W_indef(const int nmax, const T& s2, const T& q2, const T& q3) 
         result(nmax) = (
             s2
             * s2nmax
-            * (3 / (nmax + 1) * hyp2f1(-0.5, nmax + 1, nmax + 2, 1 - q2) + 2 * q3)
-            / (2 * nmax + 5)
+            * (3.0 / (nmax + 1.0) * hyp2f1(-0.5, nmax + 1.0, nmax + 2.0, T(1.0 - q2)) + 2 * q3)
+            / (2.0 * nmax + 5.0)
         );
 
         // Recurse down
         T f, A, B;
         for (int b = nmax - 1; b > -1; --b) {
-            f = 1 / (b + 1);
-            A = z * (1 + 2.5 * f);
+            f = 1.0 / (b + 1.0);
+            A = z * (1.0 + 2.5 * f);
             B = x * f;
             result(b) = A * result(b + 1) + B;
             x *= invs2;
@@ -198,17 +203,17 @@ inline Vector<T> W_indef(const int nmax, const T& s2, const T& q2, const T& q3) 
     } else {
 
         // Setup
-        T z = s2 / (1 - q2);
-        T x = -2 * q3 * (z - s2) * s2;
+        T z = s2 / (1.0 - q2);
+        T x = -2.0 * q3 * (z - s2) * s2;
 
         // Lower boundary condition
-        result(0) = (2 / 5) * (z * (1 - q3) + s2 * q3);
+        result(0) = (2.0 / 5.0) * (z * (1.0 - q3) + s2 * q3);
 
         // Recurse up
         T f, A, B;
-        for (int b = 1; b < nmax; ++b) {
-            f = 1 / (2 * b + 5);
-            A = z * (2 * b) * f;
+        for (int b = 1; b < nmax + 1; ++b) {
+            f = 1.0 / (2.0 * b + 5);
+            A = z * (2.0 * b) * f;
             B = x * f;
             result(b) = A * result(b - 1) + B;
             x *= s2;
@@ -226,11 +231,12 @@ inline Vector<T> W_indef(const int nmax, const T& s2, const T& q2, const T& q3) 
 template <typename T> 
 inline Vector<T> W(const int nmax, const Vector<T>& s2, const Vector<T>& q2, const Vector<T>& q3) {
     size_t K = s2.size();
-    Vector<T> result(K);
-    result(K).setZero();
+    Vector<T> result(nmax + 1);
+    result.setZero();
     for (size_t i = 0; i < K; i += 2) {
         result += W_indef(nmax, s2(i + 1), q2(i + 1), q3(i + 1)) - W_indef(nmax, s2(i), q2(i), q3(i));
     }
+    return result;
 }
 
 /**
@@ -387,7 +393,7 @@ inline Matrix<ADScalar<T, N>> H(const int uvmax, const Vector<ADScalar<T, N>>& x
 }
 
 /**
-    Compute the helper integral T[2].
+    Compute the primitive integral T[2].
 
     Note that these expressions are only valid for b >= 0.
 
@@ -432,6 +438,10 @@ inline T T2_indef(const T& b, const T& xi) {
     ) / 3.0;
 }
 
+/**
+    Compute the primitive integral T.
+
+*/
 template <typename S>
 inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& xi) {
 
@@ -601,6 +611,10 @@ inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& 
 
 }
 
+/**
+    Compute the primitive integral Q.
+
+*/
 template <typename T>
 inline Vector<T> Q(const int ydeg, const Vector<T>& lam) {
 
@@ -630,9 +644,154 @@ inline Vector<T> Q(const int ydeg, const Vector<T>& lam) {
     return result;
 }
 
+/**
+    Compute the primitive integral P.
 
-    
+*/
+template <typename T>
+inline Vector<T> P(const int ydeg, const T& bo, const T& ro, const Vector<T>& kappa) {
 
+    // Basic variables
+    T delta = (bo - ro) / (2 * ro);
+    T k2 = (1 - ro * ro - bo * bo + 2 * bo * ro) / (4 * bo * ro);
+    T k = sqrt(k2);
+    T km2 = 1.0 / k2;
+    T fourbr15 = (4 * bo * ro) * sqrt(4 * bo * ro);
+    T k3fourbr15 = k * k * k * fourbr15;
+    Vector<T> tworo(ydeg + 4);
+    tworo(0) = 1.0;
+    for (int i = 1; i < ydeg + 4; ++i) {
+        tworo(i) = tworo(i - 1) * 2 * ro;
+    }
+
+    // Pre-compute the helper integrals
+    size_t M = kappa.size();
+    Vector<T> x(M), s1(M), s2(M), c1(M), q2(M), q3(M);
+    x = 0.5 * kappa;
+    s1.array() = sin(x.array());
+    s2.array() = s1.array() * s1.array();
+    c1.array() = cos(x.array());
+    q2.array() = (s2.array() * km2 < 1.0).select(1.0 - s2.array() * km2, 0.0);
+    q3.array() = q2.array() * sqrt(q2.array());
+    Vector<T> UIntegral = U(2 * ydeg + 5, s1);
+    Vector<T> IIntegral = I(ydeg + 3, kappa, s1, c1);
+    Vector<T> WIntegral = W(ydeg, s2, q2, q3);
+
+    // TODO: Check bounds; avoid re-instantiating every time!
+    Vieta<T> A(ydeg);
+    A.reset(delta);
+
+    // Compute the elliptic integrals
+    auto integrals = IncompleteEllipticIntegrals<typename T::Scalar>(bo, ro, kappa);
+    Vector<T> JIntegral = J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, integrals.F, integrals.E);
+
+    // Now populate the P array
+    Vector<T> result((ydeg + 1) * (ydeg + 1));
+
+    int n = 0;
+    int mu, nu;
+    for (int l = 0; l < ydeg + 1; ++l) {
+        for (int m = -l; m < l + 1; ++m) {
+
+            mu = l - m;
+            nu = l + m;
+
+            if (is_even(mu, 2)) {
+
+                // CASE 1: Same as in starry
+                result(n) = 2 * tworo(l + 2) * K(A, IIntegral, (mu + 4) / 4, nu / 2);
+
+            } else if (mu == 1) {
+
+                if (l == 1) {
+
+                    // CASE 2: Same as in starry, but using expression from Pal (2012)
+                    result(2) = P2(bo, ro, k2, kappa, s1, s2, c1, integrals.F, integrals.E, integrals.PIp);
+
+                } else if (is_even(l)) {
+
+                    // CASE 3: Same as in starry
+                    result(n) = (
+                        tworo(l - 1)
+                        * fourbr15
+                        * (
+                            L(A, JIntegral, k, (l - 2) / 2, 0, 0)
+                            - 2 * L(A, JIntegral, k, (l - 2) / 2, 0, 1)
+                        )
+                    );
+
+                } else {
+
+                    // CASE 4: Same as in starry
+                    result(n) = (
+                        tworo(l - 1)
+                        * fourbr15
+                        * (
+                            L(A, JIntegral, k, (l - 3) / 2, 1, 0)
+                            - 2 * L(A, JIntegral, k, (l - 3) / 2, 1, 1)
+                        )
+                    );
+                }
+
+            } else if (is_even(mu - 1, 2)) {
+
+                // CASE 5: Same as in starry
+                result(n) = (
+                    2
+                    * tworo(l - 1)
+                    * fourbr15
+                    * L(A, JIntegral, k, (mu - 1) / 4, (nu - 1) / 2, 0)
+                );
+
+            } else {
+
+                /*
+                A note about these cases. In the original starry code, these integrals
+                are always zero because the integrand is antisymmetric about the
+                midpoint. Now, however, the integration limits are different, so 
+                there's no cancellation in general.
+
+                The cases below are just the first and fourth cases in equation (D25) 
+                of the starry paper. We can re-write them as the first and fourth cases 
+                in (D32) and (D35), respectively, but note that we pick up a factor
+                of `sgn(cos(phi))`, since the power of the cosine term in the integrand
+                is odd.
+                
+                The other thing to note is that `u` in the call to `K(u, v)` is now
+                a half-integer, so our Vieta trick (D36, D37) doesn't work out of the box.
+                */
+
+                if (is_even(nu)) {
+
+                    // CASE 6
+                    T res = 0;
+                    int u = int((mu + 4.0) / 4.0);
+                    int v = int(nu / 2.0);
+                    for (int i = 0; i < u + v + 1; ++i) {
+                        res += A(u, v)(i) * UIntegral(2 * (u + i) + 1); // TODO: write as dot product
+                    }
+                    result(n) = 2 * tworo(l + 2) * res;
+
+                } else {
+                    
+                    // CASE 7
+                    T res = 0;
+                    int u = (mu - 1) / 4;
+                    int v = (nu - 1) / 2;
+                    res += A(u, v).dot(WIntegral.segment(u, u + v + 1));
+                    result(n) = tworo(l - 1) * k3fourbr15 * res;
+
+                }
+            }
+
+            ++n;
+
+        }
+    }
+
+    return result;
+
+}
 
 
 

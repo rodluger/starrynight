@@ -371,7 +371,7 @@ def test_T(b, theta):
     xi = np.array([1.0, 3.0])
 
     # Analytic
-    T = c.T(ydeg, b, theta, xi)
+    T, _, _, _, _ = c.T(ydeg, b, theta, xi)
 
     # Numerically
     x = lambda xi: np.cos(theta) * np.cos(xi) - b * np.sin(theta) * np.sin(xi)
@@ -401,5 +401,25 @@ def test_Q():
     assert np.allclose(Q, Q_)
 
 
+@pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
+def test_P(bo, ro):
+
+    ydeg = 3  # DEBUG 8
+    kappa = np.array([0.0, 1.0])
+
+    # Analytic
+    P, _, _, _, _ = c.P(ydeg, bo, ro, kappa)
+
+    # Numerically
+    x = lambda phi: ro * np.cos(phi)
+    y = lambda phi: bo + ro * np.sin(phi)
+    dx = lambda phi: -ro * np.sin(phi)
+    dy = lambda phi: ro * np.cos(phi)
+    P_ = Primitive(ydeg, x, y, dx, dy, kappa[0] - np.pi / 2, kappa[1] - np.pi / 2)
+
+    assert np.allclose(P, P_)
+
+
 if __name__ == "__main__":
-    test_Q()
+
+    test_P(0.5, 0.2)

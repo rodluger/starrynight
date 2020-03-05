@@ -228,13 +228,22 @@ m.def("T", [](const int ydeg, const double& b_, const double &theta_, const Vect
 
     // Compute T
     Vector<ADScalar<double, 4>> result = T(ydeg, b, theta, xi);
-
-    // Return just the value (b/c I'm lazy)
+    
+    // Return the value + derivs
     Vector<double> result_value((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv0((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv1((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv2((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv3((ydeg + 1) * (ydeg + 1));
     for (int i = 0; i < (ydeg + 1) * (ydeg + 1); ++i) {
         result_value(i) = result(i).value();
+        result_deriv0(i) = result(i).derivatives()(0);
+        result_deriv1(i) = result(i).derivatives()(1);
+        result_deriv2(i) = result(i).derivatives()(2);
+        result_deriv3(i) = result(i).derivatives()(3);
     }
-    return result_value;
+
+    return py::make_tuple(result_value, result_deriv0, result_deriv1, result_deriv2, result_deriv3);
 
 });
 
@@ -252,7 +261,7 @@ m.def("Q", [](const int ydeg,const Vector<double>& lam_) {
     lam(1).value() = lam_(1);
     lam(1).derivatives() = Vector<double>::Unit(2, 1);
 
-    // Compute T
+    // Compute Q
     Vector<ADScalar<double, 2>> result = Q(ydeg, lam);
 
     // Return the value + derivs
@@ -266,4 +275,43 @@ m.def("Q", [](const int ydeg,const Vector<double>& lam_) {
     }
     
     return py::make_tuple(result_value, result_deriv0, result_deriv1);
+});
+
+// The P integral
+m.def("P", [](const int ydeg, const double& bo_, const double &ro_, const Vector<double>& kappa_) {
+
+    // For testing purposes, require two elements in kappa
+    if (kappa_.size() != 2)
+        throw std::runtime_error("Parameter kappa must be a two-element vector.");
+
+    // Seed the derivatives
+    ADScalar<double, 4> bo, ro;
+    bo.value() = bo_;
+    bo.derivatives() = Vector<double>::Unit(4, 0);
+    ro.value() = ro_;
+    ro.derivatives() = Vector<double>::Unit(4, 1);
+    Vector<ADScalar<double, 4>> kappa(2);
+    kappa(0).value() = kappa_(0);
+    kappa(0).derivatives() = Vector<double>::Unit(4, 2);
+    kappa(1).value() = kappa_(1);
+    kappa(1).derivatives() = Vector<double>::Unit(4, 3);
+
+    // Compute P
+    Vector<ADScalar<double, 4>> result = P(ydeg, bo, ro, kappa);
+
+    // Return the value + derivs
+    Vector<double> result_value((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv0((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv1((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv2((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv3((ydeg + 1) * (ydeg + 1));
+    for (int i = 0; i < (ydeg + 1) * (ydeg + 1); ++i) {
+        result_value(i) = result(i).value();
+        result_deriv0(i) = result(i).derivatives()(0);
+        result_deriv1(i) = result(i).derivatives()(1);
+        result_deriv2(i) = result(i).derivatives()(2);
+        result_deriv3(i) = result(i).derivatives()(3);
+    }
+
+    return py::make_tuple(result_value, result_deriv0, result_deriv1, result_deriv2, result_deriv3);
 });
