@@ -29,6 +29,44 @@ template <class T> inline Vector<T> E(const Vector<T>& tanphi, const T& k2);
 
 
 /**
+  Autodiff-safe arc tangent.
+*/
+template <typename T> 
+inline T arctan(const T& x) {
+  return atan(x);
+}
+
+/**
+  Autodiff-safe arc tangent.
+*/
+template <typename T> 
+inline ADScalar<T, 4> arctan(const ADScalar<T, 4>& x) {
+  ADScalar<T, 4> result;
+  result.value() = atan(x.value());
+  result.derivatives() = x.derivatives() / (x.value() * x.value() + 1);
+  return result;
+}
+
+/**
+  Autodiff-safe hyperbolic arc cosine.
+*/
+template <typename T> 
+inline T arccosh(const T& x) {
+  return acosh(x);
+}
+
+/**
+  Autodiff-safe hyperbolic arc cosine.
+*/
+template <typename T> 
+inline ADScalar<T, 4> arccosh(const ADScalar<T, 4>& x) {
+  ADScalar<T, 4> result;
+  result.value() = acosh(x.value());
+  result.derivatives() = x.derivatives() / sqrt(x.value() * x.value() - 1);
+  return result;
+}
+
+/**
   Vectorized implementation of the `el2` function from
   Bulirsch (1965). In this case, `x` is a *vector* of integration
   limits. The halting condition does not depend on the value of `x`,
@@ -119,25 +157,6 @@ inline Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_
 
 }
 
-
-/**
-  Autodiff-safe hyperbolic arc cosine.
-*/
-template <typename T> 
-inline T arccosh(const T& x) {
-  return acosh(x);
-}
-
-/**
-  Autodiff-safe hyperbolic arc cosine.
-*/
-template <typename T> 
-inline ADScalar<T, 4> arccosh(const ADScalar<T, 4>& x) {
-  ADScalar<T, 4> result;
-  result.value() = acosh(x.value());
-  result.derivatives() = x.derivatives() / sqrt(x.value() * x.value() - 1);
-  return result;
-}
 
 /**
   Scalar implementation of the Carlson elliptic integral RJ.

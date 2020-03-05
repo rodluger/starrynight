@@ -9,6 +9,7 @@
 
 #include "constants.h"
 #include "utils.h"
+#include "iellip.h"
 #include "special.h"
 
 namespace starry {
@@ -16,6 +17,97 @@ namespace primitive {
 
 using namespace utils;
 using namespace special;
+using namespace iellip;
+
+/**
+    Vieta's theorem coefficient A_{i,u,v}
+
+*/
+template <class T>
+class Vieta {
+ protected:
+  int umax;
+  int vmax;
+  T res;
+  T u_choose_j1;
+  T v_choose_c0;
+  T fac;
+  Vector<T> delta;
+  Matrix<bool> set;
+  Matrix<Vector<T>> vec;
+
+  //! Compute the double-binomial coefficient A_{i,u,v}
+  inline void compute(int u, int v) {
+    int j1 = u;
+    int j2 = u;
+    int c0 = v;
+    int sgn0 = 1;
+    u_choose_j1 = 1.0;
+    v_choose_c0 = 1.0;
+    for (int i = 0; i < u + v + 1; ++i) {
+      res = 0;
+      int c = c0;
+      fac = sgn0 * u_choose_j1 * v_choose_c0;
+      for (int j = j1; j < j2 + 1; ++j) {
+        res += fac * delta(c);
+        --c;
+        fac *= -((u - j) * (c + 1.0)) / ((j + 1.0) * (v - c));
+      }
+      if (i >= v) --j2;
+      if (i < u) {
+        --j1;
+        sgn0 *= -1;
+        u_choose_j1 *= (j1 + 1.0) / (u - j1);
+      } else {
+        --c0;
+        if (c0 < v)
+          v_choose_c0 *= (c0 + 1.0) / (v - c0);
+        else
+          v_choose_c0 = 1.0;
+      }
+      vec(u, v)(i) = res;
+    }
+    set(u, v) = true;
+  }
+
+  //! Getter function
+  inline Vector<T> &get_value(int u, int v) {
+    CHECK_BOUNDS(u, 0, umax);
+    CHECK_BOUNDS(v, 0, vmax);
+    if (set(u, v)) {
+      return vec(u, v);
+    } else {
+      compute(u, v);
+      return vec(u, v);
+    }
+  }
+
+ public:
+  //! Constructor
+  explicit Vieta(int lmax) :
+      umax(is_even(lmax) ? (lmax + 2) / 2 : (lmax + 3) / 2),
+      vmax(lmax > 0 ? lmax : 1), delta(vmax + 1), set(umax + 1, vmax + 1),
+      vec(umax + 1, vmax + 1) {
+    delta(0) = 1.0;
+    set.setZero();
+    for (int u = 0; u < umax + 1; ++u) {
+      for (int v = 0; v < vmax + 1; ++v) {
+        vec(u, v).resize(u + v + 1);
+      }
+    }
+  }
+
+  //! Overload () to get the function value without calling `get_value()`
+  inline Vector<T> &operator()(int u, int v) { return get_value(u, v); }
+
+  //! Resetter
+  void reset(const T &delta_) {
+    set.setZero();
+    for (int v = 1; v < vmax + 1; ++v) {
+      delta(v) = delta(v - 1) * delta_;
+    }
+  }
+};
 
 /**
 
@@ -183,6 +275,7 @@ inline Vector<T> J(const int nmax, const T& k2, const T& km2, const Vector<T>& k
     c(nmax - 2) -= fN;
 
     // Construct the tridiagonal matrix
+    // TODO: We should probably use a sparse solve here!
     Matrix<T> A(nmax - 1, nmax - 1);
     A.setZero();
     A.diagonal(0) = a;
@@ -199,6 +292,311 @@ inline Vector<T> J(const int nmax, const T& k2, const T& km2, const Vector<T>& k
     result.segment(1, nmax - 1) = soln;
     
     // We're done
+    return result;
+
+}
+
+/**
+    Compute the helper integral K.
+
+*/
+template <typename T> 
+inline T K(Vieta<T>& A, const Vector<T>& I, const int u, const int v) {
+    return A(u, v).dot(I.segment(u, u + v + 1));
+}
+
+/**
+    Compute the helper integral L.
+
+*/
+template <typename T> 
+inline T L(Vieta<T>& A, const Vector<T>& J, const T& k, const int u, const int v, const int t) {
+    return k * k * k * A(u, v).dot(J.segment(u + t, u + v + 1));
+}
+
+/**
+    Compute the helper integral H.
+
+*/
+template <typename T, int N> 
+inline Matrix<ADScalar<T, N>> H(const int uvmax, const Vector<ADScalar<T, N>>& xi) {
+
+    size_t K = xi.size();
+
+    // Split xi into its value and derivs
+    Vector<T> xi_value(K);
+    Matrix<T> dxi(N, K);
+    for (size_t i = 0; i < K; ++i) {
+        xi_value(i) = xi(i).value();
+        dxi.col(i) = xi(i).derivatives();
+    }
+
+    // Helper vars
+    Vector<T> c(K), s(K), cs(K), cc(K), ss(K);
+    c.array() = cos(xi_value.array());
+    s.array() = sin(xi_value.array());
+    cs.array() = c.array() * s.array();
+    cc.array() = c.array() * c.array();
+    ss.array() = s.array() * s.array();
+
+    // Compute H and dH / dxi
+    Matrix<T> f(uvmax + 1, uvmax + 1);
+    Matrix<Vector<T>> df(uvmax + 1, uvmax + 1);
+
+    // Lower boundary
+    f(0, 0) = pairdiff(xi_value);
+    df(0, 0).setOnes(K);
+    f(1, 0) = pairdiff(s);
+    df(1, 0) = c;
+    f(0, 1) = -pairdiff(c);
+    df(0, 1) = s;
+    f(1, 1) = -0.5 * pairdiff(cc);
+    df(1, 1) = cs;
+
+    // Recurse upward
+    for (int u = 0; u < 2; ++u) {
+        for (int v = 2; v < uvmax + 1 - u; ++v) {
+            f(u, v) = (-pairdiff(Vector<T>(df(u, v - 2).cwiseProduct(cs))) + (v - 1) * f(u, v - 2)) / (u + v);
+            df(u, v) = df(u, v - 2).cwiseProduct(ss);
+        }
+    }
+    for (int u = 2; u < uvmax + 1; ++u) {
+        for (int v = 0; v < uvmax + 1 - u; ++v) {
+            f(u, v) = (pairdiff(Vector<T>(df(u - 2, v).cwiseProduct(cs))) + (u - 1) * f(u - 2, v)) / (u + v);
+            df(u, v) = df(u - 2, v).cwiseProduct(cc);
+        }
+    }
+
+    // Populate the ADScalar
+    // TODO: This copy is slow; populate it on the fly above.
+    Matrix<ADScalar<T, N>> result(uvmax + 1, uvmax + 1);
+    for (int u = 0; u < uvmax + 1; ++u) {
+        for (int v = 0; v < uvmax + 1 - u; ++v) {
+            result(u, v).value() = f(u, v);
+            result(u, v).derivatives() = df(u, v) * dxi;
+
+            // TODO: Check this. I think we need this sign
+            // since even-numbered `xi` are *lower* integral bounds.
+            for (size_t i = 0; i < K; i += 2)
+                result(u, v).derivatives()(i) *= -1;
+        }
+    }
+
+    return result;
+
+}
+
+/**
+    Compute the helper integral T[2].
+
+    Note that these expressions are only valid for b >= 0.
+
+*/
+template <typename T> 
+inline T T2_indef(const T& b, const T& xi) {
+
+    // Helper vars
+    T c = cos(xi);
+    T s = sin(xi);
+    T term = (abs(c) > 1e-8) ? arctan(T(b * s / c)) : c > 0 ? pi<T>() : c < 0 ? -pi<T>() : T(0);
+    int sgn = s > 0 ? 1 : s < 0 ? -1 : 0;
+    T bc = sqrt(1 - b * b);
+    T bbc = b * bc;
+
+    // Special cases
+    if (xi == 0)
+        return -(arctan(T((2 * b * b - 1) / (2 * bbc))) + bbc) / 3;
+    else if (xi == 0.5 * pi<T>())
+        return (0.5 * pi<T>() - arctan(T(b / bc))) / 3;
+    else if (xi == pi<T>())
+        return (0.5 * pi<T>() + bbc) / 3;
+    else if (xi == 1.5 * pi<T>())
+        return (0.5 * pi<T>() + arctan(T(b / bc)) + 2 * bbc) / 3;
+
+    // Figure out the offset
+    T delta;
+    if (xi < 0.5 * pi<T>())
+        delta = 0;
+    else if (xi < pi<T>())
+        delta = pi<T>();
+    else if (xi < 1.5 * pi<T>())
+        delta = 2 * bbc;
+    else
+        delta = pi<T>() + 2 * bbc;
+
+    // We're done
+    return (
+        term
+        - sgn * (arctan(T(((s / (1 + c)) * (s / (1 + c)) + 2 * b * b - 1) / (2 * bbc))) + bbc * c)
+        + delta
+    ) / 3.0;
+}
+
+template <typename S>
+inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& xi) {
+
+    // Pre-compute H
+    Matrix<S> HIntegral = H(ydeg + 2, xi);
+
+    // Vars
+    int jmax, kmax, mu, nu, l, j, k, n1, n3, n4, n5, p, q;
+    S Z, Z0, Z1, Z2, Z_1, Z_5, fac;
+    size_t K = xi.size();
+    S ct = cos(theta);
+    S st = sin(theta);
+    S ttinvb = st / (b * ct);
+    S invbtt = ct / (b * st);
+    S b32 = (1 - b * b) * sqrt(1 - b * b);
+    S bct = b * ct;
+    S bst = b * st;
+
+    // Recurse
+    Vector<S> result((ydeg + 1) * (ydeg + 1));
+    result.setZero();
+
+    // Case 2 (special)
+    int sgn = b > 0 ? -1 : b < 0 ? 1 : 0;
+    for (size_t i = 0; i < K; ++i) {
+        result(2) += sgn * T2_indef(S(abs(b)), xi(i));
+        sgn *= -1;
+    }
+
+    // Special limit: sin(theta) = 0
+    // TODO: eliminate the calls to pow in favor of recursion
+    if (abs(st) < STARRY_T_TOL) {
+
+        int sgnct = ct > 0 ? 1 : ct < 0 ? -1 : 0;
+        int n = 0;
+        for (int l = 0; l < ydeg + 1; ++l) {
+            for (int m = -l; m < l + 1; ++m) {
+                int mu = l - m;
+                int nu = l + m;
+                if (nu % 2 == 0) {
+                    result(n) = pow(sgnct, l) * pow(b, (1 + nu / 2)) * HIntegral((mu + 4) / 2, nu / 2);
+                } else {
+                    if (mu == 1) {
+                        if (l % 2 == 0)
+                            result(n) = -sgnct * b32 * HIntegral(l - 2, 4);
+                        else if (l > 1)
+                            result(n) = -b * b32 * HIntegral(l - 3, 5);
+                    } else {
+                        result(n) = pow(sgnct, (l - 1)) * (
+                            b32 * pow(b, ((nu + 1) / 2)) * HIntegral((mu - 1) / 2, (nu + 5) / 2)
+                        );
+                    }
+                }
+                ++n;
+            }
+        }
+        return result;
+
+    }
+
+    // Special limit: cos(theta) = 0
+    // TODO: eliminate the calls to pow in favor of recursion
+    else if (abs(ct) < STARRY_T_TOL) {
+
+        int sgnst = st > 0 ? 1 : st < 0 ? -1 : 0;
+        int n = 0;
+        for (int l = 0; l < ydeg + 1; ++l) {
+            for (int m = -l; m < l + 1; ++m) {
+                int mu = l - m;
+                int nu = l + m;
+                if (nu % 2 == 0) {
+                    result(n) = pow(b, ((mu + 2) / 2)) * HIntegral(nu / 2, (mu + 4) / 2);
+                    if (sgnst == 1)
+                        result(n) *= pow(-1, (mu / 2));
+                    else
+                        result(n) *= pow(-1, (nu / 2));
+                } else {
+                    if (mu == 1) {
+                        if (l % 2 == 0) {
+                            result(n) = (
+                                pow(-sgnst, l - 1) * pow(b, l - 1) * b32 * HIntegral(1, l + 1)
+                            );
+                        } else if (l > 1) {
+                            result(n) = pow(b, l - 2) * b32 * HIntegral(2, l);
+                            if (sgnst == 1)
+                                result(n) *= pow(-1, l);
+                            else
+                                result(n) *= -1;
+                        }
+                    } else {
+                        result(n) = (
+                            b32 * pow(b, (mu - 3) / 2) * HIntegral((nu - 1) / 2, (mu + 5) / 2)
+                        );
+                        if (sgnst == 1)
+                            result(n) *= pow(-1, (mu - 1) / 2);
+                        else
+                            result(n) *= pow(-1, (nu - 1) / 2);
+                    }
+                }
+                ++n;
+            }
+        }
+        return result;
+
+    }
+
+    // Cases 1 and 5
+    Z0 = 1.0;
+    jmax = 0;
+    for (nu = 0; nu < 2 * ydeg + 1; nu += 2) {
+        kmax = 0;
+        Z1 = Z0;
+        for (mu = 0; mu < 2 * ydeg + 1 - nu; mu += 2) {
+            l = (mu + nu) / 2;
+            n1 = l * l + nu;
+            n5 = (l + 2) * (l + 2) + nu + 1;
+            Z2 = Z1;
+            for (j = 0; j < jmax + 1; ++j) {
+                Z_1 = -bst * Z2;
+                Z_5 = b32 * Z2;
+                for (k = 0; k < kmax + 1; ++k) {
+                    p = j + k;
+                    q = l + 1 - (j + k);
+                    fac = -invbtt / (k + 1.0);
+                    result(n1) += Z_1 * (bct * HIntegral(p + 1, q) - st * HIntegral(p, q + 1));
+                    Z_1 *= (kmax + 1 - k) * fac;
+                    if (n5 < (ydeg + 1) * (ydeg + 1)) {
+                        result(n5) += Z_5 * (bct * HIntegral(p + 1, q + 2) - st * HIntegral(p, q + 3));
+                        Z_5 *= (kmax - k) * fac;
+                    }
+                }
+                result(n1) += Z_1 * (bct * HIntegral(p + 2, q - 1) - st * HIntegral(p + 1, q));
+                Z2 *= (jmax - j) / (j + 1.0) * ttinvb;
+            }
+            kmax += 1;
+            Z1 *= -bst;
+        }
+        jmax += 1;
+        Z0 *= bct;
+    }
+
+    // Cases 3 and 4
+    Z0 = b32;
+    kmax = 0;
+    for (l = 2; l < ydeg + 1; l += 2) {
+        n3 = l * l + 2 * l - 1;
+        n4 = (l + 1) * (l + 1) + 2 * l + 1;
+        Z = Z0;
+        for (k = 0; k < kmax + 1; ++k) {
+            p = k;
+            q = l + 1 - k;
+            result(n3) -= Z * (bst * HIntegral(p + 1, q) + ct * HIntegral(p, q + 1));
+            if (l < ydeg) {
+                result(n4) -= Z * (
+                    bst * st * HIntegral(p + 2, q)
+                    + bct * ct * HIntegral(p, q + 2)
+                    + (1 + b * b) * st * ct * HIntegral(p + 1, q + 1)
+                );
+            }
+            Z *= -(kmax - k) / (k + 1.0) * invbtt;
+        }
+        kmax += 2;
+        Z0 *= bst * bst;
+    }
+
     return result;
 
 }

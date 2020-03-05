@@ -1,8 +1,10 @@
 from starrynight import c
 from mpmath import ellipf, ellipe, ellippi
 from scipy.special import hyp2f1
+from scipy.integrate import quad
 import numpy as np
 import pytest
+import matplotlib.pyplot as plt
 
 
 @pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
@@ -266,5 +268,49 @@ def test_J():
     assert np.allclose(J, J_num)
 
 
+def test_H():
+
+    uvmax = 5
+    xi = np.array([0.0, 2.0])
+    eps = 1e-8
+
+    # Analytic
+    H, dHdxi0, dHdxi1 = c.H(uvmax, xi)
+
+    # Numerical
+    H_num = np.zeros((uvmax + 1, uvmax + 1))
+    dH_numdxi0 = np.zeros((uvmax + 1, uvmax + 1))
+    dH_numdxi1 = np.zeros((uvmax + 1, uvmax + 1))
+    for u in range(uvmax + 1):
+        for v in range(uvmax + 1 - u):
+            H_num[u, v] = quad(lambda x: np.cos(x) ** u * np.sin(x) ** v, xi[0], xi[1])[
+                0
+            ]
+
+            f1 = quad(lambda x: np.cos(x) ** u * np.sin(x) ** v, xi[0] - eps, xi[1])[0]
+            f2 = quad(lambda x: np.cos(x) ** u * np.sin(x) ** v, xi[0] + eps, xi[1])[0]
+            dH_numdxi0[u, v] = (f2 - f1) / (2 * eps)
+
+            f1 = quad(lambda x: np.cos(x) ** u * np.sin(x) ** v, xi[0], xi[1] - eps)[0]
+            f2 = quad(lambda x: np.cos(x) ** u * np.sin(x) ** v, xi[0], xi[1] + eps)[0]
+            dH_numdxi1[u, v] = (f2 - f1) / (2 * eps)
+
+    assert np.allclose(H, H_num)
+    assert np.allclose(dHdxi0, dH_numdxi0, atol=1e-6)
+    assert np.allclose(dHdxi1, dH_numdxi1, atol=1e-6)
+
+
+def test_T():
+
+    ydeg = 5
+    b = 0.25
+    theta = np.pi / 2
+    xi = np.array([1.0, 3.0])
+
+    T = c.T(ydeg, b, theta, xi)
+
+    # TODO
+
+
 if __name__ == "__main__":
-    test_J()
+    test_T()

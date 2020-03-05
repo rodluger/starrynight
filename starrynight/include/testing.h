@@ -171,3 +171,69 @@ m.def("J", [](const int nmax, const double& bo_, const double& ro_, const Vector
     return result_value;
 
 });
+
+// The H vector
+m.def("H", [](const int uvmax, const Vector<double>& xi_) {
+
+    // For testing purposes, require two elements in xi
+    if (xi_.size() != 2)
+        throw std::runtime_error("Parameter xi must be a two-element vector.");
+
+    // Seed the derivatives
+    Vector<ADScalar<double, 2>> xi(2);
+    xi(0).value() = xi_(0);
+    xi(0).derivatives() = Vector<double>::Unit(2, 0);
+    xi(1).value() = xi_(1);
+    xi(1).derivatives() = Vector<double>::Unit(2, 1);
+
+    // Compute H
+    Matrix<ADScalar<double, 2>> result = H(uvmax, xi);
+
+    // Return the value and derivs
+    Matrix<double> result_value(uvmax + 1, uvmax + 1);
+    Matrix<double> result_deriv0(uvmax + 1, uvmax + 1);
+    Matrix<double> result_deriv1(uvmax + 1, uvmax + 1);
+    result_value.setZero();
+    result_deriv0.setZero();
+    result_deriv1.setZero();
+    for (int u = 0; u < uvmax + 1; ++u) {
+        for (int v = 0; v < uvmax + 1 - u; ++v) {
+            result_value(u, v) = result(u, v).value();
+            result_deriv0(u, v) = result(u, v).derivatives()(0);
+            result_deriv1(u, v) = result(u, v).derivatives()(1);
+        }
+    }
+    return py::make_tuple(result_value, result_deriv0, result_deriv1);
+
+});
+
+// The T integral
+m.def("T", [](const int ydeg, const double& b_, const double &theta_, const Vector<double>& xi_) {
+
+    // For testing purposes, require two elements in xi
+    if (xi_.size() != 2)
+        throw std::runtime_error("Parameter xi must be a two-element vector.");
+
+    // Seed the derivatives
+    ADScalar<double, 4> b, theta;
+    b.value() = b_;
+    b.derivatives() = Vector<double>::Unit(4, 0);
+    theta.value() = theta_;
+    theta.derivatives() = Vector<double>::Unit(4, 1);
+    Vector<ADScalar<double, 4>> xi(2);
+    xi(0).value() = xi_(0);
+    xi(0).derivatives() = Vector<double>::Unit(4, 2);
+    xi(1).value() = xi_(1);
+    xi(1).derivatives() = Vector<double>::Unit(4, 3);
+
+    // Compute T
+    Vector<ADScalar<double, 4>> result = T(ydeg, b, theta, xi);
+
+    // Return the value
+    Vector<double> result_value((ydeg + 1) * (ydeg + 1));
+    for (int i = 0; i < (ydeg + 1) * (ydeg + 1); ++i) {
+        result_value(i) = result(i).value();
+    }
+    return result_value;
+
+});
