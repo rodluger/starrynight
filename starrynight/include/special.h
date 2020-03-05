@@ -10,7 +10,6 @@
 #include "constants.h"
 #include "utils.h"
 #include "quad.h"
-#include <cmath>
 
 namespace starry {
 namespace special {
@@ -28,7 +27,7 @@ using namespace quad;
 
 */
 template <typename T> 
-T pairdiff(const Vector<T>& array) {
+inline T pairdiff(const Vector<T>& array) {
     size_t K = array.size();
     if (K > 1) {
         if (K % 2 == 0) {
@@ -54,7 +53,7 @@ T pairdiff(const Vector<T>& array) {
   Integrand of the P_2 term, for numerical integration.
 */
 template <typename T> 
-T P2_integrand(const T& bo, const T& ro, const T& phi) {
+inline T P2_integrand(const T& bo, const T& ro, const T& phi) {
   T c = cos(phi);
   T z = 1 - ro * ro - bo * bo - 2 * bo * ro * c;
   if (z < 1e-12) z = 1e-12;
@@ -66,7 +65,7 @@ T P2_integrand(const T& bo, const T& ro, const T& phi) {
   Derivative of the integrand of the P_2 term, for numerical integration.
 */
 template <typename T> 
-T dP2dbo_integrand(const T& bo, const T& ro, const T& phi) {
+inline T dP2dbo_integrand(const T& bo, const T& ro, const T& phi) {
   T c = cos(phi);
   T z = 1 - ro * ro - bo * bo - 2 * bo * ro * c;
   if (z < 1e-12) z = 1e-12;
@@ -80,7 +79,7 @@ T dP2dbo_integrand(const T& bo, const T& ro, const T& phi) {
   Derivative of the integrand of the P_2 term, for numerical integration.
 */
 template <typename T> 
-T dP2dro_integrand(const T& bo, const T& ro, const T& phi) {
+inline T dP2dro_integrand(const T& bo, const T& ro, const T& phi) {
   T c = cos(phi);
   T z = 1 - ro * ro - bo * bo - 2 * bo * ro * c;
   if (z < 1e-12) z = 1e-12;
@@ -96,7 +95,7 @@ T dP2dro_integrand(const T& bo, const T& ro, const T& phi) {
 
 */
 template <typename T> 
-T P2_numerical(const T& bo, const T& ro, const Vector<T>& kappa) {
+inline T P2_numerical(const T& bo, const T& ro, const Vector<T>& kappa) {
 
     using Scalar = typename T::Scalar;
     size_t K = kappa.size();
@@ -129,7 +128,7 @@ T P2_numerical(const T& bo, const T& ro, const Vector<T>& kappa) {
 
 */
 template <typename T> 
-T P2(const T& bo, const T& ro, const T& k2, const Vector<T>& kappa, const Vector<T>& s1, 
+inline T P2(const T& bo, const T& ro, const T& k2, const Vector<T>& kappa, const Vector<T>& s1, 
      const Vector<T>& s2, const Vector<T>& c1, const T& F, const T& E, 
      const T& PIp) {
 
@@ -213,7 +212,7 @@ T P2(const T& bo, const T& ro, const T& k2, const Vector<T>& kappa, const Vector
   Integrand of the J_N term, for numerical integration.
 */
 template <typename T> 
-T J_integrand(const int N, const T& k2, const T& phi) {
+inline T J_integrand(const int N, const T& k2, const T& phi) {
   T s2 = sin(phi);
   s2 *= s2;
   T term = 1 - s2 / k2;
@@ -225,7 +224,7 @@ T J_integrand(const int N, const T& k2, const T& phi) {
   Derivative of the integrand of the J_N term, for numerical integration.
 */
 template <typename T> 
-T dJdk2_integrand(const int N, const T& k2, const T& phi) {
+inline T dJdk2_integrand(const int N, const T& k2, const T& phi) {
   T s2 = sin(phi);
   s2 *= s2;
   T term = 1 - s2 / k2;
@@ -241,7 +240,7 @@ T dJdk2_integrand(const int N, const T& k2, const T& phi) {
 
 */
 template <typename T> 
-T J_numerical(const int N, const T& k2, const Vector<T>& kappa) {
+inline T J_numerical(const int N, const T& k2, const Vector<T>& kappa) {
 
   using Scalar = typename T::Scalar;
   size_t K = kappa.size();
@@ -271,7 +270,7 @@ T J_numerical(const int N, const T& k2, const Vector<T>& kappa) {
 
 */
 template <typename T> 
-T hyp2f1(const T& a_, const T& b_, const T& c_, const T& z) {
+inline T hyp2f1(const T& a_, const T& b_, const T& c_, const T& z) {
   
   // Compute the value
   T a = a_;
@@ -299,7 +298,7 @@ T hyp2f1(const T& a_, const T& b_, const T& c_, const T& z) {
 
 */
 template <typename T, int N> 
-ADScalar<T, N> hyp2f1(const T& a, const T& b, const T&c, const ADScalar<T, N>& z) {
+inline ADScalar<T, N> hyp2f1(const T& a, const T& b, const T&c, const ADScalar<T, N>& z) {
     ADScalar<T, N> F;
     F.value() = hyp2f1(a, b, c, z.value());
     F.derivatives() = z.derivatives() * a * b / c * hyp2f1(a + 1, b + 1, c + 1, z.value());

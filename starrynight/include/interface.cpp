@@ -21,6 +21,7 @@
 #include "iellip.h"
 #include "special.h"
 #include "quad.h"
+#include "primitive.h"
 
 namespace py = pybind11;
 
@@ -32,6 +33,7 @@ PYBIND11_MODULE(_c_ops, m) {
   using namespace starry::iellip;
   using namespace starry::special;
   using namespace starry::quad;
+  using namespace starry::primitive;
 
 # ifdef STARRY_DEBUG
 #   include "testing.h"

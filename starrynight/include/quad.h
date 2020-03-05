@@ -11,7 +11,6 @@ Adapted from https://rosettacode.org/wiki/Numerical_integration/Gauss-Legendre_Q
 
 #include "constants.h"
 #include "utils.h"
-#include <cmath>
 
 namespace starry {
 namespace quad {
@@ -34,7 +33,7 @@ namespace quad {
         *   @param err  callback in case of problems
         */
         template <typename Function>
-        double integrate(double a, double b, Function f) {
+        inline double integrate(double a, double b, Function f) {
             double p = (b - a) / 2;
             double q = (b + a) / 2;
             const LegendrePolynomial& legpoly = s_LegendrePolynomial;

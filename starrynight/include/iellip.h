@@ -15,7 +15,6 @@ Elliptic integrals computed following
 
 #include "constants.h"
 #include "utils.h"
-#include <cmath>
 
 namespace starry {
 namespace iellip {
@@ -37,7 +36,7 @@ template <class T> inline Vector<T> E(const Vector<T>& tanphi, const T& k2);
 
 */
 template <typename T> 
-Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
+inline Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
 
     // Make copies
     T kc = kc_;
@@ -125,7 +124,7 @@ Vector<T> el2(const Vector<T>& x_, const T& kc_, const T& a_, const T& b_) {
   Autodiff-safe hyperbolic arc cosine.
 */
 template <typename T> 
-T arccosh(const T& x) {
+inline T arccosh(const T& x) {
   return acosh(x);
 }
 
@@ -133,7 +132,7 @@ T arccosh(const T& x) {
   Autodiff-safe hyperbolic arc cosine.
 */
 template <typename T> 
-ADScalar<T, 4> arccosh(const ADScalar<T, 4>& x) {
+inline ADScalar<T, 4> arccosh(const ADScalar<T, 4>& x) {
   ADScalar<T, 4> result;
   result.value() = acosh(x.value());
   result.derivatives() = x.derivatives() / sqrt(x.value() * x.value() - 1);
@@ -162,7 +161,7 @@ ADScalar<T, 4> arccosh(const ADScalar<T, 4>& x) {
 
 */
 template <typename T> 
-T rj(const T& x_, const T& y_, const T& z_, const T& p_) {
+inline T rj(const T& x_, const T& y_, const T& z_, const T& p_) {
     
     // Constants
     const T C1 = 3.0 / 14.0;

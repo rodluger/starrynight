@@ -128,3 +128,46 @@ m.def("hyp2f1", [](const double& a, const double& b, const double& c, const doub
     ADScalar<double, 1> result = hyp2f1(a, b, c, z);
     return py::make_tuple(result.value(), result.derivatives());
 });
+
+// The full J vector
+m.def("J", [](const int nmax, const double& bo_, const double& ro_, const Vector<double>& kappa_) {
+    
+    // For testing purposes, require two elements in kappa
+    if (kappa_.size() != 2)
+        throw std::runtime_error("Parameter kappa must be a two-element vector.");
+
+    // Seed the derivatives
+    ADScalar<double, 4> bo, ro;
+    Vector<ADScalar<double, 4>> kappa(2);
+    bo.value() = bo_;
+    bo.derivatives() = Vector<double>::Unit(4, 0);
+    ro.value() = ro_;
+    ro.derivatives() = Vector<double>::Unit(4, 1);
+    kappa(0).value() = kappa_(0);
+    kappa(0).derivatives() = Vector<double>::Unit(4, 2);
+    kappa(1).value() = kappa_(1);
+    kappa(1).derivatives() = Vector<double>::Unit(4, 3);
+
+    // Pre-compute some stuff
+    auto integrals = IncompleteEllipticIntegrals<double>(bo, ro, kappa);
+    ADScalar<double, 4> k2 = (1 - ro * ro - bo * bo + 2 * bo * ro) / (4 * bo * ro);
+    ADScalar<double, 4> km2 = 1 / k2;
+    Vector<ADScalar<double, 4>> s1(2), s2(2), c1(2), q2(2);
+    s1.array() = sin(0.5 * kappa.array());
+    s2.array() = s1.array() * s1.array();
+    c1.array() = cos(0.5 * kappa.array());
+    q2.array() = 1.0 - s2.array() / k2;
+    if (q2(0) < 0) q2(0) = 0;
+    if (q2(1) < 0) q2(1) = 0;
+
+    // Compute J
+    Vector<ADScalar<double, 4>> result = J(nmax, k2, km2, kappa, s1, s2, c1, q2, integrals.F, integrals.E);
+    
+    // Return only the value
+    Vector<double> result_value(nmax + 1);
+    for (int i = 0; i < nmax + 1; ++i) {
+        result_value(i) = result(i).value();
+    }
+    return result_value;
+
+});

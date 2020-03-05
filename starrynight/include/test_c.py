@@ -248,5 +248,23 @@ def test_hyp2f1():
     )
 
 
+def test_J():
+
+    nmax = 30
+    bo = 0.5
+    ro = 0.2
+    kappa = np.array([0.0, 2.0])
+
+    # Analytic
+    J = c.J(nmax, bo, ro, kappa)
+
+    # Numerical
+    J_num = np.zeros(nmax + 1)
+    for n in range(nmax + 1):
+        J_num[n], _ = c.J_numerical(n, bo, ro, kappa)
+
+    assert np.allclose(J, J_num)
+
+
 if __name__ == "__main__":
-    test_hyp2f1()
+    test_J()
