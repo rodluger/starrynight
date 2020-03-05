@@ -7,6 +7,68 @@ import pytest
 import matplotlib.pyplot as plt
 
 
+def Glm(l, m):
+    """A Green's basis antiderivative."""
+    mu = l - m
+    nu = l + m
+
+    z = lambda x, y: np.maximum(1e-12, np.sqrt(np.abs(1 - x ** 2 - y ** 2)))
+
+    if nu % 2 == 0:
+
+        G = [lambda x, y: 0, lambda x, y: x ** (0.5 * (mu + 2)) * y ** (0.5 * nu)]
+
+    elif (l == 1) and (m == 0):
+
+        def G0(x, y):
+            z_ = z(x, y)
+            if z_ > 1 - 1e-8:
+                return -0.5 * y
+            else:
+                return (1 - z_ ** 3) / (3 * (1 - z_ ** 2)) * (-y)
+
+        def G1(x, y):
+            z_ = z(x, y)
+            if z_ > 1 - 1e-8:
+                return 0.5 * x
+            else:
+                return (1 - z_ ** 3) / (3 * (1 - z_ ** 2)) * x
+
+        G = [G0, G1]
+
+    elif (mu == 1) and (l % 2 == 0):
+
+        G = [lambda x, y: x ** (l - 2) * z(x, y) ** 3, lambda x, y: 0]
+
+    elif (mu == 1) and (l % 2 != 0):
+
+        G = [lambda x, y: x ** (l - 3) * y * z(x, y) ** 3, lambda x, y: 0]
+
+    else:
+
+        G = [
+            lambda x, y: 0,
+            lambda x, y: x ** (0.5 * (mu - 3)) * y ** (0.5 * (nu - 1)) * z(x, y) ** 3,
+        ]
+
+    return G
+
+
+def Primitive(ydeg, x, y, dx, dy, theta1, theta2, epsabs=1e-12, epsrel=1e-12):
+    """A general vectorized primitive integral computed numerically."""
+    res = np.zeros((ydeg + 1) ** 2)
+    n = 0
+    for l in range(ydeg + 1):
+        for m in range(-l, l + 1):
+            G = Glm(l, m)
+            func = lambda theta: G[0](x(theta), y(theta)) * dx(theta) + G[1](
+                x(theta), y(theta)
+            ) * dy(theta)
+            res[n], _ = quad(func, theta1, theta2, epsabs=epsabs, epsrel=epsrel)
+            n += 1
+    return res
+
+
 @pytest.mark.parametrize("bo,ro", [[0.5, 0.2], [0.95, 0.2]])
 def test_ellip(bo, ro):
 
@@ -300,16 +362,25 @@ def test_H():
     assert np.allclose(dHdxi1, dH_numdxi1, atol=1e-6)
 
 
-def test_T():
+@pytest.mark.parametrize(
+    "b,theta", [[0.25, 1.0], [-0.25, 1.0], [0.25, np.pi / 2], [0.25, 0.0]]
+)
+def test_T(b, theta):
 
     ydeg = 5
-    b = 0.25
-    theta = np.pi / 2
     xi = np.array([1.0, 3.0])
 
+    # Analytic
     T = c.T(ydeg, b, theta, xi)
 
-    # TODO
+    # Numerically
+    x = lambda xi: np.cos(theta) * np.cos(xi) - b * np.sin(theta) * np.sin(xi)
+    y = lambda xi: np.sin(theta) * np.cos(xi) + b * np.cos(theta) * np.sin(xi)
+    dx = lambda xi: -np.cos(theta) * np.sin(xi) - b * np.sin(theta) * np.cos(xi)
+    dy = lambda xi: -np.sin(theta) * np.sin(xi) + b * np.cos(theta) * np.cos(xi)
+    T_ = Primitive(ydeg, x, y, dx, dy, xi[0], xi[1])
+
+    assert np.allclose(T, T_)
 
 
 if __name__ == "__main__":
