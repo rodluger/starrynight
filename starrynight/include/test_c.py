@@ -383,5 +383,23 @@ def test_T(b, theta):
     assert np.allclose(T, T_)
 
 
+def test_Q():
+
+    ydeg = 5
+    lam = np.array([1.0, 3.0])
+
+    # Analytic
+    Q, _, _ = c.Q(ydeg, lam)
+
+    # Numerically
+    x = lambda lam: np.cos(lam)
+    y = lambda lam: np.sin(lam)
+    dx = lambda lam: -np.sin(lam)
+    dy = lambda lam: np.cos(lam)
+    Q_ = Primitive(ydeg, x, y, dx, dy, lam[0], lam[1])
+
+    assert np.allclose(Q, Q_)
+
+
 if __name__ == "__main__":
-    test_T()
+    test_Q()

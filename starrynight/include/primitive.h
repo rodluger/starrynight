@@ -601,6 +601,40 @@ inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& 
 
 }
 
+template <typename T>
+inline Vector<T> Q(const int ydeg, const Vector<T>& lam) {
+
+    // Pre-compute H
+    Matrix<T> HIntegral = H(ydeg + 2, lam);
+
+    // Allocate
+    Vector<T> result((ydeg + 1) * (ydeg + 1));
+    result.setZero();
+    
+    // Note that the linear term is special
+    result(2) = pairdiff(lam) / 3.0;
+
+    // Easy!
+    int n = 0;
+    int mu, nu;
+    for (int l = 0; l < ydeg + 1; ++l) {
+        for (int m = -l; m < l + 1; ++m) {
+            mu = l - m;
+            nu = l + m;
+            if (nu % 2 == 0) {
+                result(n) = HIntegral((mu + 4) / 2, nu / 2);
+            }
+            ++n;
+        }
+    }
+    return result;
+}
+
+
+    
+
+
+
 
 } // namespace primitive
 } // namespace starry

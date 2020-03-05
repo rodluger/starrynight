@@ -229,11 +229,41 @@ m.def("T", [](const int ydeg, const double& b_, const double &theta_, const Vect
     // Compute T
     Vector<ADScalar<double, 4>> result = T(ydeg, b, theta, xi);
 
-    // Return the value
+    // Return just the value (b/c I'm lazy)
     Vector<double> result_value((ydeg + 1) * (ydeg + 1));
     for (int i = 0; i < (ydeg + 1) * (ydeg + 1); ++i) {
         result_value(i) = result(i).value();
     }
     return result_value;
 
+});
+
+// The Q integral
+m.def("Q", [](const int ydeg,const Vector<double>& lam_) {
+
+    // For testing purposes, require two elements in lam
+    if (lam_.size() != 2)
+        throw std::runtime_error("Parameter lam must be a two-element vector.");
+
+    // Seed the derivatives
+    Vector<ADScalar<double, 2>> lam(2);
+    lam(0).value() = lam_(0);
+    lam(0).derivatives() = Vector<double>::Unit(2, 0);
+    lam(1).value() = lam_(1);
+    lam(1).derivatives() = Vector<double>::Unit(2, 1);
+
+    // Compute T
+    Vector<ADScalar<double, 2>> result = Q(ydeg, lam);
+
+    // Return the value + derivs
+    Vector<double> result_value((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv0((ydeg + 1) * (ydeg + 1));
+    Vector<double> result_deriv1((ydeg + 1) * (ydeg + 1));
+    for (int i = 0; i < (ydeg + 1) * (ydeg + 1); ++i) {
+        result_value(i) = result(i).value();
+        result_deriv0(i) = result(i).derivatives()(0);
+        result_deriv1(i) = result(i).derivatives()(1);
+    }
+    
+    return py::make_tuple(result_value, result_deriv0, result_deriv1);
 });
