@@ -1,6 +1,6 @@
 /**
 \file primitive.h
-\brief Primitiv integrals for reflected light occultations.
+\brief Primitive integrals for reflected light occultations.
 
 */
 

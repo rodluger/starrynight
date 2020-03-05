@@ -516,7 +516,6 @@ class IncompleteEllipticIntegrals {
     A E;
     A PIp;
 
-
     //! Constructor
     explicit IncompleteEllipticIntegrals(const A& bo, const A& ro, const Vector<A>& kappa) :
         bo(bo), ro(ro), kappa(kappa), K(kappa.size()),
@@ -526,8 +525,7 @@ class IncompleteEllipticIntegrals {
         // Helper vars
         phi.array() = 0.5 * (kappa.array() - pi<T>());
         for (size_t i = 0; i < K; ++i) {
-          while (phi(i) < 0) phi(i) += pi<T>();
-          while (phi(i) > pi<T>()) phi(i) -= pi<T>();
+          phi(i) = angle_mod(phi(i), A(pi<T>()));
         }
         coskap.array() = cos(kappa.array());
         cosphi.array() = cos(phi.array());

@@ -22,6 +22,7 @@
 #include "special.h"
 #include "quad.h"
 #include "primitive.h"
+#include "geometry.h"
 
 namespace py = pybind11;
 
