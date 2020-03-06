@@ -580,6 +580,7 @@ if __name__ == "__main__":
 
     ydeg = 3
     S = starrynight.StarryNight(ydeg)
+
     for CASE in cases.CASE:
 
         for i, case in enumerate(tqdm(CASE)):
@@ -609,7 +610,13 @@ if __name__ == "__main__":
             try:
                 assert np.allclose(s0T, s0T_)
             except:
-                plt.plot(s0T)
-                plt.plot(s0T_, lw=1)
-                plt.show()
+                breakpoint()
+
+            # Check illumination
+            bI = np.zeros(((ydeg + 2) ** 2, (ydeg + 1) ** 2))
+            I, _, _ = c.I(ydeg, b, theta, bI)
+            I_ = S.illum()
+            try:
+                assert np.allclose(I, I_)
+            except:
                 breakpoint()

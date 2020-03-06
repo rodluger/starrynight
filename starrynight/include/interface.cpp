@@ -82,4 +82,36 @@ m.def("s0T", [](const int& ydeg, const double& b_, const double& theta_, const d
 
 });
 
+m.def("I", [](const int& ydeg, const double& b_, const double& theta_, const Matrix<double>& bI) {
+    
+    // Dimensions
+    int N2 = (ydeg + 2) * (ydeg + 2);
+    int N1 = (ydeg + 1) * (ydeg + 1);
+
+    // Seed the derivatives
+    ADScalar<double, 4> b, theta;
+    b.value() = b_;
+    b.derivatives() = Vector<double>::Unit(2, 0);
+    theta.value() = theta_;
+    theta.derivatives() = Vector<double>::Unit(2, 1);
+
+    // Compute!
+    Matrix<ADScalar<double, 4>> result = I(ydeg, b, theta);
+
+    // Process the derivatives
+    Matrix<double> result_value(N2, N1);
+    double bb = 0.0, btheta = 0.0;
+    for (int i = 0; i < N2; ++i) {
+      for (int j = 0; j < N1; ++j) {
+        result_value(i, j) = result(i, j).value();
+        bb += result(i, j).derivatives()(0) * bI(i, j);
+        btheta += result(i, j).derivatives()(1) * bI(i, j);
+      }
+    }
+
+    // Return the vector, integration code, and all derivs
+    return py::make_tuple(result_value, bb, btheta);
+
+});
+
 }

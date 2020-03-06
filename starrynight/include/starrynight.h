@@ -66,6 +66,60 @@ inline Vector<S> s0T(const int ydeg, const S& b, const S& theta, const S& bo, co
 
 }
 
+/**
+
+    Illumination matrix.
+
+    TODO: We can backprop through this pretty easily.
+
+*/
+template <typename T>
+inline Matrix<T> I(const int ydeg, const T& b, const T& theta) {
+
+    int N2 = (ydeg + 2) * (ydeg + 2);
+    int N1 = (ydeg + 1) * (ydeg + 1);
+    Matrix<T> result(N2, N1);
+    result.setZero();
+
+    // NOTE: 3 / 2 is the starry normalization for reflected light maps
+    T y0 = sqrt(1 - b * b);
+    T x = -y0 * sin(theta);
+    T y = y0 * cos(theta);
+    T z = -b;
+    Vector<T> p(4);
+    p << 0, 1.5 * x, 1.5 * z, 1.5 * y;
+    
+    // Populate the matrix
+    int n1 = 0;
+    int n2 = 0;
+    int l, n;
+    bool odd1;
+    for (int l1 = 0; l1 < ydeg + 1; ++l1) {
+        for (int m1 = -l1; m1 < l1 + 1; ++m1) {
+            if (is_even(l1 + m1)) odd1 = false;
+            else odd1 = true;
+            n2 = 0;
+            for (int l2 = 0; l2 < 2; ++l2) {
+                for (int m2 = -l2; m2 < l2 + 1; ++m2) {
+                    l = l1 + l2;
+                    n = l * l + l + m1 + m2;
+                    if (odd1 && (!is_even(l2 + m2))) {
+                        result(n - 4 * l + 2, n1) += p(n2);
+                        result(n - 2, n1) -= p(n2);
+                        result(n + 2, n1) -= p(n2);
+                    } else {
+                        result(n, n1) += p(n2);
+                    }
+                    n2 += 1;
+                }
+            }
+            n1 += 1;
+        }
+    }
+    return result;
+
+}
+
 } // namespace night
 } // namespace starry
 
