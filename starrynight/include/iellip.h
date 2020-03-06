@@ -13,6 +13,10 @@ Elliptic integrals computed following
 #ifndef _STARRY_IELLIP_H_
 #define _STARRY_IELLIP_H_
 
+// DEBUG
+#include <iostream>
+#include <iomanip>
+
 #include "constants.h"
 #include "utils.h"
 
@@ -383,8 +387,7 @@ class IncompleteEllipticIntegrals {
           Vector<A> arg(K), arg2(K), tanphi(K);
           arg.array() = kinv * sin(0.5 * kappa.array());
           arg2.array() = 1.0 - arg.array() * arg.array();
-          arg2.array() = (arg2.array() < 1e-12).select(1e-12, arg2.array());
-          tanphi.array() = arg.array() * pow(arg2.array(), -0.5);
+          tanphi.array() = (arg.array() >= 1.0).select(STARRY_HUGE_TAN, (arg.array() <= -1.0).select(-STARRY_HUGE_TAN, arg.array() * pow(arg2.array(), -0.5)));
 
           // Compute the incomplete elliptic integrals
           compute_el2(tanphi, k2);
@@ -482,25 +485,17 @@ class IncompleteEllipticIntegrals {
         PIp = 0.0;
         for (size_t i = 0; i < K; ++i) {
             
-            if (w(i).value() >= 0) {
+            // Compute the integral, valid for -pi < kappa < pi
+            if (w(i) < 0) w(i) = 0.0;
+            val = (1.0 - coskap(i)) * cosphi(i) * rj(w(i), A(sinphi(i) * sinphi(i)), A(1.0), p(i));
 
-              // Compute the integral, valid for -pi < kappa < pi
-              val = (1.0 - coskap(i)) * cosphi(i) * rj(w(i), A(sinphi(i) * sinphi(i)), A(1.0), p(i));
-
-              // Add offsets to account for the limited domain of `rj`
-              if (kappa(i) > 3 * pi<T>()) {
-                  PIp += sgn * (2 * PIp0 + val);
-              } else if (kappa(i) > pi<T>()) {
-                  PIp += sgn * (PIp0 + val);
-              } else {
-                  PIp += sgn * val;
-              }
-
+            // Add offsets to account for the limited domain of `rj`
+            if (kappa(i) > 3 * pi<T>()) {
+                PIp += sgn * (2 * PIp0 + val);
+            } else if (kappa(i) > pi<T>()) {
+                PIp += sgn * (PIp0 + val);
             } else {
-              
-              // The integral is complex!
-              throw std::runtime_error("Elliptic integral PI' evaluated to a complex number.");
-
+                PIp += sgn * val;
             }
             
             sgn *= -1;

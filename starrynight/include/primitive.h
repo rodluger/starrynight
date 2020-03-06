@@ -404,19 +404,17 @@ inline T T2_indef(const T& b, const T& xi) {
     // Helper vars
     T c = cos(xi);
     T s = sin(xi);
-    T term = (abs(c) > 1e-8) ? arctan(T(b * s / c)) : c > 0 ? pi<T>() : c < 0 ? -pi<T>() : T(0);
-    int sgn = s > 0 ? 1 : s < 0 ? -1 : 0;
     T bc = sqrt(1 - b * b);
     T bbc = b * bc;
 
     // Special cases
-    if (xi == 0)
+    if (abs(xi - 0) < STARRY_ANGLE_TOL)
         return -(arctan(T((2 * b * b - 1) / (2 * bbc))) + bbc) / 3;
-    else if (xi == 0.5 * pi<T>())
+    else if (abs(xi - 0.5 * pi<T>()) < STARRY_ANGLE_TOL)
         return (0.5 * pi<T>() - arctan(T(b / bc))) / 3;
-    else if (xi == pi<T>())
+    else if (abs(xi - pi<T>()) < STARRY_ANGLE_TOL)
         return (0.5 * pi<T>() + bbc) / 3;
-    else if (xi == 1.5 * pi<T>())
+    else if (abs(xi - 1.5 * pi<T>()) < STARRY_ANGLE_TOL)
         return (0.5 * pi<T>() + arctan(T(b / bc)) + 2 * bbc) / 3;
 
     // Figure out the offset
@@ -431,6 +429,8 @@ inline T T2_indef(const T& b, const T& xi) {
         delta = pi<T>() + 2 * bbc;
 
     // We're done
+    T term = arctan(T(b * s / c));
+    int sgn = s > 0 ? 1 : s < 0 ? -1 : 0;
     return (
         term
         - sgn * (arctan(T(((s / (1 + c)) * (s / (1 + c)) + 2 * b * b - 1) / (2 * bbc))) + bbc * c)
@@ -444,6 +444,11 @@ inline T T2_indef(const T& b, const T& xi) {
 */
 template <typename S>
 inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& xi) {
+
+    // Check for trivial result
+    Vector<S> result((ydeg + 1) * (ydeg + 1));
+    result.setZero();
+    if (xi.size() == 0) return result;
 
     // Pre-compute H
     Matrix<S> HIntegral = H(ydeg + 2, xi);
@@ -459,10 +464,6 @@ inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& 
     S b32 = (1 - b * b) * sqrt(1 - b * b);
     S bct = b * ct;
     S bst = b * st;
-
-    // Recurse
-    Vector<S> result((ydeg + 1) * (ydeg + 1));
-    result.setZero();
 
     // Case 2 (special)
     int sgn = b > 0 ? -1 : b < 0 ? 1 : 0;
@@ -618,13 +619,16 @@ inline Vector<S> T(const int ydeg, const S& b, const S& theta, const Vector<S>& 
 template <typename T>
 inline Vector<T> Q(const int ydeg, const Vector<T>& lam) {
 
-    // Pre-compute H
-    Matrix<T> HIntegral = H(ydeg + 2, lam);
-
     // Allocate
     Vector<T> result((ydeg + 1) * (ydeg + 1));
     result.setZero();
     
+    // Check for trivial result
+    if (lam.size() == 0) return result;
+
+    // Pre-compute H
+    Matrix<T> HIntegral = H(ydeg + 2, lam);
+
     // Note that the linear term is special
     result(2) = pairdiff(lam) / 3.0;
 
@@ -650,6 +654,13 @@ inline Vector<T> Q(const int ydeg, const Vector<T>& lam) {
 */
 template <typename T>
 inline Vector<T> P(const int ydeg, const T& bo, const T& ro, const Vector<T>& kappa) {
+
+    // Check for trivial result
+    Vector<T> result((ydeg + 1) * (ydeg + 1));
+    if (kappa.size() == 0) {
+        result.setZero();
+        return result;
+    }
 
     // Basic variables
     T delta = (bo - ro) / (2 * ro);
@@ -686,8 +697,6 @@ inline Vector<T> P(const int ydeg, const T& bo, const T& ro, const Vector<T>& ka
     Vector<T> JIntegral = J(ydeg + 1, k2, km2, kappa, s1, s2, c1, q2, integrals.F, integrals.E);
 
     // Now populate the P array
-    Vector<T> result((ydeg + 1) * (ydeg + 1));
-
     int n = 0;
     int mu, nu;
     for (int l = 0; l < ydeg + 1; ++l) {
@@ -792,8 +801,6 @@ inline Vector<T> P(const int ydeg, const T& bo, const T& ro, const Vector<T>& ka
     return result;
 
 }
-
-
 
 } // namespace primitive
 } // namespace starry

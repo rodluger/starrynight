@@ -84,7 +84,7 @@ these singular points.
 #define STARRY_PAL_BO_EQUALS_ONE_MINUS_RO_TOL  1e-3
 
 // Number of Gaussian-Legendre quadrature points for numerical integration
-#define STARRY_QUAD_POINTS 50
+#define STARRY_QUAD_POINTS 100
 
 
 } // namespace constants

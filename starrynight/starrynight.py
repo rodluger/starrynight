@@ -1,3 +1,4 @@
+from . import c
 from .utils import *
 from .geometry import get_angles
 from .primitive import compute_P, compute_T, compute_Q
@@ -123,13 +124,13 @@ class StarryNight(object):
         # Ingest
         self.ingest(b, theta, bo, ro)
 
+        # Illumination matrix
+        self.IA1 = self.illum().dot(self.A1)
+
         # Get integration code & limits
         self.kappa, self.lam, self.xi, self.code = get_angles(
             self.b, self.theta, self.costheta, self.sintheta, self.bo, self.ro,
         )
-
-        # Illumination matrix
-        self.IA1 = self.illum().dot(self.A1)
 
         # Compute the three primitive integrals if necessary
         if self.code not in [

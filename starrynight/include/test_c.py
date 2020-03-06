@@ -578,17 +578,18 @@ if __name__ == "__main__":
     import cases
     import starrynight
 
+    ydeg = 3
+    S = starrynight.StarryNight(ydeg)
     for CASE in cases.CASE:
+
         for i, case in enumerate(tqdm(CASE)):
 
+            # Check angles
             b, theta, bo, ro = case
-
             kappa, lam, xi, code = c.get_angles(b, theta, bo, ro)
-
             kappa_, lam_, xi_, code_ = starrynight.geometry.get_angles(
                 b, theta, np.cos(theta), np.sin(theta), bo, ro
             )
-
             try:
                 assert np.allclose(kappa, kappa_), "kappa"
                 assert np.allclose(lam, lam_), "lam"
@@ -597,3 +598,18 @@ if __name__ == "__main__":
             except:
                 breakpoint()
 
+            # Check integrals
+            bs0T = np.zeros((ydeg + 2) ** 2)
+            s0T, code, _, _, _, _ = c.s0T(ydeg, b, theta, bo, ro, bs0T)
+            S.precompute(b, theta, bo, ro)
+            if S.P is None:
+                s0T_ = np.zeros((ydeg + 2) ** 2)
+            else:
+                s0T_ = S.P + S.Q + S.T
+            try:
+                assert np.allclose(s0T, s0T_)
+            except:
+                plt.plot(s0T)
+                plt.plot(s0T_, lw=1)
+                plt.show()
+                breakpoint()
