@@ -525,7 +525,7 @@ class IncompleteEllipticIntegrals {
         // Helper vars
         phi.array() = 0.5 * (kappa.array() - pi<T>());
         for (size_t i = 0; i < K; ++i) {
-          phi(i) = angle_mod(phi(i), A(pi<T>()));
+          phi(i) = angle(phi(i), A(pi<T>()));
         }
         coskap.array() = cos(kappa.array());
         cosphi.array() = cos(phi.array());

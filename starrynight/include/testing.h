@@ -357,3 +357,36 @@ m.def("get_roots", [](const double& b_, const double& theta_, const double& bo_,
 
     return py::make_tuple(result_value, result_deriv0, result_deriv1, result_deriv2, result_deriv3);
 });
+
+// The root solver for the occultation problem
+m.def("get_angles", [](const double& b_, const double& theta_, const double& bo_, const double &ro_) {
+
+
+    // Seed the derivatives
+    ADScalar<double, 4> b, theta, bo, ro;
+    b.value() = b_;
+    b.derivatives() = Vector<double>::Unit(4, 0);
+    theta.value() = theta_;
+    theta.derivatives() = Vector<double>::Unit(4, 1);
+    bo.value() = bo_;
+    bo.derivatives() = Vector<double>::Unit(4, 2);
+    ro.value() = ro_;
+    ro.derivatives() = Vector<double>::Unit(4, 3);
+
+    // Compute
+    ADScalar<double, 4> sintheta = sin(theta), costheta = cos(theta);
+    Vector<ADScalar<double, 4>> kappa, lam, xi;
+    int code = get_angles(b, theta, costheta, sintheta, bo, ro, kappa, lam, xi);
+
+    // Return only the *values*
+    Vector<double> kappa_value(kappa.size());
+    for (int i = 0; i < kappa.size(); ++i) kappa_value(i) = kappa(i).value();
+    Vector<double> lam_value(lam.size());
+    for (int i = 0; i < lam.size(); ++i) lam_value(i) = lam(i).value();
+    Vector<double> xi_value(xi.size());
+    for (int i = 0; i < xi.size(); ++i) xi_value(i) = xi(i).value();
+
+    return py::make_tuple(kappa_value, lam_value, xi_value, code);
+
+});
+

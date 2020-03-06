@@ -571,5 +571,25 @@ def test_roots(plot=False):
 
 if __name__ == "__main__":
 
-    test_roots()
+    import cases
+    import starrynight
+
+    for CASE in cases.CASE:
+        for i, case in enumerate(tqdm(CASE)):
+
+            b, theta, bo, ro = case
+
+            kappa, lam, xi, code = c.get_angles(b, theta, bo, ro)
+
+            kappa_, lam_, xi_, code_ = starrynight.geometry.get_angles(
+                b, theta, np.cos(theta), np.sin(theta), bo, ro
+            )
+
+            try:
+                assert np.allclose(kappa, kappa_), "kappa"
+                assert np.allclose(lam, lam_), "lam"
+                assert np.allclose(xi, xi_), "xi"
+                assert code == code_, "code"
+            except:
+                breakpoint()
 

@@ -40,12 +40,12 @@ template <typename T>
 inline Vector<T> sort_phi(const T& b, const T& theta, const T& costheta, const T& sintheta, const T& bo, const T& ro, const Vector<T>& phi_) {
 
     // First ensure the range is correct
-    T phi1 = angle_mod(phi_(0), T(2.0 * pi<T>()));
-    T phi2 = angle_mod(phi_(1), T(2.0 * pi<T>()));
+    T phi1 = angle(phi_(0));
+    T phi2 = angle(phi_(1));
     Vector<T> phi(2);
     phi << phi1, phi2;
     if (phi(1) < phi(0))
-        phi << phi(0), phi(1) + 2 * pi<T>();
+        phi(1) += 2 * pi<T>();
 
     // Now take the midpoint and check that it's on-planet and on the
     // dayside. If not, we swap the integration limits.
@@ -53,9 +53,9 @@ inline Vector<T> sort_phi(const T& b, const T& theta, const T& costheta, const T
     T x = ro * cos(phim);
     T y = bo + ro * sin(phim);
     if ((x * x + y * y > 1) || !on_dayside(b, theta, costheta, sintheta, x, y))
-        phi << angle_mod(phi2, T(2.0 * pi<T>())), angle_mod(phi1, T(2.0 * pi<T>()));
+        phi << angle(phi2), angle(phi1);
     if (phi(1) < phi(0))
-        phi << phi(0), phi(1) + 2 * pi<T>();
+        phi(1) += 2 * pi<T>();
     return phi;
 
 }
@@ -74,12 +74,13 @@ inline Vector<T> sort_phi(const T& b, const T& theta, const T& costheta, const T
 template <typename T>
 inline Vector<T> sort_xi(const T& b, const T& theta, const T& costheta, const T& sintheta, const T& bo, const T& ro, const Vector<T>& xi_) {
 
-    T xi1 = angle_mod(xi_(0), T(2.0 * pi<T>()));
-    T xi2 = angle_mod(xi_(1), T(2.0 * pi<T>()));
+    T xi1 = angle(xi_(0));
+    T xi2 = angle(xi_(1));
     Vector<T> xi(2);
-    xi << xi1, xi2;
-    if (xi(0) < xi(1))
-        xi << xi(1), xi(0) + 2 * pi<T>();
+    if (xi1 > xi2)
+        xi << xi1, xi2;
+    else
+        xi << xi2, xi1;
     return xi;
 
 }
@@ -96,12 +97,12 @@ template <typename T>
 inline Vector<T> sort_lam(const T& b, const T& theta, const T& costheta, const T& sintheta, const T& bo, const T& ro, const Vector<T>& lam_) {
 
     // First ensure the range is correct
-    T lam1 = angle_mod(lam_(0), T(2.0 * pi<T>()));
-    T lam2 = angle_mod(lam_(1), T(2.0 * pi<T>()));
+    T lam1 = angle(lam_(0));
+    T lam2 = angle(lam_(1));
     Vector<T> lam(2);
     lam << lam1, lam2;
     if (lam(1) < lam(0))
-        lam << lam(0), lam(1) + 2 * pi<T>();
+        lam(1) += 2 * pi<T>();
 
     // Now take the midpoint and ensure it is inside
     // the occultor *and* on the dayside. If not, swap
@@ -109,10 +110,10 @@ inline Vector<T> sort_lam(const T& b, const T& theta, const T& costheta, const T
     T lamm = lam.mean();
     T x = cos(lamm);
     T y = sin(lamm);
-    if ((x * x + (y - bo) * (y - bo) > ro * ro) || !on_dayside(b, theta, costheta, sintheta, (1 - STARRY_ANGLE_TOL) * x, (1 - STARRY_ANGLE_TOL) * y))
-        lam << angle_mod(lam2, T(2.0 * pi<T>())), angle_mod(lam1, T(2.0 * pi<T>()));
+    if ((x * x + (y - bo) * (y - bo) > ro * ro) || !on_dayside(b, theta, costheta, sintheta, T((1 - STARRY_ANGLE_TOL) * x), T((1 - STARRY_ANGLE_TOL) * y)))
+        lam << angle(lam2), angle(lam1);
     if (lam(1) < lam(0))
-        lam << lam(0), lam(1) + 2 * pi<T>();
+        lam(1) += 2 * pi<T>();
     return lam;
 
 }
@@ -366,6 +367,502 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
     return result;
 
 }   
+
+template <typename T>
+inline int get_angles(const T& b, const T& theta, const T& costheta, const T& sintheta, const T& bo_, const T& ro, Vector<T>& kappa, Vector<T>& lam, Vector<T>& xi) {
+
+    // We may need to adjust this, so make a copy
+    T bo = bo_;
+
+    // Helper angle
+    Vector<T> phi;
+
+    // Trivial cases
+    if (bo <= ro - 1 + STARRY_COMPLETE_OCC_TOL) {
+
+        // Complete occultation
+        kappa.setZero(0);
+        lam.setZero(0);
+        xi.setZero(0);
+        return FLUX_ZERO;
+
+    } else if (bo >= 1 + ro - STARRY_NO_OCC_TOL) {
+
+        // No occultation
+        kappa.setZero(0);
+        lam.setZero(0);
+        xi.setZero(0);
+        return FLUX_SIMPLE_REFL;
+    }
+
+    // Hack. This grazing configuration leads to instabilities
+    // in the root solver. Let's avoid it.
+    if ((1 - ro < bo) && (bo < 1 - ro + STARRY_GRAZING_TOL))
+        bo = 1 - ro + STARRY_GRAZING_TOL;
+
+    // Get the points of intersection between the occultor & terminator
+    // These are the roots to a quartic equation.
+    T xo = bo * sintheta;
+    T yo = bo * costheta;
+    Vector<T> x = get_roots(b, theta, costheta, sintheta, bo, ro);
+    int nroots = x.size();
+
+    // P-Q
+    if (nroots == 0) {
+
+        // Trivial: use the standard starry algorithm
+        kappa.setZero(0);
+        lam.setZero(0);
+        xi.setZero(0);
+
+        if ((abs(1 - ro) <= bo) && (bo <= 1 + ro)) {
+
+            // The occultor intersects the limb at this point
+            T q = (1 - ro * ro + bo * bo) / (2 * bo);
+            T xp = (1 - STARRY_ANGLE_TOL) * sqrt(1 - q * q);
+            T yp = (1 - STARRY_ANGLE_TOL) * q;
+
+            if (on_dayside(b, theta, costheta, sintheta, xp, yp)) {
+
+                // This point is guaranteed to be on the night side
+                // We're going to check if it's under the occultor or not
+                xp = (1 - STARRY_ANGLE_TOL) * cos(theta + 3 * pi<T>() / 2);
+                yp = (1 - STARRY_ANGLE_TOL) * sin(theta + 3 * pi<T>() / 2);
+
+                if (xp * xp + (yp - bo) * (yp - bo) <= ro * ro) {
+
+                    // The occultor is blocking some daylight
+                    // and all of the night side
+                    return FLUX_SIMPLE_OCC;
+
+                } else {
+
+                    // The occultor is only blocking daylight
+                    return FLUX_SIMPLE_OCC_REFL;
+                
+                }
+
+            } else {
+
+                // This point is guaranteed to be on the day side
+                // We're going to check if it's under the occultor or not
+                xp = (1 - STARRY_ANGLE_TOL) * cos(theta + pi<T>() / 2);
+                yp = (1 - STARRY_ANGLE_TOL) * sin(theta + pi<T>() / 2);
+
+                if (xp * xp + (yp - bo) * (yp - bo) <= ro * ro) {
+
+                    // The occultor is blocking some night side
+                    // and all of the day side
+                    return FLUX_ZERO;
+
+                } else {
+
+                    // The occultor is only blocking the night side
+                    return FLUX_SIMPLE_REFL;
+
+                }
+
+            }
+
+        } else {
+
+            // The occultor does not intersect the limb or the terminator
+            if (on_dayside(b, theta, costheta, sintheta, T(0.0), bo)) {
+
+                // The occultor is only blocking daylight
+                return FLUX_SIMPLE_OCC_REFL;
+
+            } else {
+
+                // The occultor is only blocking the night side
+                return FLUX_SIMPLE_REFL;
+
+            }
+
+        }
+
+    // P-Q-T
+    } else if (nroots == 1) {
+
+        // PHI
+        // ---
+
+        // Angle of intersection with limb
+        T phi_l = asin((1 - ro * ro - bo * bo) / (2 * bo * ro));
+        // There are always two points; always pick the one
+        // that's on the dayside for definiteness
+        if (!on_dayside(
+            b,
+            theta,
+            costheta,
+            sintheta,
+            T((1 - STARRY_ANGLE_TOL) * ro * cos(phi_l)),
+            T((1 - STARRY_ANGLE_TOL) * (bo + ro * sin(phi_l)))
+        ))
+            phi_l = pi<T>() - phi_l;
+
+        // Angle of intersection with the terminator
+        T phi_t = theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo);
+
+        // Now ensure phi *only* spans the dayside.
+        phi.resize(2);
+        phi << phi_l, phi_t;
+        phi = sort_phi(b, theta, costheta, sintheta, bo, ro, phi);
+        kappa.resize(phi.size());
+        kappa.array() = phi.array() + pi<T>() / 2;
+
+        // LAMBDA
+        // ------
+
+        // Angle of intersection with occultor
+        T lam_o = asin((1 - ro * ro + bo * bo) / (2 * bo));
+        // There are always two points; always pick the one
+        // that's on the dayside for definiteness
+        if (not on_dayside(
+            b,
+            theta,
+            costheta,
+            sintheta,
+            T((1 - STARRY_ANGLE_TOL) * cos(lam_o)),
+            T((1 - STARRY_ANGLE_TOL) * sin(lam_o))
+        ))
+            lam_o = pi<T>() - lam_o;
+
+        // Angle of intersection with the terminator
+        T lam_t = theta;
+        // There are always two points; always pick the one
+        // that's inside the occultor
+        if (cos(lam_t) * cos(lam_t) + (sin(lam_t) - bo) * (sin(lam_t) - bo) > ro * ro)
+            lam_t = pi<T>() + theta;
+
+        // Now ensure lam *only* spans the inside of the occultor.
+        lam.resize(2);
+        lam << lam_o, lam_t;
+        lam = sort_lam(b, theta, costheta, sintheta, bo, ro, lam);
+
+        // XI
+        // --
+
+        // Angle of intersection with occultor
+        T xi_o = atan2(sqrt(1 - x(0) * x(0)), x(0));
+
+        // Angle of intersection with the limb
+        T xi_l = ((1 - xo) * (1 - xo) + yo * yo < ro * ro) ? 0 : pi<T>();
+
+        // Now ensure xi *only* spans the inside of the occultor.
+        xi.resize(2);
+        xi << xi_l, xi_o;
+        xi = sort_xi(b, theta, costheta, sintheta, bo, ro, xi);
+
+        // In all cases, we're computing the dayside occulted flux
+        return FLUX_DAY_OCC;
+
+    // P-T
+    } else if (nroots == 2) {
+
+        // Angles are easy
+        lam.setZero(0);
+        phi.resize(2);
+        T phi0 = angle(T(theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo)));
+        T phi1 = angle(T(theta + atan2(b * sqrt(1 - x(1) * x(1)) - yo, x(1) - xo)));
+        if (phi0 > phi1)
+            phi << phi1, phi0;
+        else
+            phi << phi0, phi1;
+        xi.resize(2);
+        T xi0 = angle(T(atan2(sqrt(1 - x(0) * x(0)), x(0))));
+        T xi1 = angle(T(atan2(sqrt(1 - x(1) * x(1)), x(1))));
+        if (xi0 > xi1)
+            xi << xi1, xi0;
+        else
+            xi << xi0, xi1;
+
+        // Cases
+        if (bo <= 1 - ro) {
+
+            // No intersections with the limb (easy)
+            phi = sort_phi(b, theta, costheta, sintheta, bo, ro, phi);
+            kappa.resize(phi.size());
+            kappa.array() = phi.array() + pi<T>() / 2;
+            xi = sort_xi(b, theta, costheta, sintheta, bo, ro, xi);
+            return FLUX_DAY_OCC;
+
+        } else {
+
+            // The occultor intersects the limb, so we need to
+            // integrate along the simplest path.
+
+            // 1. Rotate the points of intersection into a frame where the
+            // semi-major axis of the terminator ellipse lies along the x axis
+            // We're going to choose xi(0) to be the rightmost point in
+            // this frame, so that the integration is counter-clockwise along
+            // the terminator to xi(1).
+            Vector<T> x(2), y(2), xr(2);
+            x.array() = costheta * cos(xi.array()) - b * sintheta * sin(xi.array());
+            y.array() = sintheta * cos(xi.array()) + b * costheta * sin(xi.array());
+            xr.array() = x.array() * costheta + y.array() * sintheta;
+            if (xr(1) > xr(0)) {
+                Vector<T> tmp(2);
+                tmp << xi(1), xi(0);
+                xi = tmp;
+            }
+
+            // 2. Now we need the point corresponding to xi(1) to be the same as the
+            // point corresponding to phi(0) in order for the path to be continuous
+            T x_xi1 = costheta * cos(xi(1)) - b * sintheta * sin(xi(1));
+            T y_xi1 = sintheta * cos(xi(1)) + b * costheta * sin(xi(1));
+            T x_phi0 = ro * cos(phi(0));
+            T y_phi0 = bo + ro * sin(phi(0));
+            T x_phi1 = ro * cos(phi(1));
+            T y_phi1 = bo + ro * sin(phi(1));
+            T d0 = (x_xi1 - x_phi0) * (x_xi1 - x_phi0) + (y_xi1 - y_phi0) * (y_xi1 - y_phi0);
+            T d1 = (x_xi1 - x_phi1) * (x_xi1 - x_phi1) + (y_xi1 - y_phi1) * (y_xi1 - y_phi1);
+            if (d1 < d0) {
+                Vector<T> tmp(2);
+                tmp << phi(1), phi(0);
+                phi = tmp;
+            }
+
+            // 3. Compare the *curvature* of the two sides of the
+            // integration area. The curvatures are similar (i.e., same sign)
+            // when cos(theta) < 0, in which case we must integrate *clockwise* along P.
+            if (costheta < 0) {
+                // Integrate *clockwise* along P
+                if (phi(0) < phi(1))
+                    phi(0) += 2 * pi<T>();
+            } else {
+                // Integrate *counter-clockwise* along P
+                if (phi(1) < phi(0))
+                    phi(1) += 2 * pi<T>();
+            }
+
+            // 4. Determine the integration code. Let's identify the midpoint
+            // along each integration path and average their (x, y)
+            // coordinates to determine what kind of region we are
+            // bounding.
+            T xim = xi.mean();
+            T x_xi = costheta * cos(xim) - b * sintheta * sin(xim);
+            T y_xi = sintheta * cos(xim) + b * costheta * sin(xim);
+            T phim = phi.mean();
+            T x_phi = ro * cos(phim);
+            T y_phi = bo + ro * sin(phim);
+            T xp = 0.5 * (x_xi + x_phi);
+            T yp = 0.5 * (y_xi + y_phi);
+            if (on_dayside(b, theta, costheta, sintheta, xp, yp)) {
+                if (xp * xp + (yp - bo) * (yp - bo) < ro * ro) {
+                    // Dayside under occultor.
+                    // We need to reverse the integration path, since
+                    // the terminator is *under* the arc along the limb
+                    // and we should instead start at the *leftmost* xi
+                    // value.
+                    Vector<T> tmp(2);
+                    tmp << phi(1), phi(0);
+                    phi = tmp;
+                    kappa.resize(phi.size());
+                    kappa.array() = phi.array() + pi<T>() / 2;
+                    tmp << xi(1), xi(0);
+                    xi = tmp;
+                    return FLUX_DAY_OCC;
+                } else {
+                    // Dayside visible
+                    if (b < 0) {
+                        Vector<T> tmp(2);
+                        tmp << phi(1), phi(0);
+                        phi = tmp;
+                        tmp << xi(1), xi(0);
+                        xi = tmp;
+                    }
+                    kappa.resize(phi.size());
+                    kappa.array() = phi.array() + pi<T>() / 2;
+                    return FLUX_DAY_VIS;
+                }
+            } else {
+                if (xp * xp + (yp - bo) * (yp - bo) < ro * ro) {
+                    // Nightside under occultor
+                    kappa.resize(phi.size());
+                    kappa.array() = phi.array() + pi<T>() / 2;
+                    return FLUX_NIGHT_OCC;
+                } else {
+                    // Nightside visible
+                    kappa.resize(phi.size());
+                    kappa.array() = phi.array() + pi<T>() / 2;
+                    return FLUX_NIGHT_VIS;
+                }
+            }
+        }
+
+    // There's a pathological case with 3 roots
+    } else if (nroots == 3) {
+
+        // Pre-compute some angles
+        std::sort(x.data(), x.data() + x.size());
+        T phi_l = asin((1 - ro * ro - bo * bo) / (2 * bo * ro));
+        T lam_o = asin((1 - ro * ro + bo * bo) / (2 * bo));
+        phi.resize(4);
+        xi.resize(4);
+        lam.resize(2);
+
+        // We need to do this case-by-case
+        // TODO: This section is really messy / cumbersome. Clean it up.
+        if (b > 0) {
+
+            if ((-1 - xo) * (-1 - xo) + yo * yo < ro * ro) {
+
+                Vector<T> tmp(3);
+                tmp << x(2), x(1), x(0);
+                x = tmp;
+
+                phi(0) = angle(T(theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo)));
+                phi(1) = angle(T(theta + atan2(b * sqrt(1 - x(1) * x(1)) - yo, x(1) - xo)));
+                phi(2) = angle(T(theta + atan2(b * sqrt(1 - x(2) * x(2)) - yo, x(2) - xo)));
+                phi(3) = angle(phi_l);
+                while (phi(1) < phi(0))
+                    phi(1) += 2 * pi<T>();
+                while (phi(2) < phi(1))
+                    phi(2) += 2 * pi<T>();
+                while (phi(3) < phi(2))
+                    phi(3) += 2 * pi<T>();
+
+                xi << angle(atan2(sqrt(1 - x(1) * x(1)), x(1))), 
+                      angle(atan2(sqrt(1 - x(0) * x(0)), x(0))), 
+                      pi<T>(),
+                      angle(atan2(sqrt(1 - x(2) * x(2)), x(2)));
+
+                lam << angle(lam_o), angle(pi<T>() + theta);
+                if (lam(1) < lam(0))
+                    lam(1) += 2 * pi<T>();
+
+            } else {
+
+                Vector<T> tmp(3);
+                tmp << x(1), x(0), x(2);
+                x = tmp;
+
+                phi(0) = angle(T(theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo)));
+                phi(1) = angle(T(theta + atan2(b * sqrt(1 - x(1) * x(1)) - yo, x(1) - xo)));
+                phi(2) = angle(pi<T>() - phi_l);
+                phi(3) = angle(T(theta + atan2(b * sqrt(1 - x(2) * x(2)) - yo, x(2) - xo)));
+                while (phi(1) < phi(0))
+                    phi(1) += 2 * pi<T>();
+                while (phi(2) < phi(1))
+                    phi(2) += 2 * pi<T>();
+                while (phi(3) < phi(2))
+                    phi(3) += 2 * pi<T>();
+
+                xi << angle(atan2(sqrt(1 - x(1) * x(1)), x(1))), 
+                      angle(atan2(sqrt(1 - x(0) * x(0)), x(0))), 
+                      angle(atan2(sqrt(1 - x(2) * x(2)), x(2))), 
+                      0.0;
+
+                lam << angle(theta), angle(pi<T>() - lam_o);
+                if (lam(1) < lam(0))
+                    lam(1) += 2 * pi<T>();
+
+            }
+
+            kappa.resize(phi.size());
+            kappa.array() = phi.array() + pi<T>() / 2;
+            return FLUX_TRIP_DAY_OCC;
+
+        } else {
+
+            if ((-1 - xo) * (-1 - xo) + yo * yo < ro * ro) {
+
+                Vector<T> tmp(3);
+                tmp << x(1), x(2), x(0);
+                x = tmp;
+
+                phi(0) = angle(T(theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo)));
+                phi(1) = angle(T(theta + atan2(b * sqrt(1 - x(1) * x(1)) - yo, x(1) - xo)));
+                phi(2) = angle(pi<T>() - phi_l);
+                phi(3) = angle(T(theta + atan2(b * sqrt(1 - x(2) * x(2)) - yo, x(2) - xo)));
+                while (phi(1) < phi(0))
+                    phi(1) += 2 * pi<T>();
+                while (phi(2) < phi(1))
+                    phi(2) += 2 * pi<T>();
+                while (phi(3) < phi(2))
+                    phi(3) += 2 * pi<T>();
+
+                xi << angle(atan2(sqrt(1 - x(1) * x(1)), x(1))), 
+                      angle(atan2(sqrt(1 - x(0) * x(0)), x(0))), 
+                      angle(atan2(sqrt(1 - x(2) * x(2)), x(2))), 
+                      pi<T>();
+
+                lam << angle(pi<T>() + theta), angle(pi<T>() - lam_o);
+                if (lam(1) < lam(0))
+                    lam(1) += 2 * pi<T>();
+
+            } else {
+
+                phi(0) = angle(T(theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo)));
+                phi(1) = angle(T(theta + atan2(b * sqrt(1 - x(1) * x(1)) - yo, x(1) - xo)));
+                phi(2) = angle(T(theta + atan2(b * sqrt(1 - x(2) * x(2)) - yo, x(2) - xo)));
+                phi(3) = angle(phi_l);
+                while (phi(1) < phi(0))
+                    phi(1) += 2 * pi<T>();
+                while (phi(2) < phi(1))
+                    phi(2) += 2 * pi<T>();
+                while (phi(3) < phi(2))
+                    phi(3) += 2 * pi<T>();
+
+                xi << angle(atan2(sqrt(1 - x(1) * x(1)), x(1))), 
+                      angle(atan2(sqrt(1 - x(0) * x(0)), x(0))), 
+                      0.0,
+                      angle(atan2(sqrt(1 - x(2) * x(2)), x(2)));
+
+                lam << angle(lam_o), angle(theta);
+                if (lam(1) < lam(0))
+                    lam(1) += 2 * pi<T>();
+            }
+
+            kappa.resize(phi.size());
+            kappa.array() = phi.array() + pi<T>() / 2;
+            return FLUX_TRIP_NIGHT_OCC;
+        
+        
+        }
+
+    // And a pathological case with 4 roots
+    } else if (nroots == 4) {
+
+        lam.setZero(0);
+        phi.resize(4);
+        xi.resize(4);
+
+        phi << angle(theta + atan2(b * sqrt(1 - x(0) * x(0)) - yo, x(0) - xo)),
+               angle(theta + atan2(b * sqrt(1 - x(1) * x(1)) - yo, x(1) - xo)),
+               angle(theta + atan2(b * sqrt(1 - x(2) * x(2)) - yo, x(2) - xo)),
+               angle(theta + atan2(b * sqrt(1 - x(3) * x(3)) - yo, x(3) - xo));
+        std::sort(phi.data(), phi.data() + phi.size());
+
+        Vector<T> tmp(4);
+        tmp << phi(1), phi(0), phi(3), phi(2);
+        phi = tmp;
+        kappa.resize(phi.size());
+        kappa.array() = phi.array() + pi<T>() / 2;
+
+        xi << angle(atan2(sqrt(1 - x(0) * x(0)), x(0))),
+              angle(atan2(sqrt(1 - x(1) * x(1)), x(1))),
+              angle(atan2(sqrt(1 - x(2) * x(2)), x(2))),
+              angle(atan2(sqrt(1 - x(3) * x(3)), x(3)));
+        std::sort(xi.data(), xi.data() + xi.size());
+
+        if (b > 0) {
+            return FLUX_QUAD_NIGHT_VIS;
+        } else {
+            Vector<T> tmp(4);
+            tmp << xi(1), xi(0), xi(3), xi(2);
+            xi = tmp;
+            return FLUX_QUAD_DAY_VIS;
+        }
+
+    } else {
+
+        throw std::runtime_error("Unexpected branch in `get_angles`.");
+
+    }
+
+}
 
 } // namespace geometry
 } // namespace starry
