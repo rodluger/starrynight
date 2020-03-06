@@ -35,6 +35,7 @@ PYBIND11_MODULE(_c_ops, m) {
   using namespace starry::special;
   using namespace starry::quad;
   using namespace starry::primitive;
+  using namespace starry::geometry;
 
 # ifdef STARRY_DEBUG
 #   include "testing.h"

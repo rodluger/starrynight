@@ -9,6 +9,7 @@
 
 #include "constants.h"
 #include "utils.h"
+#include <Eigen/Eigenvalues>
 
 namespace starry {
 namespace geometry {
@@ -117,6 +118,44 @@ inline Vector<T> sort_lam(const T& b, const T& theta, const T& costheta, const T
 }
 
 /**
+    Polynomial root finder using an eigensolver.
+    `coeffs` is a vector of coefficients, highest power first.
+
+    Adapted from http://www.sgh1.net/posts/cpp-root-finder.md
+*/
+template <typename T>
+inline std::vector<std::complex<T>> eigen_roots(const std::vector<T> &coeffs)
+{
+    int N = coeffs.size();
+    int matsz = N - 1;
+    std::vector<std::complex<T>> vret;
+
+    Matrix<T> companion_mat(matsz, matsz);
+    companion_mat.setZero();
+
+    for (int n = 0; n < matsz; ++n){
+        for (int m = 0; m < matsz; ++m){
+
+            if (n == m + 1)
+                companion_mat(n, m) = 1.0;
+
+            if (m == matsz - 1)
+                companion_mat(n, m) = -coeffs[matsz - n] / coeffs[0];
+
+        }
+    }
+
+    Matrix<std::complex<T>> eig = companion_mat.eigenvalues();
+
+    for(int i = 0; i < matsz; ++i)
+        vret.push_back(eig(i));
+
+    return vret;
+
+}
+
+
+/**
     Compute the points of intersection between the occultor and the terminator.
 
 */
@@ -127,7 +166,6 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
     using Scalar = typename T::Scalar;
     using Complex = std::complex<Scalar>;
     Scalar b = b_.value();
-    Scalar theta = theta_.value();
     Scalar costheta = costheta_.value();
     Scalar sintheta = sintheta_.value();
     Scalar bo = bo_.value();
@@ -166,31 +204,31 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
     } else {
 
         // Get the roots (eigenvalue problem)
-        // TODO: Speed up these computations
-        Scalar A = (1 - b * b) * (1 - b * b);
-        Scalar B = -4 * xo * (1 - b * b);
-        Scalar C = -2 * (
+        // TODO: Pre-compute b^2, r^2, etc.
+        std::vector<Scalar> coeffs;
+        coeffs.push_back((1 - b * b) * (1 - b * b));
+        coeffs.push_back(-4 * xo * (1 - b * b));
+        coeffs.push_back(-2 * (
             b * b * b * b
             + ro * ro
             - 3 * xo * xo
             - yo * yo
             - b * b * (1 + ro * ro - xo * xo + yo * yo)
-        );
-        Scalar D = -4 * xo * (b * b - ro * ro + xo * xo + yo * yo);
-        Scalar E = (
+        ));
+        coeffs.push_back(-4 * xo * (b * b - ro * ro + xo * xo + yo * yo));
+        coeffs.push_back(
             b * b * b * b
             - 2 * b * b * (ro * ro - xo * xo + yo * yo)
             + (ro * ro - xo * xo - yo * yo) * (ro * ro - xo * xo - yo * yo)
         );
-
-        // TODO: actually compute the roots!
-        Vector<Complex> roots(4); //np.roots([A, B, C, D, E]) + 0j
+        std::vector<std::complex<Scalar>> roots = eigen_roots(coeffs);
 
         // Polish the roots using Newton's method on the *original*
         // function, which is more stable than the quartic expression.
-        Complex absfp, absfm, absf, minf, f, df, minx;
+        Complex A, B, f, df, minx;
+        Scalar absfp, absfm, absf, minf, minx_re;
         Scalar p, q, v, w, t;
-        int s;
+        Scalar s;
         for (int n = 0; n < 4; ++n) {
 
             /*
@@ -209,8 +247,8 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
                  f = y1 - y2
             */
 
-            A = sqrt(1 - roots(n) * roots(n));
-            B = sqrt(ro * ro - (roots(n) - xo) * (roots(n) - xo));
+            A = sqrt(1.0 - roots[n] * roots[n]);
+            B = sqrt(ro * ro - (roots[n] - xo) * (roots[n] - xo));
             absfp = abs(b * A - yo + B);
             absfm = abs(b * A - yo - B);
 
@@ -236,28 +274,28 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
                 // Apply Newton's method to polish the root
                 minf = INFINITY;
                 for (int k = 0; k < STARRY_ROOT_MAX_ITER; ++k) {
-                    A = sqrt(1 - roots(n) * roots(n));
-                    B = sqrt(ro * ro - (roots(n) - xo) * (roots(n) - xo));
+                    A = sqrt(1.0 - roots[n] * roots[n]);
+                    B = sqrt(ro * ro - (roots[n] - xo) * (roots[n] - xo));
                     f = b * A + s * B - yo;
                     absf = abs(f);
                     if (absf < minf) {
                         minf = absf;
-                        minx = roots(n);
+                        minx = roots[n];
                         if (minf <= STARRY_ROOT_TOL_HIGH)
                             break;
                     }
-                    df = -(b * roots(n) / A + s * (roots(n) - xo) / B);
-                    roots(n) -= f / df;
+                    df = -(b * roots[n] / A + s * (roots[n] - xo) / B);
+                    roots[n] -= f / df;
                 }
 
                 // Only keep the root if the solver actually converged
                 if (minf < STARRY_ROOT_TOL_MED) {
 
                     // Only keep the root if it's real
-                    if ((minx.imag < STARRY_ROOT_TOL_HIGH) && (abs(minx.real) <= 1)) {
+                    if ((abs(minx.imag()) < STARRY_ROOT_TOL_HIGH) && (abs(minx.real()) <= 1)) {
 
                         // Discard the (tiny) imaginary part
-                        minx = minx.real;
+                        minx_re = minx.real();
 
                         // Check that we haven't included this root already
                         bool good = true;
@@ -270,14 +308,14 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
                         if (good) {
 
                             // Store the root
-                            x(nroots) = minx;
+                            x(nroots) = minx_re;
 
                             // Now compute its derivatives
-                            q = sqrt(ro * ro - (minx - xo) * (minx - xo));
-                            p = sqrt(1 - minx * minx);
-                            v = (minx - xo) / q;
+                            q = sqrt(ro * ro - (minx_re - xo) * (minx_re - xo));
+                            p = sqrt(1 - minx_re * minx_re);
+                            v = (minx_re - xo) / q;
                             w = b / p;
-                            t = 1.0 / (-w * minx - s * v);
+                            t = 1.0 / (-w * minx_re - s * v);
                             dxdb(nroots) = -t * p;
                             dxdtheta(nroots) = -t * bo * (sintheta + s * v * costheta);
                             dxdbo(nroots) = t * (costheta - s * v * sintheta);
@@ -319,8 +357,12 @@ inline Vector<T> get_roots(const T& b_, const T& theta_, const T& costheta_, con
         }
     }
     
-    // TODO: Figure out the return ADScalar value
-    Vector<T> result;
+    // We're done!
+    Vector<T> result(nroots);
+    for (int n = 0; n < nroots; ++n) {
+        result(n).value() = x(n);
+        result(n).derivatives() = dxdb(n) * b_.derivatives() + dxdtheta(n) * theta_.derivatives() + dxdbo(n) * bo_.derivatives() + dxdro(n) * ro_.derivatives();
+    }
     return result;
 
 }   

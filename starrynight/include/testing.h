@@ -315,3 +315,45 @@ m.def("P", [](const int ydeg, const double& bo_, const double &ro_, const Vector
 
     return py::make_tuple(result_value, result_deriv0, result_deriv1, result_deriv2, result_deriv3);
 });
+
+// Generic polynomial root solver
+m.def("eigen_roots", [](const std::vector<double>& coeffs) {
+    std::vector<std::complex<double>> roots = eigen_roots(coeffs);
+    return roots;
+});
+
+// The root solver for the occultation problem
+m.def("get_roots", [](const double& b_, const double& theta_, const double& bo_, const double &ro_) {
+
+    // Seed the derivatives
+    ADScalar<double, 4> b, theta, bo, ro;
+    b.value() = b_;
+    b.derivatives() = Vector<double>::Unit(4, 0);
+    theta.value() = theta_;
+    theta.derivatives() = Vector<double>::Unit(4, 1);
+    bo.value() = bo_;
+    bo.derivatives() = Vector<double>::Unit(4, 2);
+    ro.value() = ro_;
+    ro.derivatives() = Vector<double>::Unit(4, 3);
+
+    // Compute
+    ADScalar<double, 4> sintheta = sin(theta), costheta = cos(theta);
+    Vector<ADScalar<double, 4>> result = get_roots(b, theta, costheta, sintheta, bo, ro);
+    int nroots = result.size();
+
+    // Return the value + derivs
+    Vector<double> result_value(nroots);
+    Vector<double> result_deriv0(nroots);
+    Vector<double> result_deriv1(nroots);
+    Vector<double> result_deriv2(nroots);
+    Vector<double> result_deriv3(nroots);
+    for (int i = 0; i < nroots; ++i) {
+        result_value(i) = result(i).value();
+        result_deriv0(i) = result(i).derivatives()(0);
+        result_deriv1(i) = result(i).derivatives()(1);
+        result_deriv2(i) = result(i).derivatives()(2);
+        result_deriv3(i) = result(i).derivatives()(3);
+    }
+
+    return py::make_tuple(result_value, result_deriv0, result_deriv1, result_deriv2, result_deriv3);
+});
