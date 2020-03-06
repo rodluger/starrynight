@@ -571,6 +571,10 @@ def test_roots(plot=False):
 
 if __name__ == "__main__":
 
+    # DEBUG ONLY
+    import sys
+
+    sys.path.insert(1, "../../tests")
     import cases
     import starrynight
 
