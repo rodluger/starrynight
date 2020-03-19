@@ -11,11 +11,11 @@ jobs:
   - script: |
       sudo chown -R $USER $CONDA
       . $CONDA/etc/profile.d/conda.sh
-      conda create --yes --quiet --name paparazzi python=3.7.3 pip
+      conda create --yes --quiet --name starrynight python=3.7.3 pip
     displayName: 'Setup conda'
   - script: |
       . $CONDA/etc/profile.d/conda.sh
-      conda activate paparazzi
+      conda activate starrynight
       conda install -y -q numpy scipy mkl openblas theano
       theano-cache purge
       pip install -U pip
@@ -26,7 +26,7 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       . $CONDA/etc/profile.d/conda.sh
-      conda activate paparazzi
+      conda activate starrynight
       cd $(Build.SourcesDirectory)/tex
       make
     displayName: 'Build the paper'
@@ -38,6 +38,6 @@ jobs:
       git add -f tex/ms.pdf
       git add -f tex/figures/*.pdf
       git -c user.name='azure' -c user.email='azure' commit -m "building the paper"
-      git push -q -f https://$(GITHUB_USER):$(GITHUB_API_KEY)@github.com/rodluger/paparazzi $(Build.SourceBranchName)-pdf >/dev/null 2>&1
+      git push -q -f https://$(GITHUB_USER):$(GITHUB_API_KEY)@github.com/rodluger/starrynight $(Build.SourceBranchName)-pdf >/dev/null 2>&1
     displayName: 'Upload the paper'
     #condition: contains(variables['Build.SourceVersionMessage'], '[build paper]')
