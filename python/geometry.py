@@ -1,11 +1,9 @@
 import numpy as np
-from .utils import *
+from utils import *
 
 
 def on_dayside(b, theta, costheta, sintheta, x, y):
     """Return True if a point is on the dayside."""
-    if x ** 2 + y ** 2 > 1:
-        raise ValueError("Point not on the unit disk.")
     xr = x * costheta + y * sintheta
     yr = -x * sintheta + y * costheta
     term = 1 - xr ** 2
@@ -77,12 +75,7 @@ def sort_lam(b, theta, costheta, sintheta, bo, ro, lam):
     x = np.cos(lamm)
     y = np.sin(lamm)
     if x ** 2 + (y - bo) ** 2 > ro ** 2 or not on_dayside(
-        b,
-        theta,
-        costheta,
-        sintheta,
-        (1 - STARRY_ANGLE_TOL) * x,
-        (1 - STARRY_ANGLE_TOL) * y,
+        b, theta, costheta, sintheta, x, y,
     ):
         lam = np.array([lam2, lam1]) % (2 * np.pi)
 
@@ -384,12 +377,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         # There are always two points; always pick the one
         # that's on the dayside for definiteness
         if not on_dayside(
-            b,
-            theta,
-            costheta,
-            sintheta,
-            (1 - STARRY_ANGLE_TOL) * ro * np.cos(phi_l),
-            (1 - STARRY_ANGLE_TOL) * (bo + ro * np.sin(phi_l)),
+            b, theta, costheta, sintheta, ro * np.cos(phi_l), (bo + ro * np.sin(phi_l))
         ):
             phi_l = np.pi - phi_l
 
@@ -406,14 +394,7 @@ def get_angles(b, theta, costheta, sintheta, bo, ro):
         lam_o = np.arcsin((1 - ro ** 2 + bo ** 2) / (2 * bo))
         # There are always two points; always pick the one
         # that's on the dayside for definiteness
-        if not on_dayside(
-            b,
-            theta,
-            costheta,
-            sintheta,
-            (1 - STARRY_ANGLE_TOL) * np.cos(lam_o),
-            (1 - STARRY_ANGLE_TOL) * np.sin(lam_o),
-        ):
+        if not on_dayside(b, theta, costheta, sintheta, np.cos(lam_o), np.sin(lam_o)):
             lam_o = np.pi - lam_o
 
         # Angle of intersection with the terminator

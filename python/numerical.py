@@ -1,5 +1,5 @@
 from starrynight import StarryNight
-from starrynight.geometry import get_angles
+from geometry import get_angles
 import numpy as np
 from starry._core.ops.polybasis import pTOp
 from scipy.integrate import quad

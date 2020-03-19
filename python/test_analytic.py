@@ -1,4 +1,4 @@
-from utils import compare
+from test_utils import compare
 from cases import CASE
 from numerical import Numerical
 from starrynight import StarryNight

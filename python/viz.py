@@ -1,4 +1,4 @@
-from .geometry import get_angles
+from geometry import get_angles
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc

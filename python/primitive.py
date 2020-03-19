@@ -1,7 +1,7 @@
-from .special import hyp2f1, J, ellip
-from .utils import *
-from .vieta import Vieta
-from .linear import dP2
+from special import hyp2f1, J, ellip
+from utils import *
+from vieta import Vieta
+from linear import dP2
 import matplotlib.pyplot as plt
 import numpy as np
 

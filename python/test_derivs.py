@@ -1,7 +1,7 @@
 import numpy as np
-from starrynight.special import J, pal, EllipF, EllipE, EllipJ, el2, rj
-from starrynight.primitive import compute_Q
-from starrynight.geometry import get_roots
+from special import J, pal, EllipF, EllipE, EllipJ, el2, rj
+from primitive import compute_Q
+from geometry import get_roots
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 

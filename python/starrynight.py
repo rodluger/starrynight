@@ -1,7 +1,6 @@
-from . import c
-from .utils import *
-from .geometry import get_angles
-from .primitive import compute_P, compute_T, compute_Q
+from utils import *
+from geometry import get_angles
+from primitive import compute_P, compute_T, compute_Q
 import starry
 from starry._c_ops import Ops
 from starry._core.ops.rotation import dotROp

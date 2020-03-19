@@ -1,4 +1,4 @@
-from .utils import *
+from utils import *
 from mpmath import ellipe, ellipk, ellippi
 from scipy.integrate import quad
 import numpy as np

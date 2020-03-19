@@ -1,5 +1,5 @@
 from starrynight import StarryNight
-from starrynight.viz import visualize
+from viz import visualize
 from numerical import Brute
 import numpy as np
 import pytest

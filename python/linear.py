@@ -1,5 +1,5 @@
-from .utils import *
-from .special import pal
+from utils import *
+from special import pal
 import numpy as np
 
 TWOTHIRDS = 2.0 / 3.0
