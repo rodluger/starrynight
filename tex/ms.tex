@@ -1,0 +1,60 @@
+% !TeX root = ./ms.tex
+\documentclass[modern]{aastex62}
+
+% Load the corTeX style definitions
+\input{cortex}
+
+% Bibliography stuff
+\bibliographystyle{aasjournal}
+
+% Begin!
+\begin{document}
+
+% Title
+\title{Title here}
+
+% Author list
+\author[0000-0002-0296-3826]{Rodrigo Luger}
+\email{rluger@flatironinstitute.org}
+\affil{Center~for~Computational~Astrophysics, Flatiron~Institute, New~York, NY}
+%
+
+\begin{abstract} 
+Abstract here.
+%
+\href{https://github.com/rodluger/starrynight}{\color{linkcolor}\faGithub}
+\end{abstract}
+
+%
+\section{Introduction}
+%
+Intro here \citep{Luger2019}.
+Here's an equation with a proof:
+%
+\begin{proof}{dummy}
+    \label{eq:dummy}
+    1 + 1 = 2.
+\end{proof}
+The proof is a Jupyter notebook with a formal derivation of the solution,
+an informal justification, a numerical validation, or whatever you want it
+to be.
+%
+And here's a figure with a link:
+%
+\begin{figure}[h!]
+    \begin{centering}
+    \includegraphics[width=0.5\linewidth]{figures/dummy.pdf}
+    \oscaption{pretty_function}{%
+        This is a plot of a pretty function. And at the end of this
+        caption is a symbol with a link to the \emph{exact} script
+        that generated it, hosted on \textsf{GitHub}.
+        \label{fig:dummy}
+    }
+    \end{centering}
+\end{figure}
+
+% Bibliography
+\bibliography{bib}
+
+
+\end{document}
