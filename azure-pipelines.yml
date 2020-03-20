@@ -39,4 +39,6 @@ jobs:
       git -c user.name='azure' -c user.email='azure' commit -m "building the paper"
       git push -q -f https://$GITHUB_USER:$GITHUB_API_KEY@github.com/rodluger/starrynight $(Build.SourceBranchName)-pdf 
     displayName: 'Upload the paper'
+    env:
+      GITHUB_API_KEY: $(GITHUB_API_KEY)
     
