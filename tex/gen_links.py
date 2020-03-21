@@ -4,7 +4,7 @@ import os
 
 # Generate the github links
 hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8")[:-1]
-slug = os.getenv("TRAVIS_REPO_SLUG", "user/repo")
+slug = "rodluger/starrynight"
 with open("gitlinks.tex", "w") as f:
     print(
         r"\newcommand{\codelink}[1]{\href{https://github.com/%s/blob/%s/tex/figures/#1.py}{\codeicon}\,\,}"
