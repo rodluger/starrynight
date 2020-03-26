@@ -7,7 +7,7 @@ import theano
 import theano.tensor as tt
 import theano.sparse as ts
 from theano.ifelse import ifelse
-from starry._core.utils import autocompile
+from scipy.optimize import root_scalar
 from tqdm import tqdm
 import time
 import warnings
@@ -17,218 +17,314 @@ import warnings
 plt.switch_backend("MacOSX")
 starry.config.lazy = False
 starry.config.quiet = True
-warnings.simplefilter("ignore")
+# warnings.simplefilter("ignore")
 HUGE = 1e30
 np.random.seed(1234)
+
+
+_y = tt.dvector()
+_x = tt.dvector()
+_xs = tt.dvector()
+_ys = tt.dvector()
+_zs = tt.dvector()
+_xo = tt.dvector()
+_yo = tt.dvector()
+_ro = tt.dscalar()
 
 
 class Compare(object):
     """Compare different ways of evaluating the flux."""
 
-    def __init__(self, ydeg):
-        self.ydeg = ydeg
+    def __init__(self, y):
+        self.y = y
 
     @property
-    def ydeg(self):
-        return self._ydeg
+    def y(self):
+        return self._y
 
-    @ydeg.setter
-    def ydeg(self, ydeg):
-        self._ydeg = ydeg
-        self.map_ref = starry.Map(ydeg=ydeg, reflected=True)
-        self.map_emi = starry.Map(ydeg=ydeg)
-        if ydeg > 0:
-            self.map_ref[1:, :] = 1
-            self.map_emi[1:, :] = 1
-        self._A1y = ts.dot(
-            self.map_ref.ops.A1, tt.as_tensor_variable(np.ones((ydeg + 1) ** 2))
+    @y.setter
+    def y(self, y):
+        self._y = np.array(y)
+        self.ydeg = int(np.sqrt(len(y)) - 1)
+        self.map_ref = starry.Map(ydeg=self.ydeg, reflected=True)
+        self.map_emi = starry.Map(ydeg=self.ydeg)
+        if self.ydeg > 0:
+            self.map_ref[1:, :] = y[1:]
+            self.map_emi[1:, :] = y[1:]
+        self._A1y = ts.dot(self.map_ref.ops.A1, tt.as_tensor_variable(y))
+
+        # Reset
+        self.intensity_occulted(
+            0.0, 0.0, [0.0], [0.0], [0.0], [0.0], [0.0], 0.0, reset=True
+        )
+        self.intensity(0.0, 0.0, [0.0], [0.0], [0.0], reset=True)
+        self.flux([0.0], [0.0], [0.0], [0.0], [0.0], 0.0, reset=True)
+        self.dfluxdro([0.0], [0.0], [0.0], [0.0], [0.0], 0.0, reset=True)
+        if self.ydeg > 0:
+            self.flux_emitted([0.0], [0.0], [0.0], [0.0], [0.0], 0.0, reset=True)
+            self.dfluxdro_emitted([0.0], [0.0], [0.0], [0.0], [0.0], 0.0, reset=True)
+
+    def intensity_occulted(self, y, x, xs, ys, zs, xo, yo, ro, reset=False):
+
+        if reset or not hasattr(self, "_intensity_occulted"):
+
+            def theano_code(y, x, xs, ys, zs, xo, yo, ro):
+
+                # Get the z coord
+                z = tt.sqrt(1 - x ** 2 - y ** 2)
+
+                # Compute the intensity
+                pT = self.map_ref.ops.pT(x, y, z)
+
+                # Weight the intensity by the illumination
+                # Dot the polynomial into the basis
+                intensity = tt.shape_padright(tt.dot(pT, self._A1y))
+
+                # Weight the intensity by the illumination
+                xyz = tt.concatenate(
+                    (
+                        tt.reshape(x, [1, -1]),
+                        tt.reshape(y, [1, -1]),
+                        tt.reshape(z, [1, -1]),
+                    )
+                )
+                I = self.map_ref.ops.compute_illumination(xyz, xs, ys, zs)
+                intensity = tt.switch(tt.isnan(intensity), intensity, intensity * I)[
+                    0, 0
+                ]
+
+                # Check if the point is visible
+                result = ifelse(
+                    ((x - xo) ** 2 + (y - yo) ** 2 < ro ** 2)[0],
+                    tt.as_tensor_variable(0.0).astype(tt.config.floatX),
+                    ifelse(
+                        (x ** 2 + y ** 2 > 1)[0],
+                        tt.as_tensor_variable(0.0).astype(tt.config.floatX),
+                        intensity,
+                    ),
+                )
+                return result
+
+            self._intensity_occulted = theano.function(
+                [_y, _x, _xs, _ys, _zs, _xo, _yo, _ro],
+                theano_code(_y, _x, _xs, _ys, _zs, _xo, _yo, _ro),
+            )
+
+        return self._intensity_occulted(
+            np.array([y]), np.array([x]), xs, ys, zs, xo, yo, ro
         )
 
-        # Dry run to force compile
-        self.flux()
-        self.dfluxdro()
-        self.flux_emitted()
-        self.dfluxdro_emitted()
+    def intensity(self, y, x, xs, ys, zs, reset=False):
 
-    @autocompile
-    def _intensity_theano(self, y, x, xs, ys, zs, xo, yo, ro):
+        if reset or not hasattr(self, "_intensity"):
 
-        # Get the z coord
-        z = tt.sqrt(1 - x ** 2 - y ** 2)
+            def theano_code(y, x, xs, ys, zs):
 
-        # Compute the intensity
-        pT = self.map_ref.ops.pT(x, y, z)
+                # Get the z coord (abs to prevent numerical error)
+                z = tt.sqrt(tt.abs_(1 - x ** 2 - y ** 2))
 
-        # Weight the intensity by the illumination
-        # Dot the polynomial into the basis
-        intensity = tt.shape_padright(tt.dot(pT, self._A1y))
+                # Compute the intensity
+                pT = self.map_ref.ops.pT(x, y, z)
 
-        # Weight the intensity by the illumination
-        xyz = tt.concatenate(
-            (tt.reshape(x, [1, -1]), tt.reshape(y, [1, -1]), tt.reshape(z, [1, -1]),)
-        )
-        I = self.map_ref.ops.compute_illumination(xyz, xs, ys, zs)
-        intensity = tt.switch(tt.isnan(intensity), intensity, intensity * I)[0, 0]
+                # Weight the intensity by the illumination
+                # Dot the polynomial into the basis
+                intensity = tt.shape_padright(tt.dot(pT, self._A1y))
 
-        # Check if the point is visible
-        result = ifelse(
-            ((x - xo) ** 2 + (y - yo) ** 2 < ro ** 2)[0],
-            tt.as_tensor_variable(0.0).astype(tt.config.floatX),
-            ifelse(
-                (x ** 2 + y ** 2 > 1)[0],
-                tt.as_tensor_variable(0.0).astype(tt.config.floatX),
-                intensity,
-            ),
-        )
-        return result
+                # Weight the intensity by the illumination
+                xyz = tt.concatenate(
+                    (
+                        tt.reshape(x, [1, -1]),
+                        tt.reshape(y, [1, -1]),
+                        tt.reshape(z, [1, -1]),
+                    )
+                )
+                I = self.map_ref.ops.compute_illumination(xyz, xs, ys, zs)
+                intensity = intensity * I
+                return intensity
 
-    def _intensity(self, y, x, xs, ys, zs, xo, yo, ro):
-        # Wrapper to get the dims correct
-        y = np.array([y])
-        x = np.array([x])
-        xs = np.array([xs])
-        ys = np.array([ys])
-        zs = np.array([zs])
-        xo = np.array([xo])
-        yo = np.array([yo])
-        ro = np.array(ro)
-        return self._intensity_theano(y, x, xs, ys, zs, xo, yo, ro)
+            self._intensity = theano.function(
+                [_y, _x, _xs, _ys, _zs], theano_code(_y, _x, _xs, _ys, _zs),
+            )
 
-    @autocompile
-    def _flux_theano(self, xs, ys, zs, xo, yo, ro):
-        theta = tt.zeros_like(xo)
-        zo = tt.ones_like(xo)
-        inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
-        obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
-        f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-        alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        y = tt.as_tensor_variable(np.ones((self.ydeg + 1) ** 2)).astype(
-            tt.config.floatX
-        )
-        return self.map_ref.ops.flux(
-            theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
-        )[0]
+        return self._intensity(np.array([y]), np.array([x]), xs, ys, zs)
 
-    def flux(self, xs=0, ys=0, zs=1, xo=0, yo=0, ro=0, **kwargs):
-        # Compute the flux analytically
-        xs = np.atleast_1d(xs)
-        ys = np.atleast_1d(ys)
-        zs = np.atleast_1d(zs)
-        xo = np.atleast_1d(xo)
-        yo = np.atleast_1d(yo)
-        ro = np.array(ro)
-        return self._flux_theano(xs, ys, zs, xo, yo, ro)
+    def flux(self, xs, ys, zs, xo, yo, ro, reset=False):
 
-    @autocompile
-    def _dfluxdro_theano(self, xs, ys, zs, xo, yo, ro):
-        theta = tt.zeros_like(xo)
-        zo = tt.ones_like(xo)
-        inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
-        obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
-        f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-        alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        y = tt.as_tensor_variable(np.ones((self.ydeg + 1) ** 2)).astype(
-            tt.config.floatX
-        )
-        return theano.grad(
-            self.map_ref.ops.flux(
-                theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
-            )[0],
-            ro,
-        )
+        if reset or not hasattr(self, "_flux"):
 
-    def dfluxdro(self, xs=0, ys=0, zs=1, xo=0, yo=0, ro=0, **kwargs):
-        # Compute the flux analytically
-        xs = np.atleast_1d(xs)
-        ys = np.atleast_1d(ys)
-        zs = np.atleast_1d(zs)
-        xo = np.atleast_1d(xo)
-        yo = np.atleast_1d(yo)
-        ro = np.array(ro)
-        return self._dfluxdro_theano(xs, ys, zs, xo, yo, ro)
+            def theano_code(xs, ys, zs, xo, yo, ro):
+                theta = tt.zeros_like(xo)
+                zo = tt.ones_like(xo)
+                inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
+                obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
+                f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
+                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
+                return self.map_ref.ops.flux(
+                    theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
+                )[0]
 
-    @autocompile
-    def _flux_emitted_theano(self, xo, yo, ro):
-        theta = tt.zeros_like(xo)
-        zo = tt.ones_like(xo)
-        inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
-        obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
-        f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-        alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        y = tt.as_tensor_variable(np.ones((self.ydeg + 1) ** 2)).astype(
-            tt.config.floatX
-        )
-        return self.map_emi.ops.flux(theta, xo, yo, zo, ro, inc, obl, y, u, f, alpha)[0]
+            self._flux = theano.function(
+                [_xs, _ys, _zs, _xo, _yo, _ro],
+                theano_code(_xs, _ys, _zs, _xo, _yo, _ro),
+            )
 
-    def flux_emitted(self, xo=0, yo=0, ro=0, **kwargs):
-        # Compute the flux in emission (starry 1.0)
-        xo = np.atleast_1d(xo)
-        yo = np.atleast_1d(yo)
-        ro = np.array(ro)
-        return self._flux_emitted_theano(xo, yo, ro)
+        return self._flux(xs, ys, zs, xo, yo, ro)
 
-    @autocompile
-    def _dfluxdro_emitted_theano(self, xo, yo, ro):
-        theta = tt.zeros_like(xo)
-        zo = tt.ones_like(xo)
-        inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
-        obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
-        f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-        alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
-        y = tt.as_tensor_variable(np.ones((self.ydeg + 1) ** 2)).astype(
-            tt.config.floatX
-        )
-        return theano.grad(
-            self.map_emi.ops.flux(theta, xo, yo, zo, ro, inc, obl, y, u, f, alpha)[0],
-            ro,
-        )
+    def dfluxdro(self, xs, ys, zs, xo, yo, ro, reset=False):
 
-    def dfluxdro_emitted(self, xo=0, yo=0, ro=0, **kwargs):
-        # Compute the flux in emission (starry 1.0)
-        xo = np.atleast_1d(xo)
-        yo = np.atleast_1d(yo)
-        ro = np.array(ro)
-        return self._dfluxdro_emitted_theano(xo, yo, ro)
+        if reset or not hasattr(self, "_dfluxdro"):
 
-    def flux_quad(
-        self, xs=0, ys=0, zs=1, xo=0, yo=0, ro=0, epsabs=1e-8, epsrel=1e-8, **kwargs
-    ):
-        # Compute the double integral numerically
-        val, err = dblquad(
-            self._intensity,
-            -1,
-            1,
-            lambda x: -np.sqrt(1 - x ** 2),
-            lambda x: np.sqrt(1 - x ** 2),
-            epsabs=epsabs,
-            epsrel=epsrel,
-            args=(xs, ys, zs, xo, yo, ro),
-        )
-        return val, err
+            def theano_code(xs, ys, zs, xo, yo, ro):
+                theta = tt.zeros_like(xo)
+                zo = tt.ones_like(xo)
+                inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
+                obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
+                f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
+                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
+                return theano.grad(
+                    self.map_ref.ops.flux(
+                        theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
+                    )[0],
+                    ro,
+                )
 
-    def flux_brute(self, xs=0, ys=0, zs=1, xo=0, yo=0, ro=0, res=999, **kwargs):
+            self._dfluxdro = theano.function(
+                [_xs, _ys, _zs, _xo, _yo, _ro],
+                theano_code(_xs, _ys, _zs, _xo, _yo, _ro),
+            )
+
+        return self._dfluxdro(xs, ys, zs, xo, yo, ro)
+
+    def flux_emitted(self, xs, ys, zs, xo, yo, ro, reset=False):
+
+        if reset or not hasattr(self, "_flux_emitted"):
+
+            def theano_code(xo, yo, ro):
+                theta = tt.zeros_like(xo)
+                zo = tt.ones_like(xo)
+                inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
+                obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
+                f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
+                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
+                return self.map_emi.ops.flux(
+                    theta, xo, yo, zo, ro, inc, obl, y, u, f, alpha
+                )[0]
+
+            self._flux_emitted = theano.function(
+                [_xo, _yo, _ro], theano_code(_xo, _yo, _ro),
+            )
+
+        return self._flux_emitted(xo, yo, ro)
+
+    def dfluxdro_emitted(self, xs, ys, zs, xo, yo, ro, reset=False):
+
+        if reset or not hasattr(self, "_dfluxdro_emitted"):
+
+            def theano_code(xo, yo, ro):
+                theta = tt.zeros_like(xo)
+                zo = tt.ones_like(xo)
+                inc = tt.as_tensor_variable(np.pi / 2).astype(tt.config.floatX)
+                obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
+                f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
+                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
+                y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
+                return theano.grad(
+                    self.map_emi.ops.flux(
+                        theta, xo, yo, zo, ro, inc, obl, y, u, f, alpha
+                    )[0],
+                    ro,
+                )
+
+            self._dfluxdro_emitted = theano.function(
+                [_xo, _yo, _ro], theano_code(_xo, _yo, _ro),
+            )
+
+        return self._dfluxdro_emitted(xo, yo, ro)
+
+    def flux_brute(self, xs, ys, zs, xo, yo, ro, res=999, **kwargs):
         # Compute the flux by brute force grid integration
         img = self.map_ref.render(xs=xs, ys=ys, zs=zs, res=res)
         x, y, z = self.map_ref.ops.compute_ortho_grid(res)
         idx = x ** 2 + (y - yo) ** 2 > ro ** 2
         return np.nansum(img.flat[idx]) * 4 / res ** 2
 
+    def flux_quad(
+        self,
+        xs,
+        ys,
+        zs,
+        xo,
+        yo,
+        ro,
+        epsabs=1e-6,
+        epsrel=1e-6,
+        boundaries=None,
+        **kwargs
+    ):
+        # Compute the double integral numerically
+        if boundaries is not None:
+            val = 0
+            err = 0
+            for (xa, xb, y1, y2) in boundaries:
+                val_new, err_new = dblquad(
+                    self.intensity,
+                    xa,
+                    xb,
+                    y1,
+                    y2,
+                    epsabs=epsabs,
+                    epsrel=epsrel,
+                    args=(np.atleast_1d(xs), np.atleast_1d(ys), np.atleast_1d(zs)),
+                )
+                val += val_new
+                err += err_new
+        else:
+            xa, xb, y1, y2 = (
+                -1,
+                1,
+                lambda x: -np.sqrt(1 - x ** 2),
+                lambda x: np.sqrt(1 - x ** 2),
+            )
+            val, err = dblquad(
+                self.intensity_occulted,
+                xa,
+                xb,
+                y1,
+                y2,
+                epsabs=epsabs,
+                epsrel=epsrel,
+                args=(
+                    np.atleast_1d(xs),
+                    np.atleast_1d(ys),
+                    np.atleast_1d(zs),
+                    np.atleast_1d(xo),
+                    np.atleast_1d(yo),
+                    ro,
+                ),
+            )
+
+        return val
+
     def display(
         self,
+        xs,
+        ys,
+        zs,
+        xo,
+        yo,
+        ro,
         ax=None,
-        xs=0,
-        ys=0,
-        zs=1,
-        xo=0,
-        yo=0,
-        ro=0,
         res=999,
-        cmap="plasma",
+        cmap="gray_r",
         occultor_color="k",
+        boundaries=[],
     ):
         """Render an imshow view of the map."""
         # Render
@@ -242,36 +338,53 @@ class Compare(object):
         # Mask the night side
         img[img == 0.0] = -HUGE
 
-        # Figure out limits
+        # Figure out imshow limits
         cmap = plt.get_cmap(cmap)
         cmap.set_over(occultor_color)
         cmap.set_under("k")
         vmin = np.nanmin(img[np.abs(img) < HUGE])
         vmax = np.nanmax(img[np.abs(img) < HUGE])
 
-        # Display and return
+        # Display
         if ax is None:
             fig, ax = plt.subplots(1)
+            ax.axis("off")
         ax.imshow(
             img, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax, extent=(-1, 1, -1, 1),
         )
+        ax.add_artist(plt.Circle((xo, yo), ro, edgecolor="w", color=occultor_color))
+
+        # Integration boundaries
+        for bound in boundaries:
+            xa, xb, y1, y2 = bound
+            x = np.linspace(xa, xb, 1000)
+            y1 = y1(x)
+            y2 = y2(x)
+            ax.plot(x, y1, "r-", lw=3)
+            ax.plot(x, y2, "r-", lw=3)
+            ax.plot(x[-1], y1[-1], "ro")
+            ax.plot(x[-1], y2[-1], "ro")
+            ax.plot([x[-1], x[-1]], [y1[-1], y2[-1]], "r--", lw=1)
+
         return ax
 
-    def _run(self, func, nt=1, **kwargs):
+    def _run(self, func, nt=1, *args, **kwargs):
         t = time.time()
-        val = func(**kwargs)
+        val = func(*args, **kwargs)
         return (time.time() - t) / nt, val
 
-    def compare(self, res=999, nt=1000):
+    def compare(
+        self, xs, ys, zs, xo, yo, ro, res=999, nt=1000, boundaries=None,
+    ):
         """Compare different integration schemes."""
 
         # Initialize
-        ydeg = self.ydeg
-        teval = np.zeros((6, ydeg + 1))
-        value = np.zeros((6, ydeg + 1))
+        yfull = np.array(self.y)
+        teval = np.zeros((7, ydeg + 1))
+        value = np.zeros((7, ydeg + 1))
 
         # Params for the comparison
-        kwargs = dict(xs=-1, ys=0.5, zs=0.4, xo=0.0, yo=0.7, ro=0.8)
+        kwargs = dict(xs=xs, ys=ys, zs=zs, xo=xo, yo=yo, ro=ro)
         kwargs_vec = dict(kwargs)
         for key in ["xs", "ys", "zs", "xo", "yo"]:
             kwargs_vec[key] *= np.ones(nt)
@@ -282,27 +395,43 @@ class Compare(object):
             ("starry: emitted", "C2", "-"),
             ("starry: emitted (grad)", "C3", "-"),
             ("grid", "C4", "-"),
-            ("dblquad", "C5", "-"),
+            ("dblquad (naive)", "C5", "-"),
+            ("dblquad (segmented)", "C6", "-"),
         ]
 
         # Loop over all degrees
         for l in tqdm(range(ydeg + 1)):
-            self.ydeg = l
+            self.y = yfull[: (l + 1) ** 2]
             teval[0, l], value[0, l] = self._run(self.flux, nt, **kwargs_vec)
             teval[1, l], value[1, l] = self._run(self.dfluxdro, nt, **kwargs_vec)
-            teval[2, l], value[2, l] = self._run(self.flux_emitted, nt, **kwargs_vec)
-            teval[3, l], value[3, l] = self._run(
-                self.dfluxdro_emitted, nt, **kwargs_vec
+            if l > 0:
+                teval[2, l], value[2, l] = self._run(
+                    self.flux_emitted, nt, **kwargs_vec
+                )
+                teval[3, l], value[3, l] = self._run(
+                    self.dfluxdro_emitted, nt, **kwargs_vec
+                )
+            teval[4, l], value[4, l] = self._run(self.flux_brute, res=res, **kwargs)
+            teval[5, l], value[5, l] = self._run(
+                self.flux_quad, boundaries=None, epsabs=1e-3, epsrel=1e-3, **kwargs
             )
-            teval[4, l], value[4, l] = self._run(self.flux_brute, **kwargs)
-            teval[5, l], value[5, l] = (
-                np.nan,
-                np.nan,
-            )  # TODO self._run(self.flux_quad, **kwargs)
 
-        # TODO
+            # TODO
+            teval[6, l], value[6, l] = np.nan, np.nan  # self._run(
+            # self.flux_quad, boundaries=boundaries, **kwargs
+            # )
+
+        # Zero-degree emitted light maps are limb-darkened maps,
+        # so let's just set them equal to the l = 1 result for
+        # simplicity
+        teval[2, 0], value[2, 0] = teval[2, 1], value[2, 1]
+        teval[3, 0], value[3, 0] = teval[3, 1], value[3, 1]
+
+        # Assume starry solution is error-free (TODO: verify)
         error = np.abs(value - value[0].reshape(1, -1))
-        error[:4] = 0
+        error[1] = error[0]
+        error[2] = error[0]
+        error[3] = error[0]
 
         # Marker size is proportional to log error
         def ms(error):
@@ -357,9 +486,68 @@ class Compare(object):
         # DEBUG fig.savefig("speed.pdf", bbox_inches="tight")
 
         # Restore
-        self.ydeg = ydeg
+        self.y = yfull
 
 
 if __name__ == "__main__":
-    cmp = Compare(ydeg=10)
-    cmp.compare()
+
+    # Geometric params
+    xs = -1
+    ys = 0.5
+    zs = 0.4
+    xo = 0.0
+    yo = 0.7
+    ro = 0.8
+
+    # Compute the integration boundaries
+    boundaries = []
+    theta = -np.arctan2(xs, ys)
+    b = -zs / np.sqrt(xs ** 2 + ys ** 2 + zs ** 2)
+    c = np.cos(theta)
+    s = np.sin(theta)
+    q2 = c ** 2 + b ** 2 * s ** 2
+
+    # 1: body lower limb -> body upper limb
+    xa = -(1.0 / (2.0 * yo)) * np.sqrt(4 * yo ** 2 - (1 + yo ** 2 - ro ** 2) ** 2)
+    boundaries.append(
+        (-1, xa, lambda x: -np.sqrt(1 - x ** 2), lambda x: np.sqrt(1 - x ** 2))
+    )
+
+    # 2: body lower limb -> occultor lower limb
+    xb = -np.cos(theta)
+    x = np.linspace(xa, xb, 1000)
+    boundaries.append(
+        (
+            xa,
+            xb,
+            lambda x: -np.sqrt(1 - x ** 2),
+            lambda x: yo - np.sqrt(ro ** 2 - x ** 2),
+        )
+    )
+
+    # 3: terminator -> occultor lower limb
+    def diff(x):
+        p = (x * c + b * s * np.sqrt(q2 - x ** 2)) / q2
+        y1 = p * s + b * np.sqrt(1 - p ** 2) * c
+        y2 = yo - np.sqrt(ro ** 2 - x ** 2)
+        return y1 - y2
+
+    res = root_scalar(diff, bracket=[0.36, 0.38], method="brentq", xtol=1e-16)
+    xc = res.root
+    x = np.linspace(xb, xc, 1000)
+    b = -zs / np.sqrt(xs ** 2 + ys ** 2 + zs ** 2)
+    c = np.cos(theta)
+    s = np.sin(theta)
+    q2 = c ** 2 + b ** 2 * s ** 2
+
+    def y1(x):
+        p = (x * c + b * s * np.sqrt(q2 - x ** 2)) / q2
+        return p * s + b * np.sqrt(1 - p ** 2) * c
+
+    boundaries.append((xb, xc, y1, lambda x: yo - np.sqrt(ro ** 2 - x ** 2)))
+
+    # Let's go
+    ydeg = 5
+    cmp = Compare(y=np.ones((ydeg + 1) ** 2))
+    cmp.display(xs, ys, zs, xo, yo, ro, boundaries=boundaries)
+    cmp.compare(xs, ys, zs, xo, yo, ro)

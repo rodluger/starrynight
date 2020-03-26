@@ -53,6 +53,99 @@ And here's a figure with a link:
     \end{centering}
 \end{figure}
 
+\section{Integration}
+
+Define the pairwise difference operator
+%
+\begin{align}
+    \label{eq:pairdiff}
+    \Delta \bvec{v} \equiv \sum_{i=0}^{2N} (-1)^{i + 1} v_i
+\end{align}
+%
+which sums the difference of successive pairs of values in 
+an array $\bvec{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_{2N}\}$.
+
+\newcommand{\kap}{\boldsymbol{\kappa}}
+\newcommand{\kmt}{k^{-2}}
+
+\subsection{The integral $\mathcal{J}$}
+%
+\begin{align}
+    \label{eq:J}
+    \mathcal{J}_v(k, \kap) = 
+        \int_{\frac{\kappa_i}{2}}^{\frac{\kappa_{i+1}}{2}}
+        \sin^{2v}\varphi
+        \left(1 - \kmt\sin^2\varphi\right)^\frac{3}{2} 
+        \mathrm{d}\varphi
+\end{align}
+%
+Given the lower boundary condition
+%
+\begin{proof}{J0}
+    \label{eq:J0}
+    \mathcal{J}_0(k, \kap) &= 
+        \frac{1}{3} \bigg(
+            2 (2 - \kmt) \Delta \mathbf{E}(k, \kap) + 
+            (\kmt - 1) \Delta \mathbf{F}(k, \kap) + 
+            \kmt \Delta \mathbf{z}(k, \kap)
+        \bigg)
+%
+    \nonumber \\
+%
+    \mathbf{z}(k, \boldsymbol{\kappa}) &= 
+        \sin\left(\frac{\kap}{2}\right) 
+        \cos\left(\frac{\kap}{2}\right) 
+        \sqrt{1 - \kmt \sin^2\left(\frac{\kap}{2}\right)}
+\end{proof}
+%
+and an upper boundary condition $\mathcal{J}_N$ 
+(computed by numerical integration of Equation~\ref{eq:J}),
+the values of all intermediate $J_v$ can be obtained by solving the following
+tridiagonal problem:
+%
+\begin{proof}{Jtri}
+    \label{eq:Jtri}
+    \begin{pmatrix}
+        a_0   & 1     &       &       &       &       \\
+        b_1   & a_1   & 1     &       &       &       \\
+            & b_2   & a_2   & 1     &       &       \\
+            &       & b_0   & a_3   & 1     &       \\
+            &       &       & \ddots& \ddots&\ddots \\
+            &       &       &       & b_N   & a_N   
+    \end{pmatrix}
+    \begin{pmatrix}
+        \mathcal{J}_1 \\
+        \mathcal{J}_2 \\
+        \mathcal{J}_3 \\
+        \mathcal{J}_4 \\
+        \cdot\cdot\cdot \\
+        \mathcal{J}_{N-1}
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        c_0 - b_0 \mathcal{J}_0 \\
+        c_1 \\
+        c_2 \\
+        c_3 \\
+        \cdot\cdot\cdot \\
+        c_N - \mathcal{J}_N
+    \end{pmatrix}
+\end{proof}
+%
+where the recursion coefficients are given by
+%
+\begin{proof}{Jtri}
+    \label{eq:Jtri_coeffs}
+    a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
+    b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
+    c_v(k, \kap) &= \frac{\Delta \mathbf{q_v}(k, \kap)}{2v + 3} \nonumber \\
+    \mathbf{q_v}(k, \kap) &= 
+        k^2 
+        \sin^{2v + 1}\left(\frac{\kap}{2}\right) 
+        \cos\left(\frac{\kap}{2}\right) 
+        \bigg(1 - \kmt \sin^2\left(\frac{\kap}{2}\right)\bigg)^\frac{5}{2}
+\end{proof}
+
 % Bibliography
 \bibliography{bib}
 
