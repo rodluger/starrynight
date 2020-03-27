@@ -28,27 +28,15 @@ Abstract here.
 %
 \section{Introduction}
 %
-Intro here \citep{Luger2019}.
-Here's an equation with a proof:
-%
-\begin{proof}{dummy}
-    \label{eq:dummy}
-    1 + 1 = 2.
-\end{proof}
-The proof is a Jupyter notebook with a formal derivation of the solution,
-an informal justification, a numerical validation, or whatever you want it
-to be.
-%
-And here's a figure with a link:
+This is an extension of \citep{Luger2019}.
+
 %
 \begin{figure}[h!]
     \begin{centering}
-    \includegraphics[width=0.5\linewidth]{figures/dummy.pdf}
-    \oscaption{pretty_function}{%
-        This is a plot of a pretty function. And at the end of this
-        caption is a symbol with a link to the \emph{exact} script
-        that generated it, hosted on \textsf{GitHub}.
-        \label{fig:dummy}
+    \includegraphics[width=\linewidth]{figures/speed.pdf}
+    \oscaption{speed}{%
+        Evaluation time for the starry algorithm.
+        \label{fig:speed}
     }
     \end{centering}
 \end{figure}
@@ -138,8 +126,8 @@ where the recursion coefficients are given by
     \label{eq:Jtri_coeffs}
     a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
     b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
-    c_v(k, \kap) &= \frac{\Delta \mathbf{q_v}(k, \kap)}{2v + 3} \nonumber \\
-    \mathbf{q_v}(k, \kap) &= 
+    c_v(k, \kap) &= \frac{\Delta \mathbf{q}_v(k, \kap)}{2v + 3} \nonumber \\
+    \mathbf{q}_v(k, \kap) &= 
         k^2 
         \sin^{2v + 1}\left(\frac{\kap}{2}\right) 
         \cos\left(\frac{\kap}{2}\right) 
