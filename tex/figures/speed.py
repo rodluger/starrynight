@@ -13,7 +13,6 @@ import warnings
 
 
 # Config
-plt.switch_backend("MacOSX")
 starry.config.lazy = False
 starry.config.quiet = True
 warnings.simplefilter("ignore")
