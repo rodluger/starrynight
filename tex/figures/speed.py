@@ -386,7 +386,7 @@ class Compare(object):
             for l in range(ydeg + 1):
                 ax.plot(l, teval[n, l], "o", color=styles[n][1], ms=ms(error[n, l]))
                 if n in [0, 3, 4, 5]:
-                    logerr = np.round(np.max(-16, np.log10(error[n, l])))
+                    logerr = np.round(max(-16, np.log10(error[n, l])))
                     ax.annotate(
                         "{:.0f}".format(logerr),
                         xy=(l, teval[n, l]),
