@@ -1,6 +1,12 @@
 % !TeX root = ./ms.tex
 \documentclass[modern]{aastex62}
 
+% Shorthand
+\newcommand{\STARRYQUADPOINTS}{100}
+\newcommand{\kap}{\boldsymbol{\kappa}}
+\newcommand{\kmt}{k^{-2}}
+
+
 % Load the corTeX style definitions
 \input{cortex}
 
@@ -11,7 +17,7 @@
 \begin{document}
 
 % Title
-\title{A closed form solution for light curves in reflected light}
+\title{Analytic Light Curves in Reflected Light}
 
 % Author list
 \author[0000-0002-0296-3826]{Rodrigo Luger}
@@ -19,10 +25,10 @@
 \affil{Center~for~Computational~Astrophysics, Flatiron~Institute, New~York, NY}
 %
 
-\begin{abstract} 
-Abstract here.
-%
-\href{https://github.com/rodluger/starrynight}{\color{linkcolor}\faGithub}
+\begin{abstract}
+    Abstract here.
+    %
+    \href{https://github.com/rodluger/starrynight}{\color{linkcolor}\faGithub}
 \end{abstract}
 
 %
@@ -33,11 +39,11 @@ This is an extension of \citep{Luger2019}.
 %
 \begin{figure}[h!]
     \begin{centering}
-    \includegraphics[width=\linewidth]{figures/speed.pdf}
-    \oscaption{speed}{%
-        Evaluation time for the starry algorithm.
-        \label{fig:speed}
-    }
+        \includegraphics[width=\linewidth]{figures/speed.pdf}
+        \oscaption{speed}{%
+            Evaluation time for the starry algorithm.
+            \label{fig:speed}
+        }
     \end{centering}
 \end{figure}
 
@@ -47,75 +53,78 @@ Define the pairwise difference operator
 %
 \begin{align}
     \label{eq:pairdiff}
-    \Delta \bvec{v} \equiv \sum_{i=0}^{2N} (-1)^{i + 1} v_i
+    \Delta \bvec{v} \equiv \sum_{i=0}^N \left( v_{2i + 1} - v_{2i} \right)
 \end{align}
 %
-which sums the difference of successive pairs of values in 
+which sums the difference of successive pairs of values in
 an array $\bvec{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_{2N}\}$.
 
-\newcommand{\kap}{\boldsymbol{\kappa}}
-\newcommand{\kmt}{k^{-2}}
 
-\subsection{The integral $\mathcal{J}$}
+
+
+\subsection{$\mathcal{J}_v$}
+%
+The function $\mathcal{J}_v$ is given by
 %
 \begin{align}
     \label{eq:J}
-    \mathcal{J}_v(k, \kap) = 
-        \int_{\frac{\kappa_i}{2}}^{\frac{\kappa_{i+1}}{2}}
-        \sin^{2v}\varphi
-        \left(1 - \kmt\sin^2\varphi\right)^\frac{3}{2} 
-        \mathrm{d}\varphi
+    \mathcal{J}_v(k, \kap) =
+    \sum_{i = 0}^N
+    \int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
+    \sin^{2v}\varphi
+    \left(1 - \kmt\sin^2\varphi\right)^\frac{3}{2}
+    \mathrm{d}\varphi
+    \quad.
 \end{align}
 %
-Given the lower boundary condition
-%
-\begin{proof}{J0}
-    \label{eq:J0}
-    \mathcal{J}_0(k, \kap) &= 
-        \frac{1}{3} \bigg(
-            2 (2 - \kmt) \Delta \mathbf{E}(k, \kap) + 
-            (\kmt - 1) \Delta \mathbf{F}(k, \kap) + 
-            \kmt \Delta \mathbf{z}(k, \kap)
-        \bigg)
-%
-    \nonumber \\
-%
-    \mathbf{z}(k, \boldsymbol{\kappa}) &= 
-        \sin\left(\frac{\kap}{2}\right) 
-        \cos\left(\frac{\kap}{2}\right) 
-        \sqrt{1 - \kmt \sin^2\left(\frac{\kap}{2}\right)}
-\end{proof}
-%
-and an upper boundary condition $\mathcal{J}_N$ 
-(computed by numerical integration of Equation~\ref{eq:J}),
-the values of all intermediate $J_v$ can be obtained by solving the following
-tridiagonal problem:
+The integral in this expression is the same as that in Equation (D39)
+of \citet{Luger2019}, except for a change in the limits of integration.
+In that paper, we computed all terms
+$\{ \mathcal{J}_0, {\cdot\cdot\cdot}, \mathcal{J}_N \}$ from a three-term
+recurrence relation and two boundary conditions. In the case of upward recursion,
+the boundary conditions $\mathcal{J}_0$ and $\mathcal{J}_1$ were computed
+analytically from the complete elliptic
+integrals $K(k^2)$ and $E(k^2)$. In cases where upward recursion was not
+numerically stable, we evaluated $\mathcal{J}_N$ and $\mathcal{J}_{N-1}$
+via a quickly convergent series expansion and recursed downward.
+
+In order to solve Equation~(\ref{eq:J}), it is possible to
+replace the complete elliptic integrals $K(k^2)$ and $E(k^2)$ in the lower
+boundary conditions \citep[Equation D46 in ][]{Luger2019} with the
+incomplete elliptic integrals $F(k^2, \kappa)$ and $E(k^2, \kappa)$,
+then use the same upward
+recursion relation to obtain analytic solutions for all $\mathcal{J}_v$.
+However, in practice we find that this procedure is even more numerically
+unstable than it was in \citet{Luger2019}.
+Instead, here we express the recurrence structure of the problem as
+a tridiagonal system with one lower boundary condition $\mathcal{J}_0$
+and one upper boundary condition $\mathcal{J}_N$:
 %
 \begin{proof}{Jtri}
     \label{eq:Jtri}
     \begin{pmatrix}
-        a_0   & 1     &       &       &       &       \\
-        b_1   & a_1   & 1     &       &       &       \\
-            & b_2   & a_2   & 1     &       &       \\
-            &       & b_0   & a_3   & 1     &       \\
-            &       &       & \ddots& \ddots&\ddots \\
-            &       &       &       & b_N   & a_N   
+        a_0 & 1   &     &        &        &        \\
+        b_1 & a_1 & 1   &        &        &        \\
+            & b_2 & a_2 & 1      &        &        \\
+            &     & b_0 & a_3    & 1      &        \\
+            &     &     & \ddots & \ddots & \ddots \\
+            &     &     &        & b_N    & a_N
     \end{pmatrix}
     \begin{pmatrix}
-        \mathcal{J}_1 \\
-        \mathcal{J}_2 \\
-        \mathcal{J}_3 \\
-        \mathcal{J}_4 \\
+        \mathcal{J}_1   \\
+        \mathcal{J}_2   \\
+        \mathcal{J}_3   \\
+        \mathcal{J}_4   \\
         \cdot\cdot\cdot \\
         \mathcal{J}_{N-1}
     \end{pmatrix}
     =
     \begin{pmatrix}
         c_0 - b_0 \mathcal{J}_0 \\
-        c_1 \\
-        c_2 \\
-        c_3 \\
-        \cdot\cdot\cdot \\
+        c_1                     \\
+        c_2                     \\
+        c_3                     \\
+        \cdot\cdot\cdot         \\
         c_N - \mathcal{J}_N
     \end{pmatrix}
 \end{proof}
@@ -127,12 +136,46 @@ where the recursion coefficients are given by
     a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
     b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
     c_v(k, \kap) &= \frac{\Delta \mathbf{q}_v(k, \kap)}{2v + 3} \nonumber \\
-    \mathbf{q}_v(k, \kap) &= 
-        k^2 
-        \sin^{2v + 1}\left(\frac{\kap}{2}\right) 
-        \cos\left(\frac{\kap}{2}\right) 
-        \bigg(1 - \kmt \sin^2\left(\frac{\kap}{2}\right)\bigg)^\frac{5}{2}
+    \mathbf{q}_v(k, \kap) &=
+    k^2
+    \sin^{2v + 1}\left(\frac{\kap}{2}\right)
+    \cos\left(\frac{\kap}{2}\right)
+    \bigg(1 - \kmt \sin^2\left(\frac{\kap}{2}\right)\bigg)^\frac{5}{2}
 \end{proof}
+%
+Solving this matrix system yields values for all
+intermediate $\{ \mathcal{J}_1, {\cdot\cdot\cdot}, \mathcal{J}_{N - 1} \}$.
+While efficient algorithms exist for solving tridiagonal problems, we obtain
+far better numerical stability by instead performing traditional LU
+decomposition. We find that this algorithm is stable in all regimes that we
+tested.
+
+We evaluate the upper boundary condition $\mathcal{J}_{N}$ by numerical
+integration of Equation~(\ref{eq:J}) via Gauss-Legendre quadrature with
+\STARRYQUADPOINTS points. The lower boundary condition may be computed
+analytically from the incomplete elliptic integrals $\mathbf{F}(k^2, \kap)$
+and $\mathbf{E}(k^2, \kap)$:
+%
+\begin{proof}{J0}
+    \label{eq:J0}
+    \mathcal{J}_0(k, \kap) &=
+    \frac{1}{3} \bigg(
+    2 (2 - \kmt) \Delta \mathbf{E}(k^2, \kap) +
+    (\kmt - 1) \Delta \mathbf{F}(k^2, \kap) +
+    \kmt \Delta \mathbf{z}(k, \kap)
+    \bigg)
+    %
+    \nonumber \\
+    %
+    \mathbf{z}(k, \boldsymbol{\kappa}) &=
+    \sin\left(\frac{\kap}{2}\right)
+    \cos\left(\frac{\kap}{2}\right)
+    \sqrt{1 - \kmt \sin^2\left(\frac{\kap}{2}\right)}
+    \quad.
+\end{proof}
+%
+However, in practice we achieve better numerical precision via numerical
+integration (as above), with negligible effects on computational performance.
 
 % Bibliography
 \bibliography{bib}
