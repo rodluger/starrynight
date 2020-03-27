@@ -445,8 +445,6 @@ if __name__ == "__main__":
 
     # Let's go
     ydeg = 10
-    map = starry.Map(ydeg=ydeg)
-    map.load("earth")
-    y = np.array(map.y)
+    y = np.ones((ydeg + 1) ** 2)
     cmp = Compare(y=y)
     cmp.compare(xs, ys, zs, xo, yo, ro)
