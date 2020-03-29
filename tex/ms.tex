@@ -40,7 +40,7 @@
 This is an extension of \citep{Luger2019}.
 
 %
-\begin{figure}[t!]
+\begin{figure}[h!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/speed.pdf}
         \oscaption{speed}{%
@@ -73,6 +73,48 @@ Define the quantity
     \quad.
 \end{align}
 
+\subsection{$\mathcal{I}_v$}
+%
+The function $\mathcal{I}_v$ is given by
+%
+\begin{align}
+    \label{eq:I}
+    \mathcal{I}_v(k^2, \kap) =
+    \sum_{i = 0}^{\frac{N - 1}{2}}
+    \int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
+    \sin^{2v}\varphi
+    \mathrm{d}\varphi
+    \quad.
+\end{align}
+%
+The integral in this expression is the same as that in Equation (D38)
+of \citet{Luger2019}, except for a change in the limits of integration.
+As in \citet{Luger2019}, we can compute this integral recursively given
+a trivial lower boundary condition:
+%
+\begin{proof}{I}
+    \label{eq:Irec}
+    \mathcal{I}_0(\kap) &=
+    \frac{\Delta \kap}{2}
+    %
+    \nonumber \\
+    %
+    \mathcal{I}_v(\kap) &=
+    \frac{1}{2v}
+    \bigg(
+    (2v - 1) \mathcal{I}_{v-1}(\kap) -
+    \Delta \left(\sin^{2v - 1}\left(\frac{\kap}{2}\right)
+    \cos\left(\frac{\kap}{2}\right)\right)
+    \bigg)
+\end{proof}
+%
+where the last expression is valid for all $v > 0$. We find that this algorithm
+is generally stable, except when $\sin\left(\frac{\kap}{2}\right)$ is small. In
+that limit, we evaluate $\mathcal{I}_N(\kap)$ by numerical integration of
+Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
+points. We then recurse downward by substituting $v \rightarrow v + 1$ in
+Equation~(\ref{eq:Irec}) and solving for $\mathcal{I}_v(\kap)$.
+
 \subsection{$\mathcal{J}_v$}
 %
 The function $\mathcal{J}_v$ is given by
@@ -88,7 +130,7 @@ The function $\mathcal{J}_v$ is given by
     \quad.
 \end{align}
 %
-The integral in this expression is the same as that in Equation (D39)
+The integral in this expression is again the same as that in Equation (D39)
 of \citet{Luger2019}, except for a change in the limits of integration.
 In that paper, we computed all terms
 $\{ \mathcal{J}_0, {\cdot\cdot\cdot}, \mathcal{J}_\vmax \}$ from a three-term
