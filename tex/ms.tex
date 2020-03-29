@@ -2,10 +2,13 @@
 \documentclass[modern]{aastex62}
 
 % Shorthand
-\newcommand{\STARRYQUADPOINTS}{100}
+\newcommand{\STARRYQUADPOINTS}{100\xspace}
 \newcommand{\kap}{\boldsymbol{\kappa}}
 \newcommand{\kmt}{k^{-2}}
 \newcommand{\vmax}{{v_\mathrm{max}}}
+
+\newcommand{\DE}{\Delta \mathbf{E}(k^2, \kap)}
+\newcommand{\DF}{\Delta \mathbf{F}(k^2, \kap)}
 
 % Load the corTeX style definitions
 \input{cortex}
@@ -37,7 +40,7 @@
 This is an extension of \citep{Luger2019}.
 
 %
-\begin{figure}[h!]
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/speed.pdf}
         \oscaption{speed}{%
@@ -49,18 +52,26 @@ This is an extension of \citep{Luger2019}.
 
 \section{Integration}
 
+\subsection{Definitions}
+%
 Define the pairwise difference operator
 %
 \begin{align}
     \label{eq:pairdiff}
-    \Delta \bvec{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}} \left( v_{2i + 1} - v_{2i} \right)
+    \Delta \bvec{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
+    \left( v_{2i + 1} - v_{2i} \right)
 \end{align}
 %
 which sums the difference of successive pairs of values in
 an array $\bvec{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
 
-
-
+Define the quantity
+%
+\begin{align}
+    \label{eq:q}
+    \mathbf{q}(k^2, \kap) = \sqrt{1 - \frac{\sin^2\left(\frac{\kap}{2}\right)}{k^2}}
+    \quad.
+\end{align}
 
 \subsection{$\mathcal{J}_v$}
 %
@@ -68,11 +79,11 @@ The function $\mathcal{J}_v$ is given by
 %
 \begin{align}
     \label{eq:J}
-    \mathcal{J}_v(k, \kap) =
+    \mathcal{J}_v(k^2, \kap) =
     \sum_{i = 0}^{\frac{N - 1}{2}}
     \int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
     \sin^{2v}\varphi
-    \left(1 - \kmt\sin^2\varphi\right)^\frac{3}{2}
+    \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
     \mathrm{d}\varphi
     \quad.
 \end{align}
@@ -81,11 +92,11 @@ The integral in this expression is the same as that in Equation (D39)
 of \citet{Luger2019}, except for a change in the limits of integration.
 In that paper, we computed all terms
 $\{ \mathcal{J}_0, {\cdot\cdot\cdot}, \mathcal{J}_\vmax \}$ from a three-term
-recurrence relation and two boundary conditions. In the case of upward recursion,
-the boundary conditions $\mathcal{J}_0$ and $\mathcal{J}_1$ were computed
-analytically from the complete elliptic
-integrals $K(k^2)$ and $E(k^2)$. In cases where upward recursion was not
-numerically stable, we evaluated $\mathcal{J}_\vmax$ and $\mathcal{J}_{\vmax-1}$
+recurrence relation and two boundary conditions. In the case of upward
+recursion, the boundary conditions $\mathcal{J}_0$ and $\mathcal{J}_1$ were
+computed analytically from the complete elliptic integrals $K(k^2)$
+and $E(k^2)$. In cases where upward recursion was not numerically stable, we
+evaluated $\mathcal{J}_\vmax$ and $\mathcal{J}_{\vmax-1}$
 via a quickly convergent series expansion and recursed downward.
 
 In order to solve Equation~(\ref{eq:J}), it is possible to
@@ -93,14 +104,74 @@ replace the complete elliptic integrals $K(k^2)$ and $E(k^2)$ in the lower
 boundary conditions \citep[Equation D46 in ][]{Luger2019} with the
 incomplete elliptic integrals $F(k^2, \kappa)$ and $E(k^2, \kappa)$,
 then use the same upward
-recursion relation to obtain analytic solutions for all $\mathcal{J}_v$.
+recursion relation to obtain analytic solutions for all $\mathcal{J}_v$:
+%
+\begin{proof}{J}
+    \label{eq:Jrec}
+    \mathcal{J}_0(k^2, \kap) &=
+    \frac{1}{3} \bigg(
+    2 \left(2 - \frac{1}{k^2}\right) \DE +
+    \left(\frac{1}{k^2} - 1\right) \DF +
+    \Delta \mathbf{z}_0(k^2, \kap)
+    \bigg)
+    %
+    \nonumber \\
+    %
+    \mathcal{J}_1(k^2, \kap) &=
+    \frac{1}{15} \bigg(
+    \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE +
+    \left(3 k^2 - 7 + \frac{4}{k^2}\right) \DF +
+    \Delta \mathbf{z}_1(k^2, \kap)
+    \bigg)
+    %
+    \nonumber \\
+    %
+    \mathcal{J}_v(k^2, \kap) &=
+    \frac{1}{2v + 3}
+    \bigg(
+    2 \left( v + 1 + (v - 1) k^2 \right) \mathcal{J}_{v - 1} -
+    (2v - 3) k^2 \mathcal{J}_{v - 2}
+    + \Delta \mathbf{z}_v(k^2, \kap)
+    \bigg)
+\end{proof}
+%
+%
+where the last expression is valid for all $v > 1$ and
+%
+\begin{proof}{J}
+    \label{eq:Jrec_z}
+    \mathbf{z}_0(k^2, \boldsymbol{\kappa}) & =
+    \frac{
+        \sin\left(\frac{\kap}{2}\right)
+        \cos\left(\frac{\kap}{2}\right)
+        \mathbf{q}(k^2, \kap)
+    }{
+        k^2
+    }
+    %
+    \nonumber                                  \\
+    %
+    \mathbf{z}_1(k^2, \boldsymbol{\kappa}) & =
+    \left(\left(3 \sin^2 \left( \frac{\kap}{2} \right) + 4\right) - 6k^2\right)
+    \mathbf{z}_0(k^2, \boldsymbol{\kappa})
+    %
+    \nonumber                                  \\
+    %
+    \mathbf{z}_v(k^2, \boldsymbol{\kappa}) & =
+    k^2
+    \sin^{2v - 3}\left( \frac{\kap}{2} \right)
+    \cos\left( \frac{\kap}{2} \right)
+    \mathbf{q}(k^2, \boldsymbol{\kappa})^5
+    \quad.
+\end{proof}
+%
 However, in practice we find that this procedure is even more numerically
 unstable than it was in \citet{Luger2019}.
-Instead, here we express the recurrence structure of the problem as
+To address this, we express the recurrence structure of the problem as
 a tridiagonal system with one lower boundary condition $\mathcal{J}_0$
 and one upper boundary condition $\mathcal{J}_\vmax$:
 %
-\begin{proof}{Jtri}
+\begin{proof}{J}
     \label{eq:Jtri}
     \begin{pmatrix}
         a_0 & 1   &     &        &         &         \\
@@ -131,16 +202,19 @@ and one upper boundary condition $\mathcal{J}_\vmax$:
 %
 where the recursion coefficients are given by
 %
-\begin{proof}{Jtri}
+\begin{proof}{J}
     \label{eq:Jtri_coeffs}
     a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
     b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
-    c_v(k, \kap) &= \frac{\Delta \mathbf{q}_v(k, \kap)}{2v + 3} \nonumber \\
-    \mathbf{q}_v(k, \kap) &=
-    k^2
-    \sin^{2v + 1}\left(\frac{\kap}{2}\right)
-    \cos\left(\frac{\kap}{2}\right)
-    \bigg(1 - \kmt \sin^2\left(\frac{\kap}{2}\right)\bigg)^\frac{5}{2}
+    c_v(k^2, \kap) &= \Delta
+    \bigg(
+    \frac{
+            \mathbf{z}_v(k^2, \boldsymbol{\kappa})
+        }{
+            2v + 3
+        }
+    \bigg)
+    \quad.
 \end{proof}
 %
 Solving this matrix system yields values for all
@@ -152,30 +226,38 @@ tested.
 
 We evaluate the upper boundary condition $\mathcal{J}_{\vmax}$ by numerical
 integration of Equation~(\ref{eq:J}) via Gauss-Legendre quadrature with
-\STARRYQUADPOINTS points. The lower boundary condition may be computed
-analytically from the incomplete elliptic integrals $\mathbf{F}(k^2, \kap)$
-and $\mathbf{E}(k^2, \kap)$:
-%
-\begin{proof}{J0}
-    \label{eq:J0}
-    \mathcal{J}_0(k, \kap) &=
-    \frac{1}{3} \bigg(
-    2 (2 - \kmt) \Delta \mathbf{E}(k^2, \kap) +
-    (\kmt - 1) \Delta \mathbf{F}(k^2, \kap) +
-    \kmt \Delta \mathbf{z}(k, \kap)
-    \bigg)
-    %
-    \nonumber \\
-    %
-    \mathbf{z}(k, \boldsymbol{\kappa}) &=
-    \sin\left(\frac{\kap}{2}\right)
-    \cos\left(\frac{\kap}{2}\right)
-    \sqrt{1 - \kmt \sin^2\left(\frac{\kap}{2}\right)}
-    \quad.
-\end{proof}
-%
-However, in practice we achieve better numerical precision via numerical
+\STARRYQUADPOINTS points. While the lower boundary condition may be computed
+analytically from Equation~(\ref{eq:Jrec}),
+in practice we achieve better precision via numerical
 integration (as above), with negligible effects on computational performance.
+
+\subsection{$\mathcal{W}_n$}
+%
+The function $\mathcal{W}_n$ is given by
+%
+\begin{align}
+    \label{eq:W}
+    % TODO
+    \mathcal{W}_n = \int
+\end{align}
+%
+This integral has a closed-form solution:
+%
+\begin{align}
+    \label{eq:Wsol}
+    \mathcal{W}_n =
+    \frac{\sin^{2n + 2}\left(\frac{\kap}{2}\right)}{2n + 5}
+    \left(
+    \frac{3}{n+1}
+        {_2F_1}\left(-\frac{1}{2}, n + 1; n + 2; 1 - q^2\right) + 2 q^3
+    \right)
+\end{align}
+%
+where ${_2F_1}(a, b; c; z)$ is the Gauss hypergeometric function.
+
+
+% by either upward recursion (stable for |1 - q^2| > 1/2) or downward
+% recursion (always stable).
 
 % Bibliography
 \bibliography{bib}
