@@ -55,7 +55,7 @@
 \begin{document}
 
 % Title
-\title{Analytic Light Curves in Reflected Light}
+\title{Occultation Light Curves in Reflected Light}
 
 % Author list
 \author[0000-0002-0296-3826]{Rodrigo Luger}
@@ -71,21 +71,68 @@
 
 %
 \section{Introduction}
+\label{sec:intro}
 %
-This is an extension of \citep{Luger2019}.
+This is an extension of \citet{Luger2019}.
+
+\pagebreak
 
 %
-\begin{figure}[h!]
+\section{The Problem}
+\label{sec:the-problem}
+
+As in \citet{Luger2019}, we compute the instantaneous visible flux $f$ from
+a spherical body whose surface intensity is described by the spherical harmonic
+coefficient vector $\mathbf{y}$ as
+%
+\begin{align}
+    \label{eq:sTARRy}
+    f = \bvec{s}^\top \bvec{A} \bvec{R}' \bvec{R} \bvec{y}
+    \quad,
+\end{align}
+%
+where $\bvec{R}$ and $\bvec{R}'$ are spherical harmonic rotation matrices,
+$\bvec{A}$ is a change-of-basis matrix to a basis $\tilde{\bvec{g}}$,
+and $\bvec{s}^\top$ is the \emph{solution vector}, the integral of each
+of the basis functions in $\tilde{\bvec{g}}$ over
+the projected visible disk of the body (which may be partially occulted by
+another spherical body).
+For more information on these terms, the reader is referred to
+\citet{Luger2019}.
+
+\begin{figure}[t!]
     \begin{centering}
-        \includegraphics[width=\linewidth]{figures/speed.pdf}
-        \oscaption{speed}{%
-            Evaluation time for the starry algorithm.
-            \label{fig:speed}
+        \includegraphics[width=0.35\linewidth]{figures/illum.pdf}
+        \oscaption{illum}{%
+            Illumination geometry.
+            \label{fig:illum}
         }
     \end{centering}
 \end{figure}
 
-\begin{figure}[h!]
+The derivations in \citet{Luger2019} assume that the coefficient vector
+$\mathbf{y}$ describes the \emph{emissivity} of the body, which (in the
+absence of limb darkening) is assumed to be Lambertian, i.e., all points on the
+surface emit equally in all directions.
+Here, we derive the solution to the occultation problem for Lambertian
+reflectance, in which case the vector $\mathbf{y}$ describes the
+surface \emph{reflectivity} (or \emph{Bond albedo}). Specifically, we assume
+the body is illuminated by a point-like source and the radiance at any point
+is proportional to the cosine of the angle between the incident light
+and the surface normal. Points for which this angle is greater than
+$\frac{\pi}{2}$ are unilluminated and therefore have radiance of zero;
+see Figure~\ref{fig:illum}.
+
+% case 1: 0
+% case 2: sTr
+% case 3: sTe * I + ~sTr
+% case 4: sTe * I
+% case 5: sTr - sT0 * I
+% case 6: (sTe + sT0) * I + ~sTr
+% case 7: (sTe - sT0) * I
+% case 8: sT0 * I
+
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/cases.pdf}
         \oscaption{cases}{%
@@ -106,7 +153,14 @@ This is an extension of \citep{Luger2019}.
     \end{centering}
 \end{figure}
 
-\begin{figure}[h!]
+\section{Cases 1--4}
+\label{sec:cases-1-4}
+TODO.
+
+\section{Cases 5--8}
+\label{sec:cases-5-8}
+
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/geometry.pdf}
         \oscaption{geometry}{%
@@ -120,13 +174,12 @@ This is an extension of \citep{Luger2019}.
     \end{centering}
 \end{figure}
 
-
 As in \citet{Luger2019}, the elements of the solution vector $\mathbf{s}^\top$
 are given by the line integral
 %
 \begin{align}
     \label{eq:s}
-    \mathbf{s}_{n(\mu,\nu)} = \oint \mathbf{G}_{\mu,\nu} \cdot \dd\mathbf{r}
+    s_{n(\mu,\nu)} = \oint \mathbf{G}_{\mu,\nu} \cdot \dd\mathbf{r}
 \end{align}
 %
 where
@@ -185,6 +238,20 @@ closed surface of integration, which we will denote $\mathcal{P}$,
 $\mathcal{Q}$, and $\mathcal{T}$. These are shown for a typical occultor-occulted
 configuration in Figure~\ref{fig:geometry}.
 
+
+\section{Performance}
+\label{sec:performance}
+
+%
+\begin{figure}[h!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/speed.pdf}
+        \oscaption{speed}{%
+            Evaluation time for the starry algorithm.
+            \label{fig:speed}
+        }
+    \end{centering}
+\end{figure}
 
 
 \section{Integration}
