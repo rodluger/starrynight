@@ -1,17 +1,52 @@
 % !TeX root = ./ms.tex
 \documentclass[modern]{aastex62}
 
-% Shorthand
-\newcommand{\STARRYQUADPOINTS}{100\xspace}
-\newcommand{\kap}{\boldsymbol{\kappa}}
-\newcommand{\kmt}{k^{-2}}
-\newcommand{\vmax}{{v_\mathrm{max}}}
-
-\newcommand{\DE}{\Delta \mathbf{E}(k^2, \kap)}
-\newcommand{\DF}{\Delta \mathbf{F}(k^2, \kap)}
-
 % Load the corTeX style definitions
 \input{cortex}
+
+% Shorthand for this paper
+\usepackage{xifthen}
+\newcommand{\dd}{\ensuremath{\mathrm{d}}}
+\newcommand{\STARRYQUADPOINTS}{100\xspace}
+\newcommand{\bkappa}{\boldsymbol{\kappa}}
+\newcommand{\blambda}{\boldsymbol{\lambda}}
+\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\vmax}{{v_\mathrm{max}}}
+\newcommand{\kapint}[1]{%
+\sum_{i = 0}^{\frac{N - 1}{2}}
+\int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
+#1
+\dd\varphi
+}
+\newcommand{\lamint}[1]{%
+\sum_{i = 0}^{\frac{N - 1}{2}}
+\int\limits_{\frac{1}{2}\lambda_{2i}}^{\frac{1}{2}\lambda_{2i+1}}
+#1
+\dd\varphi
+}
+\newcommand{\coshalfkap}[1][]{%
+\ifthenelse{%
+    \equal{#1}{}
+}{
+    \cos\left(\frac{\bkappa}{2}\right)
+}{
+    \cos^{#1}\left(\frac{\bkappa}{2}\right)
+}}
+\newcommand{\sinhalfkap}[1][]{%
+\ifthenelse{%
+    \equal{#1}{}
+}{
+    \sin\left(\frac{\bkappa}{2}\right)
+}{
+    \sin^{#1}\left(\frac{\bkappa}{2}\right)
+}}
+\newcommand{\DE}{\Delta \boldsymbol{E}(k^2, \bkappa)}
+\newcommand{\DF}{\Delta \boldsymbol{F}(k^2, \bkappa)}
+\newcommand{\sgn}{{\mathrm{sgn}}}
+\newcommand{\xhat}{\ensuremath{\mathbf{\hat{x}}}\xspace}
+\newcommand{\yhat}{\ensuremath{\mathbf{\hat{y}}}\xspace}
+\newcommand{\zhat}{\ensuremath{\mathbf{\hat{z}}}\xspace}
+
 
 % Bibliography stuff
 \bibliographystyle{aasjournal}
@@ -50,7 +85,110 @@ This is an extension of \citep{Luger2019}.
     \end{centering}
 \end{figure}
 
+\begin{figure}[h!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/cases.pdf}
+        \oscaption{cases}{%
+            The eight families of cases of occultations in reflected light.
+            In these figures, the night side of the occulted body is colored
+            black (dark grey if occulted), and the dayside is colored blue
+            (light grey if occulted). The cases in the top row involve
+            configurations in which the limb of the occultor does not intersect
+            with the terminator at any point, so the visible flux may be
+            computed in terms of classical \starry integrals. The remaining
+            cases require integration along the red boundary (the curves
+            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ of
+            \S\ref{sec:integration}), which
+            include the terminator. These involve the evaluation of incomplete
+            elliptic integrals and are derived below.
+            \label{fig:cases}
+        }
+    \end{centering}
+\end{figure}
+
+\begin{figure}[h!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/geometry.pdf}
+        \oscaption{geometry}{%
+            Geometry of an occultation in reflected light, corresponding
+            to case 5 in Figure~\ref{fig:cases}. The surface integral over
+            the blue region is computed from the antiderivatives of the
+            surface intensity map counter-clockwise along the boundary curves
+            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$.
+            \label{fig:geometry}
+        }
+    \end{centering}
+\end{figure}
+
+
+As in \citet{Luger2019}, the elements of the solution vector $\mathbf{s}^\top$
+are given by the line integral
+%
+\begin{align}
+    \label{eq:s}
+    \mathbf{s}_{n(\mu,\nu)} = \oint \mathbf{G}_{\mu,\nu} \cdot \dd\mathbf{r}
+\end{align}
+%
+where
+%
+\begin{align}
+    \label{eq:G}
+    \bvec{G}_{\mu,\nu} (x, y) & =
+    \begin{dcases}
+        %
+        x^{\frac{\mu + 2}{2}}
+        y^{\frac{\nu}{2}}
+        \,\yhat
+         & \qquad \mu, \nu \, \mathrm{even}
+        \\[1em]
+        %
+        \frac{1-z(x, y)^3}{3(1-z(x, y)^2)}\bigg(-y \, \xhat + x \, \yhat\bigg)
+         & \qquad \mu = \nu = 1
+        \\[1em]
+        %
+        x^{l-2}
+        z(x, y)^3
+        \,\xhat
+         & \qquad \nu \, \mathrm{odd}, \,
+        \mu = 1, \,
+        \frac{\mu + \nu}{2} \, \mathrm{even}
+        \\[1em]
+        %
+        x^{l-3}
+        y
+        z(x, y)^3
+        \,\xhat
+         & \qquad \nu \, \mathrm{odd}, \,
+        \mu = 1, \,
+        \frac{\mu + \nu}{2} \, \mathrm{odd}
+        \\[1em]
+        %
+        x^{\frac{\mu-3}{2}}
+        y^{\frac{\nu-1}{2}}
+        z(x, y)^3
+        \,\yhat
+         & \qquad \mathrm{otherwise,}
+    \end{dcases}
+\end{align}
+%
+and
+%
+\begin{align}
+    \dd \bvec{r} & = -r \sin\varphi \, \dd \varphi \, \xhat +
+    r \cos\varphi \, \dd \varphi \, \yhat
+    \quad,
+\end{align}
+%
+where $\varphi = \varphi(x, y)$ is the parametrized angle along the
+arc of integration. Generally, there are at most three arcs bounding a given
+closed surface of integration, which we will denote $\mathcal{P}$,
+$\mathcal{Q}$, and $\mathcal{T}$. These are shown for a typical occultor-occulted
+configuration in Figure~\ref{fig:geometry}.
+
+
+
 \section{Integration}
+\label{sec:integration}
 
 \subsection{Definitions}
 %
@@ -58,20 +196,163 @@ Define the pairwise difference operator
 %
 \begin{align}
     \label{eq:pairdiff}
-    \Delta \bvec{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
+    \Delta \boldsymbol{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
     \left( v_{2i + 1} - v_{2i} \right)
 \end{align}
 %
 which sums the difference of successive pairs of values in
-an array $\bvec{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
+an array $\boldsymbol{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
 
 Define the quantity
 %
 \begin{align}
     \label{eq:q}
-    \mathbf{q}(k^2, \kap) = \sqrt{1 - \frac{\sin^2\left(\frac{\kap}{2}\right)}{k^2}}
+    \boldsymbol{q}(k^2, \bkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
     \quad.
 \end{align}
+
+\subsection{$\mathcal{H}_{u,v}$}
+%
+The function $\mathcal{H}_{u,v}$ is given by
+%
+\begin{align}
+    \label{eq:H}
+    \mathcal{H}_{u,v}(\blambda) & =
+    \lamint{
+        \cos^u\varphi
+        \sin^v\varphi
+    }
+    \quad.
+\end{align}
+%
+The integral in this expression is the same as that in Equation (D27)
+of \citet{Luger2019}, except for a change in the limits of integration.
+We can compute this integral recursively given four lower boundary conditions:
+%
+\begin{proof}{H}
+    \label{eq:Hlower}
+    \mathcal{H}_{0,0}(\blambda) &= \Delta \blambda
+    %
+    \nonumber \\
+    %
+    \mathcal{H}_{1,0}(\blambda) &= \Delta \sin\blambda
+    %
+    \nonumber \\
+    %
+    \mathcal{H}_{0,1}(\blambda) &= -\Delta \cos\blambda
+    %
+    \nonumber \\
+    %
+    \mathcal{H}_{1,1}(\blambda) &= -\frac{\Delta\cos^2\blambda}{2}
+    %
+    \quad.
+\end{proof}
+%
+The remaining terms may be computed by upward recursion using the
+relations
+%
+\begin{proof}{H}
+    \label{eq:Hrec1}
+    \mathcal{H}_{u,v}(\blambda) &=
+    \frac{
+        -\Delta \left(
+        \cos^{u + 1} \blambda
+        \sin^{v - 1} \blambda
+        \right)
+        +(v - 1)\mathcal{H}_{u,v - 2}(\blambda)
+    }{u + v}
+\end{proof}
+%
+for $u < 2, v \ge 2$ and
+%
+\begin{proof}{H}
+    \label{eq:Hrec2}
+    \mathcal{H}_{u,v}(\blambda) &=
+    \frac{
+        \Delta \left(
+        \cos^{u - 1} \blambda
+        \sin^{v + 1} \blambda
+        \right)
+        + (u - 1)\mathcal{H}_{u - 2,v}(\blambda)
+    }{u + v}
+\end{proof}
+%
+for all remaining terms.
+
+\subsection{$\mathcal{T}_{2}$}
+%
+The function $\mathcal{T}_{2}$ is given by
+%
+\begin{align}
+    \label{eq:T2}
+    \mathcal{T}_{2}(b, \bxi) & = ?
+    \quad.
+\end{align}
+
+\begin{proof}{T2}
+    \mathcal{T}_{2}(b, \bxi) &= -\sgn(b) \Delta \boldsymbol{f}(b, \bxi)
+\end{proof}
+%
+where
+%
+\begin{proof}{T2}
+    \begin{split}
+        f_i(b, \xi_i) =
+        \frac{1}{3}\scalebox{1.4}{\Bigg(}
+        &\arctan\left( \frac{|b|\sin\xi_i}{\cos\xi_i} \right)
+        %
+        \\
+        %
+        &- \sgn\left({\sin\xi_i}\right)
+        \left(
+        \arctan
+        \left(
+            \frac{
+                \left(\frac{\sin\xi_i}{1 + \cos\xi_i}\right)^2 + 2 b^2 - 1
+            }{2 |b| \sqrt{1 - b^2}}
+            \right)
+        + |b| \sqrt{1 - b^2} \cos\xi_i
+        \right)
+        %
+        \\
+        %
+        &+ \phi(b, \xi_i)
+        \scalebox{1.4}{\Bigg)}
+    \end{split}
+\end{proof}
+%
+and
+%
+\begin{proof}{T2}
+    \phi(b, \xi_i) & =
+    \begin{cases}
+        0                          & \qquad 0 \leq \xi_i < \frac{\pi}{2}     \\
+        \pi                        & \qquad \frac{\pi}{2} \leq \xi_i < \pi   \\
+        2 |b| \sqrt{1 - b^2}       & \qquad \pi < \xi_i \leq \frac{3\pi}{2}  \\
+        \pi + 2 |b| \sqrt{1 - b^2} & \qquad \frac{3\pi}{2} \leq \xi_i < 2\pi
+        \quad.
+    \end{cases}
+\end{proof}
+
+\subsection{$\mathcal{U}_v$}
+%
+The function $\mathcal{U}_v$ is given by
+%
+\begin{align}
+    \label{eq:U}
+    \mathcal{U}_v(\bkappa) =
+    \kapint{\cos\varphi\sin^{2v}\varphi}
+    \quad.
+\end{align}
+%
+This integral has an analytic solution for all $v$:
+%
+\begin{proof}{U}
+    \label{eq:Usol}
+    \mathcal{U}_v(\bkappa) &= \frac{\Delta \sinhalfkap[v+1]}{v + 1}
+    \quad.
+\end{proof}
+%
 
 \subsection{$\mathcal{I}_v$}
 %
@@ -79,11 +360,8 @@ The function $\mathcal{I}_v$ is given by
 %
 \begin{align}
     \label{eq:I}
-    \mathcal{I}_v(k^2, \kap) =
-    \sum_{i = 0}^{\frac{N - 1}{2}}
-    \int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
-    \sin^{2v}\varphi
-    \mathrm{d}\varphi
+    \mathcal{I}_v(\bkappa) & =
+    \kapint{\sinhalfkap[2v]}
     \quad.
 \end{align}
 %
@@ -94,26 +372,25 @@ a trivial lower boundary condition:
 %
 \begin{proof}{I}
     \label{eq:Irec}
-    \mathcal{I}_0(\kap) &=
-    \frac{\Delta \kap}{2}
+    \mathcal{I}_0(\bkappa) &=
+    \frac{\Delta \bkappa}{2}
     %
     \nonumber \\
     %
-    \mathcal{I}_v(\kap) &=
+    \mathcal{I}_v(\bkappa) &=
     \frac{1}{2v}
     \bigg(
-    (2v - 1) \mathcal{I}_{v-1}(\kap) -
-    \Delta \left(\sin^{2v - 1}\left(\frac{\kap}{2}\right)
-    \cos\left(\frac{\kap}{2}\right)\right)
+    (2v - 1) \mathcal{I}_{v-1}(\bkappa) -
+    \Delta \left(\sinhalfkap[2v - 1]\coshalfkap\right)
     \bigg)
 \end{proof}
 %
 where the last expression is valid for all $v > 0$. We find that this algorithm
-is generally stable, except when $\sin\left(\frac{\kap}{2}\right)$ is small. In
-that limit, we evaluate $\mathcal{I}_N(\kap)$ by numerical integration of
+is generally stable, except when $\sin\left(\frac{\bkappa}{2}\right)$ is small. In
+that limit, we evaluate $\mathcal{I}_N(\bkappa)$ by numerical integration of
 Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
 points. We then recurse downward by substituting $v \rightarrow v + 1$ in
-Equation~(\ref{eq:Irec}) and solving for $\mathcal{I}_v(\kap)$.
+Equation~(\ref{eq:Irec}) and solving for $\mathcal{I}_v(\bkappa)$.
 
 \subsection{$\mathcal{J}_v$}
 %
@@ -121,12 +398,11 @@ The function $\mathcal{J}_v$ is given by
 %
 \begin{align}
     \label{eq:J}
-    \mathcal{J}_v(k^2, \kap) =
-    \sum_{i = 0}^{\frac{N - 1}{2}}
-    \int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
-    \sin^{2v}\varphi
-    \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
-    \mathrm{d}\varphi
+    \mathcal{J}_v(k^2, \bkappa) =
+    \kapint{
+        \sin^{2v}\varphi
+        \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
+    }
     \quad.
 \end{align}
 %
@@ -150,30 +426,30 @@ recursion relation to obtain analytic solutions for all $\mathcal{J}_v$:
 %
 \begin{proof}{J}
     \label{eq:Jrec}
-    \mathcal{J}_0(k^2, \kap) &=
+    \mathcal{J}_0(k^2, \bkappa) &=
     \frac{1}{3} \bigg(
     2 \left(2 - \frac{1}{k^2}\right) \DE +
     \left(\frac{1}{k^2} - 1\right) \DF +
-    \Delta \mathbf{z}_0(k^2, \kap)
+    \Delta \boldsymbol{z}_0(k^2, \bkappa)
     \bigg)
     %
     \nonumber \\
     %
-    \mathcal{J}_1(k^2, \kap) &=
+    \mathcal{J}_1(k^2, \bkappa) &=
     \frac{1}{15} \bigg(
     \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE +
     \left(3 k^2 - 7 + \frac{4}{k^2}\right) \DF +
-    \Delta \mathbf{z}_1(k^2, \kap)
+    \Delta \boldsymbol{z}_1(k^2, \bkappa)
     \bigg)
     %
     \nonumber \\
     %
-    \mathcal{J}_v(k^2, \kap) &=
+    \mathcal{J}_v(k^2, \bkappa) &=
     \frac{1}{2v + 3}
     \bigg(
     2 \left( v + 1 + (v - 1) k^2 \right) \mathcal{J}_{v - 1} -
     (2v - 3) k^2 \mathcal{J}_{v - 2}
-    + \Delta \mathbf{z}_v(k^2, \kap)
+    + \Delta \boldsymbol{z}_v(k^2, \bkappa)
     \bigg)
 \end{proof}
 %
@@ -182,28 +458,28 @@ where the last expression is valid for all $v > 1$ and
 %
 \begin{proof}{J}
     \label{eq:Jrec_z}
-    \mathbf{z}_0(k^2, \boldsymbol{\kappa}) & =
+    \boldsymbol{z}_0(k^2, \boldsymbol{\kappa}) & =
     \frac{
-        \sin\left(\frac{\kap}{2}\right)
-        \cos\left(\frac{\kap}{2}\right)
-        \mathbf{q}(k^2, \kap)
+        \sinhalfkap
+        \coshalfkap
+        \boldsymbol{q}(k^2, \bkappa)
     }{
         k^2
     }
     %
-    \nonumber                                  \\
+    \nonumber\\
     %
-    \mathbf{z}_1(k^2, \boldsymbol{\kappa}) & =
-    \left(\left(3 \sin^2 \left( \frac{\kap}{2} \right) + 4\right) - 6k^2\right)
-    \mathbf{z}_0(k^2, \boldsymbol{\kappa})
+    \boldsymbol{z}_1(k^2, \boldsymbol{\kappa}) & =
+    \left(\left(3 \sinhalfkap[2] + 4\right) - 6k^2\right)
+    \boldsymbol{z}_0(k^2, \boldsymbol{\kappa})
     %
-    \nonumber                                  \\
+    \nonumber\\
     %
-    \mathbf{z}_v(k^2, \boldsymbol{\kappa}) & =
+    \boldsymbol{z}_v(k^2, \boldsymbol{\kappa}) & =
     k^2
-    \sin^{2v - 3}\left( \frac{\kap}{2} \right)
-    \cos\left( \frac{\kap}{2} \right)
-    \mathbf{q}(k^2, \boldsymbol{\kappa})^5
+    \sinhalfkap[2v - 3]
+    \coshalfkap
+    \boldsymbol{q}(k^2, \boldsymbol{\kappa})^5
     \quad.
 \end{proof}
 %
@@ -248,10 +524,10 @@ where the recursion coefficients are given by
     \label{eq:Jtri_coeffs}
     a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
     b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
-    c_v(k^2, \kap) &= \Delta
+    c_v(k^2, \bkappa) &= \Delta
     \bigg(
     \frac{
-            \mathbf{z}_v(k^2, \boldsymbol{\kappa})
+            \boldsymbol{z}_v(k^2, \boldsymbol{\kappa})
         }{
             2v + 3
         }
@@ -288,7 +564,7 @@ This integral has a closed-form solution:
 \begin{align}
     \label{eq:Wsol}
     \mathcal{W}_n =
-    \frac{\sin^{2n + 2}\left(\frac{\kap}{2}\right)}{2n + 5}
+    \frac{\sin^{2n + 2}\left(\frac{\bkappa}{2}\right)}{2n + 5}
     \left(
     \frac{3}{n+1}
         {_2F_1}\left(-\frac{1}{2}, n + 1; n + 2; 1 - q^2\right) + 2 q^3
