@@ -80,7 +80,7 @@ This is an extension of \citet{Luger2019}.
 %
 \section{The Problem}
 \label{sec:the-problem}
-
+%
 As in \citet{Luger2019}, we compute the instantaneous visible flux $f$ from
 a spherical body whose surface intensity is described by the spherical harmonic
 coefficient vector $\mathbf{y}$ as
@@ -91,20 +91,99 @@ coefficient vector $\mathbf{y}$ as
     \quad,
 \end{align}
 %
-where $\bvec{R}$ and $\bvec{R}'$ are spherical harmonic rotation matrices,
-$\bvec{A}$ is a change-of-basis matrix to a basis $\tilde{\bvec{g}}$,
+where $\bvec{R}$ and $\bvec{R}'$ are spherical harmonic rotation matrices
+\citep[\S3.3 of][]{Luger2019},
+$\bvec{A}$ is the change-of-basis matrix from spherical harmonics
+to a basis $\tilde{\bvec{g}}$ \citep[Equation B13 in][]{Luger2019},
 and $\bvec{s}^\top$ is the \emph{solution vector}, the integral of each
 of the basis functions in $\tilde{\bvec{g}}$ over
 the projected visible disk of the body (which may be partially occulted by
 another spherical body).
-For more information on these terms, the reader is referred to
+%
+The basis $\tilde{\bvec{g}}$ is called the \emph{Green's basis}; its name
+stems from the fact that its components have a structure that makes integration
+by Green's theorem convenient. Its components were defined in
+Equation~11 of \citet{Luger2019b}:
+%
+\begin{proof}{bg}
+    \tilde{g}_{l,m} &=
+    \begin{dcases}
+        %
+        \frac{\mu+2}{2}x^\frac{\mu}{2} y^\frac{\nu}{2}
+         & \qquad \mu, \nu \, \mathrm{even}
+        \\[1em]
+        %
+        z(x, y)
+         & \qquad \mu = \nu = 1
+        \\[1em]
+        %
+        3x^{l-2}yz(x, y)
+         & \qquad \nu \, \mathrm{odd}, \,
+        \mu = 1, \,
+        \frac{\mu + \nu}{2} \, \mathrm{even}
+        \\[1em]
+        %
+        z(x, y)
+        \bigg(
+        -x^{l-3} + x^{l-1} + 4x^{l-3}y^2
+        \bigg)
+         & \qquad \nu \, \mathrm{odd}, \,
+        \mu = 1, \,
+        \, \mathrm{odd}
+        \\[1em]
+        %
+        z(x, y)
+        \bigg(
+        \frac{\mu-3}{2} x^\frac{\mu-5}{2} y^\frac{\nu-1}{2}
+        \ - \
+        \frac{\mu-3}{2} x^\frac{\mu-5}{2} y^\frac{\nu+3}{2}
+        \\
+        \qquad\qquad \ - \
+        \frac{\mu+3}{2} x^\frac{\mu-1}{2} y^\frac{\nu-1}{2}
+        \bigg)
+         & \qquad \mathrm{otherwise}
+        \quad,
+    \end{dcases}
+    \label{eq:bg}
+\end{proof}
+%
+where $x$ and $y$ are the Cartesian components on the surface
+of the projected
+disk of the body, with $z(x, y) = \sqrt{1 - x^2 - y^2}$, and
+%
+\begin{align}
+    \mu & = l - m
+    \nonumber     \\
+    \nu & = l + m
+    \quad.
+\end{align}
+%
+The vector $\tilde{\bvec{g}}$ is structured such that
+the component at index $n$ is $\tilde{g}_{l,m}$ with
+\begin{align}
+    \label{eq:lm}
+    l & = \floor*{\sqrt{n}} \nonumber \\
+    m & = n - l^2 - l
+    \quad.
+\end{align}
+\xxx{The rotation matrices do the following...}
+For more information on all of these terms, the reader is referred to
 \citet{Luger2019}.
 
 \begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=0.35\linewidth]{figures/illum.pdf}
         \oscaption{illum}{%
-            Illumination geometry.
+            Illumination geometry for the unocculted case.
+            A point source at Cartesian coordinates
+            $(0, y_s, z_s)$ illuminates a uniform,
+            Lambertian, spherical body of radius unity. The observed
+            radiance falls off as the cosine of the angle $\phi$ between the
+            source and the surface normal. Beyond the terminator
+            (defined by $\phi = \frac{\pi}{2}$), the radiance is zero. In
+            projection, the terminator is a segment of an ellipse of semi-major
+            axis unity and semi-minor axis
+            $b = -\nicefrac{z_s}{\sqrt{y_s^2 + z_s^2}}$.
             \label{fig:illum}
         }
     \end{centering}
@@ -118,11 +197,26 @@ Here, we derive the solution to the occultation problem for Lambertian
 reflectance, in which case the vector $\mathbf{y}$ describes the
 surface \emph{reflectivity} (or \emph{Bond albedo}). Specifically, we assume
 the body is illuminated by a point-like source and the radiance at any point
-is proportional to the cosine of the angle between the incident light
-and the surface normal. Points for which this angle is greater than
-$\frac{\pi}{2}$ are unilluminated and therefore have radiance of zero;
-see Figure~\ref{fig:illum}.
+is proportional to the cosine of the angle $\phi$ between the incident light
+and the surface normal. Points for which $\phi \ge \frac{\pi}{2}$ are
+unilluminated and therefore have radiance of zero; see Figure~\ref{fig:illum}.
 
+In \citet{Luger2019}, the crux of the problem was to compute the terms in the
+vector $\bvec{s}^\top$, which are surface integrals over
+the region of the occulted body that is visible to
+the observer (Figure 2 in that paper). Here, these integrals are significantly
+more difficult, because they involve not only the intersection of the
+limbs of the two bodies, but also intersections with the elliptical
+day/night terminator of the occulted body. Figure~\ref{fig:cases} shows the
+eight families of cases involving an occultation of an illuminated body by
+a spherical occultor. Each of these cases correspond to distinct ways in
+which the limb of the occultor can intersect with the limb of the occulted
+body and its terminator; together, these cases encompass all possible
+occultation configurations, for any illumination angle, occultor size, and
+occultor position. In the next three sections, we present the solution for the
+$\bvec{s}^\top$, and hence for the total visible flux, for each of these cases.
+
+% case 0: sTr
 % case 1: 0
 % case 2: sTr
 % case 3: sTe * I + ~sTr
@@ -153,12 +247,231 @@ see Figure~\ref{fig:illum}.
     \end{centering}
 \end{figure}
 
-\section{Cases 1--4}
-\label{sec:cases-1-4}
-TODO.
+\section{The Solution: Case 0}
+\label{sec:cases-0}
+%
+Before we tackle configurations involving occultations, we must address the
+simpler problem of computing the total visible flux from an unocculted
+body in reflected light (see Figure~\ref{fig:illum}). This problem was
+originally solved by \citet{Haggard2018} and subsequently adapted to the
+\starry formalism in \citet{Luger2019b}, but for completeness we present
+the detailed solution below.
 
-\section{Cases 5--8}
+Our task is to compute the solution vector for this
+configuration, which we will denote $\bvec{s}^\top_0$.  When no occultor
+is present (as in this case), it is
+more convenient to perform the integration in the \emph{polynomial basis}
+$\tilde{\bvec{p}}$ \citep[Equation 7 in][]{Luger2019}:
+%
+\begin{align}
+    \tilde{p}_{l,m}(x, y) & =
+    \begin{dcases}
+        x^\frac{\mu}{2} y^\frac{\nu}{2}
+         & \qquad \mu, \nu \, \mathrm{even}
+        \\[1em]
+        x^\frac{\mu-1}{2} y^\frac{\nu-1}{2} z(x, y)
+         & \qquad \mathrm{otherwise} \quad,
+    \end{dcases}
+\end{align}
+%
+where \xxx{we unroll p as before...}
+The solution vector is then given by
+%
+\begin{align}
+    \label{eq:sTref}
+    \bvec{s}^\top_0 & = \bvec{r}^\top \bvec{A_1} \bvec{R} \bvec{A}^{-1}
+    \quad,
+\end{align}
+%
+where $\bvec{r}^\top$ is the solution vector in the polynomial basis,
+$\bvec{A_1}$ is the change-of-basis matrix between the polynomial basis
+and the spherical harmonic basis, $\bvec{R}$ is a spherical harmonic rotation
+matrix, and $\bvec{A}$ is the change-of basis matrix between the spherical
+harmonic basis and the Green's basis.
+\xxx{In words, the equation above reads...}
+
+\xxx{...} In this frame, the body sits at the origin and is illuminated by a point
+source in the
+$y-z$ plane at coordinates $(0, y_s, z_s)$. It is straightforward to show
+that the illumination at a point $(x, y)$ on the projected disk is
+given by
+%
+\begin{proof}{illum}
+    \Psi(b; x, y) & =
+    \begin{dcases}
+        b_cy - bz(x, y) &
+        \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
+        y \geq b \sqrt{1 - x^2}
+        \\
+        0               &
+        \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
+        \mathrm{otherwise}
+    \end{dcases}
+    \quad ,
+    \label{eq:illum}
+\end{proof}
+%
+where $b_c = \sqrt{1 - b^2}$.
+%
+\xxx{The solution vector may then be computed as...}
+%
+\begin{align}
+    \label{eq:rT}
+    r_{n(\mu,\nu)} & =
+    \int_{-1}^{1}
+    \int_{b\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
+    \tilde{p}_{n(\mu,\nu)}(x, y)
+    \Psi(b; x, y)
+    \ \dd y \ \dd x
+    \quad.
+\end{align}
+%
+Equation~(\ref{eq:rT}) may be solved analytically in terms of purely
+trigonometric and algebraic functions of $b$:
+%
+\begin{proof}{rT}
+    \label{eq:rTsoln}
+    r_{n(\mu,\nu)} & =
+    \begin{cases}
+        \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
+        J_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
+        b I_\frac{\nu}{2}(b) K_{\frac{\mu}{2}, \frac{\nu}{2}}
+        %
+         &
+        %
+        \qquad
+        \mu, \nu \ \mathrm{even}
+        %
+        \\[1em]
+        %
+        b_c
+        I_{\frac{\nu + 1}{2}}(b) K_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
+        %
+        \\[0.5em]
+        \qquad
+        %
+        - \frac{b}{2} \bigg\{
+        \left(1 - b^{\frac{\nu + 1}{2}}\right)
+        \left(
+        J_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}} -
+        J_{\frac{\mu + 3}{2}, \frac{\nu - 1}{2}}
+        \right)
+        \\[0.5em]
+        \qquad\qquad
+        -
+        \left(1 - b^{\frac{\nu + 5}{2}}\right)
+        J_{\frac{\mu - 1}{2}, \frac{\nu + 3}{2}}
+        \bigg\}
+        %
+         &
+        %
+        \qquad
+        \mathrm{otherwise}
+        %
+    \end{cases}
+\end{proof}
+%
+where
+%
+\begin{proof}{rT}
+    \label{eq:IJK}
+    I_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
+    \nonumber \\
+    %
+    J_{i,j} &=
+    \frac{
+        \Gamma\left(\frac{i + 1}{2}\right)
+        \Gamma\left(\frac{j + 1}{2}\right)
+    }
+    {
+        \Gamma\left(\frac{i + j + 4}{2}\right)
+    }
+    %
+    \nonumber \\
+    %
+    K_{i,j} &=
+    \frac{
+        \Gamma\left(\frac{i + 1}{2}\right)
+        \Gamma\left(\frac{j + 4}{2}\right)
+    }
+    {
+        \Gamma\left(\frac{i + j + 5}{2}\right)
+    }
+    \quad.
+\end{proof}
+%
+Given initial conditions
+%
+\\[1em]
+\begin{minipage}{.33\linewidth}
+    \begin{proof}{rT}
+        I_{0}(b) &= \frac{\arccos(b) - bb_c}{2}
+        %
+        \nonumber \\
+        %
+        I_{1}(b) &= \frac{b_c^3}{3}
+        %
+        \nonumber
+    \end{proof}
+\end{minipage}%
+\begin{minipage}{.32\linewidth}
+    \begin{proof}{rT}
+        J_{0,0} &= \pi
+        %
+        \nonumber \\
+        %
+        J_{0,1} &= \frac{4}{3}
+        %
+        \nonumber
+    \end{proof}
+\end{minipage}%
+\begin{minipage}{.33\linewidth}
+    \begin{proof}{rT}
+        \label{eq:IJK0}
+        K_{0,0} &= \frac{4}{3}
+        %
+        \nonumber \\
+        K_{0,1} &= \frac{3\pi}{8}
+    \end{proof}
+\end{minipage}
+\\[1em]
+%
+we may compute all higher order terms from the recurrence relations
+%
+\begin{proof}{rT}
+    \label{eq:IJKrec}
+    I_{j}(b) &= \frac{b^n b_c^3 + (j - 1) I_{j - 2}(b)}{j + 2}
+    %
+    \nonumber \\
+    %
+    J_{0,j} &= \left(\frac{j - 1}{j + 2}\right) J_{0,j-2}
+    %
+    \nonumber \\
+    %
+    K_{0,j} &= \left(\frac{j + 2}{j + 3}\right) K_{0,j-2}
+    %
+    \nonumber \\
+    %
+    J_{i,j} &= \left(\frac{i - 1}{i + j + 2}\right) J_{i-2,j}
+    %
+    \nonumber \\
+    %
+    K_{i,j} &= \left(\frac{i - 1}{i + j + 3}\right) K_{i-2,j}
+    \quad.
+\end{proof}
+%
+
+
+\section{The Solution: Cases 1--4}
+\label{sec:cases-1-4}
+Cases 1--4 (see Figure~\ref{fig:cases}) involve configurations in which the
+occultor does not intersect with
+the terminator of the occulted body, and are therefore significantly easier to
+solve.
+
+\section{The Solution: Cases 5--8}
 \label{sec:cases-5-8}
+Cases 5--8 (see Figure~\ref{fig:cases}).
 
 \begin{figure}[t!]
     \begin{centering}

@@ -16,7 +16,6 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
     if code == FLUX_NIGHT_VIS or code == FLUX_DAY_VIS:
         phi = phi[::-1]
 
-    color_day = (0.122, 0.467, 0.706, 0.33)
     color_night = (0, 0, 0, 0.75)
     color_day_occ = (0, 0, 0, 0.25)
     color_night_occ = (0, 0, 0, 0.5)
@@ -39,10 +38,15 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
     img_day_occ[cond1 & cond2 & cond3] = 1
     img_night_occ = np.zeros_like(xpt)
     img_night_occ[cond1 & cond2 & ~cond3] = 1
-    img_day = np.zeros_like(xpt)
-    img_day[~cond1 & cond2 & cond3] = 1
     img_night = np.zeros_like(xpt)
     img_night[~cond1 & cond2 & ~cond3] = 1
+    x0, y0 = np.meshgrid(np.linspace(-1, 1, res), np.linspace(-1, 1, res))
+    x = x0 * np.cos(theta) + y0 * np.sin(theta)
+    y = -x0 * np.sin(theta) + y0 * np.cos(theta)
+    z = np.sqrt(1 - x ** 2 - y ** 2)
+    img_day = np.sqrt(1 - b ** 2) * y - b * z
+    img_day[img_day < 0] = np.nan
+    img_day[cond1] = np.nan
 
     # Draw basic shapes
     ax.axis("off")
@@ -60,6 +64,8 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
         cmap=LinearSegmentedColormap.from_list(
             "cmap1", [(0, 0, 0, 0), color_day_occ], 2
         ),
+        interpolation="none",
+        zorder=-1,
     )
     ax.imshow(
         img_night_occ,
@@ -69,13 +75,27 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
         cmap=LinearSegmentedColormap.from_list(
             "cmap1", [(0, 0, 0, 0), color_night_occ], 2
         ),
+        interpolation="none",
+        zorder=-1,
     )
     ax.imshow(
         img_day,
         origin="lower",
         extent=(-1, 1, -1, 1),
         alpha=1,
-        cmap=LinearSegmentedColormap.from_list("cmap1", [(0, 0, 0, 0), color_day], 2),
+        cmap=LinearSegmentedColormap(
+            "cmap1",
+            segmentdata={
+                "red": [[0.0, 0.0, 0.122], [1.0, 1.0, 1.0]],
+                "green": [[0.0, 0.0, 0.467], [1.0, 1.0, 1.0]],
+                "blue": [[0.0, 0.0, 0.706], [1.0, 1.0, 1.0]],
+            },
+            N=256,
+        ),
+        vmin=0,
+        vmax=1,
+        interpolation="none",
+        zorder=-1,
     )
     ax.imshow(
         img_night,
@@ -83,6 +103,8 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
         extent=(-1, 1, -1, 1),
         alpha=1,
         cmap=LinearSegmentedColormap.from_list("cmap1", [(0, 0, 0, 0), color_night], 2),
+        interpolation="none",
+        zorder=-1,
     )
 
     # Draw integration paths
@@ -92,7 +114,7 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
             inds = x_t ** 2 + (y_t - bo) ** 2 > ro ** 2
         else:
             inds = x_t ** 2 + (y_t - bo) ** 2 < ro ** 2
-        ax.plot(x_t[inds], y_t[inds], "r-", lw=2)
+        ax.plot(x_t[inds], y_t[inds], "C1-", lw=2)
 
     if len(phi):
         for k in range(0, len(phi) // 2 + 1, 2):
@@ -105,7 +127,7 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
                 0,
                 phi[k] * 180 / np.pi,
                 phi[k + 1] * 180 / np.pi,
-                color="r",
+                color="C1",
                 lw=2,
                 zorder=3,
             )
@@ -121,7 +143,7 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
             0,
             lam[0] * 180 / np.pi,
             lam[1] * 180 / np.pi,
-            color="r",
+            color="C1",
             lw=2,
             zorder=3,
         )
