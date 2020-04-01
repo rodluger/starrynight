@@ -83,7 +83,7 @@ This is an extension of \citet{Luger2019}.
 %
 As in \citet{Luger2019}, we compute the instantaneous visible flux $f$ from
 a spherical body whose surface intensity is described by the spherical harmonic
-coefficient vector $\mathbf{y}$ as
+coefficient vector $\mathbf{y}$ in some static frame $\mathcal{F}$ as
 %
 \begin{align}
     \label{eq:sTARRy}
@@ -147,26 +147,32 @@ Equation~11 of \citet{Luger2019b}:
     \label{eq:bg}
 \end{proof}
 %
-where $x$ and $y$ are the Cartesian components on the surface
+where $x$ and $y$ are the Cartesian coordinates on the surface
 of the projected
 disk of the body, with $z(x, y) = \sqrt{1 - x^2 - y^2}$, and
 %
 \begin{align}
+    \label{eq:munu}
     \mu & = l - m
     \nonumber     \\
     \nu & = l + m
     \quad.
 \end{align}
 %
-The vector $\tilde{\bvec{g}}$ is structured such that
-the component at index $n$ is $\tilde{g}_{l,m}$ with
+The vector $\tilde{\bvec{g}}$ is ordered such that
+the component at index $n$ is $\tilde{g}_{l,m}$, with
 \begin{align}
     \label{eq:lm}
     l & = \floor*{\sqrt{n}} \nonumber \\
     m & = n - l^2 - l
     \quad.
 \end{align}
-\xxx{The rotation matrices do the following...}
+Finally, the rotation matrix $\bvec{R} = \bvec{R}(i, \lambda, \theta)$
+rotates the body to the correct orientation on the sky given its
+inclination $i$, obliquity $\lambda$, and rotational phase $\theta$,
+while $\bvec{R}'$ rotates the body on the plane
+of the sky into the frame $\mathcal{F}'$ in which the integration is
+actually performed, with the occultor along the $+y$-axis.
 For more information on all of these terms, the reader is referred to
 \citet{Luger2019}.
 
@@ -258,10 +264,15 @@ originally solved by \citet{Haggard2018} and subsequently adapted to the
 the detailed solution below.
 
 Our task is to compute the solution vector for this
-configuration, which we will denote $\bvec{s}^\top_0$.  When no occultor
-is present (as in this case), it is
-more convenient to perform the integration in the \emph{polynomial basis}
-$\tilde{\bvec{p}}$ \citep[Equation 7 in][]{Luger2019}:
+configuration, which we will denote $\bvec{s}^\top_0$.
+Since in this case there is no occultor, it is
+more convenient to perform the integration in a frame $\mathcal{F}''$ where the
+semi-major axis of the terminator is aligned with the $x$-axis
+(see Figure~\ref{fig:illum}); let us denote the matrix that rotates us
+from $\mathcal{F}'$ to $\mathcal{F}''$ as $\bvec{R}''$.
+It is also far easier to perform the integration
+in the \emph{polynomial basis} $\tilde{\bvec{p}}$
+\citep[Equation 7 in][]{Luger2019}:
 %
 \begin{align}
     \tilde{p}_{l,m}(x, y) & =
@@ -274,25 +285,34 @@ $\tilde{\bvec{p}}$ \citep[Equation 7 in][]{Luger2019}:
     \end{dcases}
 \end{align}
 %
-where \xxx{we unroll p as before...}
-The solution vector is then given by
+where $\tilde{\bvec{p}}$ is again ordered such that the component at
+index $n$ is $\tilde{p}_{l,m}$, with $l$ and $m$ given by
+Equation~(\ref{eq:lm}).
+Now, if $\bvec{r}^\top$ is the solution to the surface integrals in the
+polynomial basis in $\mathcal{F}''$,
+we may compute the desired solution vector in the Green's basis from
 %
 \begin{align}
     \label{eq:sTref}
-    \bvec{s}^\top_0 & = \bvec{r}^\top \bvec{A_1} \bvec{R} \bvec{A}^{-1}
+    \bvec{s}^\top_0 & = \bvec{r}^\top \bvec{A_1} \bvec{R}'' \bvec{A}^{-1}
     \quad,
 \end{align}
 %
-where $\bvec{r}^\top$ is the solution vector in the polynomial basis,
-$\bvec{A_1}$ is the change-of-basis matrix between the polynomial basis
-and the spherical harmonic basis, $\bvec{R}$ is a spherical harmonic rotation
-matrix, and $\bvec{A}$ is the change-of basis matrix between the spherical
-harmonic basis and the Green's basis.
-\xxx{In words, the equation above reads...}
+where $\bvec{A_1}$ \citep[Equation B11 in][]{Luger2019}
+transforms the solution into the spherical harmonic basis so it can
+be rotated out of the integration frame $\mathcal{F}''$ via $\bvec{R}''$, and
+$\bvec{A}^{-1}$ \citep[Equation B13 in][]{Luger2019} transforms the
+result into the Green's basis (in which $\bvec{s}^\top$ is defined).
 
-\xxx{...} In this frame, the body sits at the origin and is illuminated by a point
-source in the
-$y-z$ plane at coordinates $(0, y_s, z_s)$. It is straightforward to show
+Our task is thus to compute $\bvec{r}^\top$.
+In frame $\mathcal{F}''$, the body sits at the origin and is
+illuminated by a point source in the
+$y-z$ plane at coordinates $(0, y_s, z_s)$ as in Figure~\ref{fig:illum}.
+The day/night terminator is a half-ellipse whose semi-major axis
+is unity and is aligned with the $x$-axis. The semi-minor axis is given
+by $b = -\nicefrac{z_s}{\sqrt{y_s^2 + z_s^2}}$, where $b > 0$ corresponds to
+a half-ellipse that is concave down and $b < 0$ to one that is concave up.
+It is straightforward to show
 that the illumination at a point $(x, y)$ on the projected disk is
 given by
 %
@@ -313,11 +333,11 @@ given by
 %
 where $b_c = \sqrt{1 - b^2}$.
 %
-\xxx{The solution vector may then be computed as...}
+The elements of the solution vector may then be computed from
 %
 \begin{align}
     \label{eq:rT}
-    r_{n(\mu,\nu)} & =
+    r_{l, m}(b) & =
     \int_{-1}^{1}
     \int_{b\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
     \tilde{p}_{n(\mu,\nu)}(x, y)
@@ -326,12 +346,16 @@ where $b_c = \sqrt{1 - b^2}$.
     \quad.
 \end{align}
 %
+This is the integral of the illumination-weighted intensity of each
+term in the polynomial basis over the projected visible dayside of the
+body.
+%
 Equation~(\ref{eq:rT}) may be solved analytically in terms of purely
 trigonometric and algebraic functions of $b$:
 %
 \begin{proof}{rT}
     \label{eq:rTsoln}
-    r_{n(\mu,\nu)} & =
+    r_{l, m}(b) & =
     \begin{cases}
         \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
         J_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -

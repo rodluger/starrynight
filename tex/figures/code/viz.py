@@ -187,10 +187,9 @@ def visualize(b, theta, bo, ro, res=4999):
     kappa, lam, xi, code = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
     phi = kappa - np.pi / 2
 
-    color_day = (1, 1, 1, 1)
     color_night = (0, 0, 0, 0.75)
-    color_day_occ = (0.122, 0.467, 0.706, 0.33)
-    color_night_occ = (0, 0, 0, 0.25)
+    color_day_occ = (0, 0, 0, 0.25)
+    color_night_occ = (0, 0, 0, 0.5)
 
     # Equation of half-ellipse
     x = np.linspace(-1, 1, 1000)
@@ -210,23 +209,28 @@ def visualize(b, theta, bo, ro, res=4999):
     img_day_occ[cond1 & cond2 & cond3] = 1
     img_night_occ = np.zeros_like(xpt)
     img_night_occ[cond1 & cond2 & ~cond3] = 1
-    img_day = np.zeros_like(xpt)
-    img_day[~cond1 & cond2 & cond3] = 1
     img_night = np.zeros_like(xpt)
     img_night[~cond1 & cond2 & ~cond3] = 1
+    x0, y0 = np.meshgrid(np.linspace(-1, 1, res), np.linspace(-1, 1, res))
+    x = x0 * np.cos(theta) + y0 * np.sin(theta)
+    y = -x0 * np.sin(theta) + y0 * np.cos(theta)
+    z = np.sqrt(1 - x ** 2 - y ** 2)
+    img_day = np.sqrt(1 - b ** 2) * y - b * z
+    img_day[img_day < 0] = np.nan
+    img_day[cond1] = np.nan
 
     # Plot
     if len(lam):
         fig, ax = plt.subplots(1, 3, figsize=(14, 5))
         fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.825)
-        ax[1].set_title("T", color="r")
-        ax[0].set_title("P", color="r")
-        ax[2].set_title("Q", color="r")
+        ax[1].set_title(r"$\mathcal{T}$", color="C1", fontsize=24)
+        ax[0].set_title(r"$\mathcal{P}$", color="C1", fontsize=24)
+        ax[2].set_title(r"$\mathcal{Q}$", color="C1", fontsize=24)
     else:
         fig, ax = plt.subplots(1, 2, figsize=(9, 5))
         fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.825)
-        ax[1].set_title("T", color="r")
-        ax[0].set_title("P", color="r")
+        ax[1].set_title(r"$\mathcal{T}$", color="C1", fontsize=24)
+        ax[0].set_title(r"$\mathcal{P}$", color="C1", fontsize=24)
 
     # Labels
     for i in range(len(phi)):
@@ -291,9 +295,19 @@ def visualize(b, theta, bo, ro, res=4999):
             origin="lower",
             extent=(-1, 1, -1, 1),
             alpha=1,
-            cmap=LinearSegmentedColormap.from_list(
-                "cmap1", [(0, 0, 0, 0), color_day], 2
+            cmap=LinearSegmentedColormap(
+                "cmap1",
+                segmentdata={
+                    "red": [[0.0, 0.0, 0.122], [1.0, 1.0, 1.0]],
+                    "green": [[0.0, 0.0, 0.467], [1.0, 1.0, 1.0]],
+                    "blue": [[0.0, 0.0, 0.706], [1.0, 1.0, 1.0]],
+                },
+                N=256,
             ),
+            vmin=0,
+            vmax=1,
+            interpolation="none",
+            zorder=-1,
         )
         axis.imshow(
             img_night,
@@ -309,15 +323,15 @@ def visualize(b, theta, bo, ro, res=4999):
 
     # T
     inds = x_t ** 2 + (y_t - bo) ** 2 < ro ** 2
-    ax[1].plot(x_t[inds], y_t[inds], "r-", lw=2)
+    ax[1].plot(x_t[inds], y_t[inds], "C1-", lw=3)
     ax[1].plot(
         [0, 1], [0, 0], color="k", ls="--", lw=0.5,
     )
-    arc = Arc((0, 0), 0.25, 0.25, 0, 0, theta * 180 / np.pi, color="k", lw=0.5,)
+    arc = Arc((0, 0), 0.15, 0.15, 0, 0, theta * 180 / np.pi, color="k", lw=0.5,)
     ax[1].add_patch(arc)
     ax[1].annotate(
         r"$\theta$",
-        xy=(0.5 * 0.25 * np.cos(0.5 * theta), 0.5 * 0.25 * np.sin(0.5 * theta),),
+        xy=(0.5 * 0.15 * np.cos(0.5 * theta), 0.5 * 0.15 * np.sin(0.5 * theta),),
         xycoords="data",
         xytext=(7 * np.cos(0.5 * theta), 7 * np.sin(0.5 * theta),),
         textcoords="offset points",
@@ -338,8 +352,8 @@ def visualize(b, theta, bo, ro, res=4999):
                 0,
                 phi[k] * 180 / np.pi,
                 phi[k + 1] * 180 / np.pi,
-                color="r",
-                lw=2,
+                color="C1",
+                lw=3,
                 zorder=3,
             )
             ax[0].add_patch(arc)
@@ -354,8 +368,8 @@ def visualize(b, theta, bo, ro, res=4999):
             0,
             lam[0] * 180 / np.pi,
             lam[1] * 180 / np.pi,
-            color="r",
-            lw=2,
+            color="C1",
+            lw=3,
             zorder=3,
         )
         ax[2].add_patch(arc)
