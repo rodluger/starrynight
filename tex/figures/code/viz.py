@@ -50,7 +50,7 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
 
     # Draw basic shapes
     ax.axis("off")
-    ax.add_artist(plt.Circle((0, bo), ro, fill=False))
+    ax.add_artist(plt.Circle((0, bo), ro, fill=False, ls="--", lw=1.5))
     ax.add_artist(plt.Circle((0, 0), 1, fill=False))
     ax.plot(x_t, y_t, "k-", lw=1)
     ax.set_xlim(-1.25, 1.25)

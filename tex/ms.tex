@@ -6,11 +6,13 @@
 
 % Shorthand for this paper
 \usepackage{xifthen}
+\newcommand{\BF}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\BS}[1]{\ensuremath{\boldsymbol{#1}}}
 \newcommand{\dd}{\ensuremath{\mathrm{d}}}
 \newcommand{\STARRYQUADPOINTS}{100\xspace}
-\newcommand{\bkappa}{\boldsymbol{\kappa}}
-\newcommand{\blambda}{\boldsymbol{\lambda}}
-\newcommand{\bxi}{\boldsymbol{\xi}}
+\newcommand{\bkappa}{\BS{\kappa}}
+\newcommand{\blambda}{\BS{\lambda}}
+\newcommand{\bxi}{\BS{\xi}}
 \newcommand{\vmax}{{v_\mathrm{max}}}
 \newcommand{\kapint}[1]{%
 \sum_{i = 0}^{\frac{N - 1}{2}}
@@ -40,12 +42,15 @@
 }{
     \sin^{#1}\left(\frac{\bkappa}{2}\right)
 }}
-\newcommand{\DE}{\Delta \boldsymbol{E}(k^2, \bkappa)}
-\newcommand{\DF}{\Delta \boldsymbol{F}(k^2, \bkappa)}
+\newcommand{\DE}{\Delta \BS{E}(k^2, \bkappa)}
+\newcommand{\DF}{\Delta \BS{F}(k^2, \bkappa)}
 \newcommand{\sgn}{{\mathrm{sgn}}}
 \newcommand{\xhat}{\ensuremath{\mathbf{\hat{x}}}\xspace}
 \newcommand{\yhat}{\ensuremath{\mathbf{\hat{y}}}\xspace}
 \newcommand{\zhat}{\ensuremath{\mathbf{\hat{z}}}\xspace}
+\newcommand{\sT}{\ensuremath{\BF{s}^\top}}
+\newcommand{\bg}{\ensuremath{\tilde{\BF{g}}}}
+\newcommand{\bp}{\ensuremath{\tilde{\BF{p}}}}
 
 
 % Bibliography stuff
@@ -75,32 +80,247 @@
 %
 This is an extension of \citet{Luger2019}.
 
-\pagebreak
-
 %
 \section{The Problem}
 \label{sec:the-problem}
 %
-As in \citet{Luger2019}, we compute the instantaneous visible flux $f$ from
-a spherical body whose surface intensity is described by the spherical harmonic
-coefficient vector $\mathbf{y}$ in some static frame $\mathcal{F}$ as
+\subsection{Overview}
+\label{sec:overview}
+%
+Without loss of generality, assume the body whose flux we wish to compute
+has radius unity and sits at the origin of a right-handed Cartesian coordinate
+system with the $x$-axis pointing to the right on the sky, the $y$-axis
+pointing up on the sky, and the $z$-axis pointing out of the sky
+toward the observer; denote this frame by $\mathcal{F}_0$. In $\mathcal{F}_0$,
+the surface intensity field of the body is described by the spherical harmonic
+coefficient vector $\mathbf{y}$. Following \citet{Luger2019}, we may compute
+the total visible flux $f$ from this body as
 %
 \begin{align}
     \label{eq:sTARRy}
-    f = \bvec{s}^\top \bvec{A} \bvec{R}' \bvec{R} \bvec{y}
+    f = \sT \BF{A} \BF{R}' \BF{R} \BF{y}
     \quad,
 \end{align}
 %
-where $\bvec{R}$ and $\bvec{R}'$ are spherical harmonic rotation matrices
-\citep[\S3.3 of][]{Luger2019},
-$\bvec{A}$ is the change-of-basis matrix from spherical harmonics
-to a basis $\tilde{\bvec{g}}$ \citep[Equation B13 in][]{Luger2019},
-and $\bvec{s}^\top$ is the \emph{solution vector}, the integral of each
-of the basis functions in $\tilde{\bvec{g}}$ over
-the projected visible disk of the body (which may be partially occulted by
-another spherical body).
+where, from right to left, $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
+is a Wigner rotation matrix that
+rotates $\bvec{y}$ to the sky frame $\mathcal{F}_\mathrm{sky}$
+given the body's inclination $i$, obliquity $\lambda$, and
+rotational phase $\vartheta$,
 %
-The basis $\tilde{\bvec{g}}$ is called the \emph{Green's basis}; its name
+$\BF{R}'$ rotates the body on the plane
+of the sky into the frame $\mathcal{F}_\mathrm{int}$ in which the
+integration is actually performed,
+%
+$\BF{A}$ is the change-of-basis matrix from spherical harmonics
+to the basis in which the integrals are computed
+%,
+and $\sT$ is the \emph{solution vector}, the integral of each
+of the basis functions over
+the projected visible disk of the body (which may be partially occulted by
+another spherical body). For more details, see Appendix~\ref{app:starry}.
+
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=0.35\linewidth]{figures/illum.pdf}
+        \oscaption{illum}{%
+            Illumination geometry for the unocculted case.
+            A point source at Cartesian coordinates
+            $(0, y_s, z_s)$ illuminates a uniform,
+            Lambertian, spherical body of radius unity. The observed
+            radiance falls off as the cosine of the angle $\phi$ between the
+            source and the surface normal. Beyond the terminator
+            (defined by $\phi = \frac{\pi}{2}$), the radiance is zero. In
+            projection, the terminator is a segment of an ellipse of semi-major
+            axis unity and semi-minor axis
+            $b = -\nicefrac{z_s}{\sqrt{y_s^2 + z_s^2}}$.
+            \label{fig:illum}
+        }
+    \end{centering}
+\end{figure}
+
+The derivations in \citet{Luger2019} assume that the coefficient vector
+$\mathbf{y}$ describes the \emph{emissivity} of the body, which (in the
+absence of limb darkening) is assumed to be Lambertian, i.e., all points on the
+surface emit equally in all directions.
+Here, we derive the solution to the occultation problem for Lambertian
+reflectance, in which case the vector $\mathbf{y}$ describes the
+surface \emph{reflectivity} (or \emph{Bond albedo}). Specifically, we assume
+the body is illuminated by a point-like source and the radiance at any point
+is proportional to the cosine of the angle $\phi$ between the incident light
+and the surface normal. Points for which $\phi \ge \frac{\pi}{2}$ are
+unilluminated and therefore have radiance of zero; see Figure~\ref{fig:illum}.
+
+In \citet{Luger2019}, the crux of the problem was to compute the terms in the
+vector $\sT$, which are surface integrals over
+the region of the occulted body that is visible to
+the observer (Figure 2 in that paper). Here, these integrals are significantly
+more difficult, because they involve not only the intersection of the
+limbs of the two bodies, but also intersections with the elliptical
+day/night terminator of the occulted body.
+
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/cases.pdf}
+        \oscaption{cases}{%
+            The eight families of cases of occultations in reflected light.
+            In these figures, the body with the solid outline
+            is the one whose flux we are interested in, and the body with the
+            dashed outline is the occultor.
+            The night side of the occulted body is colored
+            black (dark grey if occulted), and the dayside is colored blue
+            (light grey if occulted).
+            The cases in the top row involve
+            configurations in which the limb of the occultor does not intersect
+            with the terminator at any point, so the visible flux may be
+            computed in terms of classical \starry integrals. The remaining
+            cases require integration along the red boundary (the curves
+            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ of
+            \S\ref{sec:cases-5-8}), which
+            include the terminator. These involve the evaluation of incomplete
+            elliptic integrals and are derived below.
+            \label{fig:cases}
+        }
+    \end{centering}
+\end{figure}
+
+%
+
+\subsection{Problem Setup}
+\label{sec:setup}
+%
+
+Figure~\ref{fig:cases} shows the
+eight families of cases involving an occultation of an illuminated body by
+a spherical occultor. Each of these cases correspond to distinct ways in
+which the limb of the occultor can intersect with the limb of the occulted
+body and its terminator; together, these cases encompass all possible
+occultation configurations, for any illumination angle, occultor size, and
+occultor position. In the next three sections, we present the solution for the
+$\sT$, and hence for the total visible flux, for each of these cases.
+
+\section{The Solution}
+\label{sec:solution}
+%
+\subsection{Case 0}
+\label{sec:case-0}
+%
+Before we tackle configurations involving occultations, we must address the
+simpler problem of computing the total visible flux from an unocculted
+body in reflected light (see Figure~\ref{fig:illum}). This problem was
+originally solved by \citet{Haggard2018} and subsequently adapted to the
+\starry formalism in \citet{Luger2019b}, but for completeness we present
+the detailed solution in Appendix~\ref{app:case0}. We will refer to the
+solution vector for this case as $\sT_0$ (Equation~\ref{eq:sT0}).
+
+\subsection{Cases 1--4}
+\label{sec:cases-1-4}
+%
+Cases 1--4 (see Figure~\ref{fig:cases}) involve configurations in which the
+occultor does not intersect with
+the terminator of the occulted body, and are therefore fairly
+straightforward to solve.
+%
+Case 1 corresponds to any complete occultation of the body, so its
+solution vector is trivial:
+%
+\begin{align}
+    \label{eq:sT1}
+    \sT_1 = \BS{0}
+    \quad.
+\end{align}
+%
+Case 2 involves any occultation in which the occultor blocks \emph{only} the
+night side of the body (regardless of whether or not it intersects with the
+limb of the body). Since the night side intensity is zero everywhere, this case
+is also trivial, as the integration is the same as in case 0:
+%
+\begin{align}
+    \label{eq:sT2}
+    \sT_2 = \sT_0(b, \theta)
+    \quad.
+\end{align}
+%
+Case 3 corresponds to occultations in which the occultor blocks \emph{all} of
+the night side of the body and \emph{some} of the day side. In this
+configuration, the unocculted part of the disk consists only of dayside.
+Since we have no intersections with the terminator to worry about,
+we may compute the total flux using the \starry formalism from
+\citet{Luger2019}, provided we weight the intensity map by the illumination
+field:
+%
+\begin{align}
+    \label{eq:sT3}
+    \sT_3 = \sT_\star(b_o, r_o) \BS{\Psi}(b, \theta, d_s)
+    \quad,
+\end{align}
+%
+where $\sT_\star$ is the usual \starry solution vector
+\citep[Equation~26 in][]{Luger2019} and $\BS{\Psi}$ is an illumination
+matrix (Appendix~\ref{app:case3}).
+%
+Finally, case 4 involves any occultation in which the occultor blocks
+\emph{only} the day side of the body (regardless of whether or not it
+intersects with the limb).
+%
+\begin{align}
+    \label{eq:sT4}
+    \sT_4 = \sT_\star(b_o, r_o) + \sT_0(-b, \theta + \pi)
+    \quad.
+\end{align}
+%
+
+% case 1: 0
+% case 2: s0
+% case 3: sTe * I
+% case 4: sTe * I + ~sT0
+
+\subsection{Cases 5--8}
+\label{sec:cases-5-8}
+%
+Cases 5--8 (see Figure~\ref{fig:cases}, Figure~\ref{fig:geometry}).
+
+% case 5: sT0 - sT0 * I
+% case 6: (sTe + sT0) * I + ~sT0
+% case 7: (sTe - sT0) * I
+% case 8: sT0 * I
+
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/geometry.pdf}
+        \oscaption{geometry}{%
+            Geometry of an occultation in reflected light, corresponding
+            to case 5 in Figure~\ref{fig:cases}. The surface integral over
+            the blue region is computed from the antiderivatives of the
+            surface intensity map counter-clockwise along the boundary curves
+            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$.
+            \label{fig:geometry}
+        }
+    \end{centering}
+\end{figure}
+
+
+\section{Performance}
+\label{sec:performance}
+%
+See Figure~\ref{fig:speed}.
+%
+\begin{figure}[h!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/speed.pdf}
+        \oscaption{speed}{%
+            Evaluation time for the starry algorithm.
+            \label{fig:speed}
+        }
+    \end{centering}
+\end{figure}
+
+\appendix
+
+\section{The \starry formalism}
+\label{app:starry}
+%
+The basis $\bg$ is called the \emph{Green's basis}; its name
 stems from the fact that its components have a structure that makes integration
 by Green's theorem convenient. Its components were defined in
 Equation~11 of \citet{Luger2019b}:
@@ -159,119 +379,37 @@ disk of the body, with $z(x, y) = \sqrt{1 - x^2 - y^2}$, and
     \quad.
 \end{align}
 %
-The vector $\tilde{\bvec{g}}$ is ordered such that
+The vector $\bg$ is ordered such that
 the component at index $n$ is $\tilde{g}_{l,m}$, with
+%
 \begin{align}
     \label{eq:lm}
     l & = \floor*{\sqrt{n}} \nonumber \\
     m & = n - l^2 - l
     \quad.
 \end{align}
-Finally, the rotation matrix $\bvec{R} = \bvec{R}(i, \lambda, \theta)$
+%
+Finally, the rotation matrix $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
 rotates the body to the correct orientation on the sky given its
-inclination $i$, obliquity $\lambda$, and rotational phase $\theta$,
-while $\bvec{R}'$ rotates the body on the plane
+inclination $i$, obliquity $\lambda$, and rotational phase $\vartheta$,
+while $\BF{R}'$ rotates the body on the plane
 of the sky into the frame $\mathcal{F}'$ in which the integration is
 actually performed, with the occultor along the $+y$-axis.
 For more information on all of these terms, the reader is referred to
 \citet{Luger2019}.
 
-\begin{figure}[t!]
-    \begin{centering}
-        \includegraphics[width=0.35\linewidth]{figures/illum.pdf}
-        \oscaption{illum}{%
-            Illumination geometry for the unocculted case.
-            A point source at Cartesian coordinates
-            $(0, y_s, z_s)$ illuminates a uniform,
-            Lambertian, spherical body of radius unity. The observed
-            radiance falls off as the cosine of the angle $\phi$ between the
-            source and the surface normal. Beyond the terminator
-            (defined by $\phi = \frac{\pi}{2}$), the radiance is zero. In
-            projection, the terminator is a segment of an ellipse of semi-major
-            axis unity and semi-minor axis
-            $b = -\nicefrac{z_s}{\sqrt{y_s^2 + z_s^2}}$.
-            \label{fig:illum}
-        }
-    \end{centering}
-\end{figure}
-
-The derivations in \citet{Luger2019} assume that the coefficient vector
-$\mathbf{y}$ describes the \emph{emissivity} of the body, which (in the
-absence of limb darkening) is assumed to be Lambertian, i.e., all points on the
-surface emit equally in all directions.
-Here, we derive the solution to the occultation problem for Lambertian
-reflectance, in which case the vector $\mathbf{y}$ describes the
-surface \emph{reflectivity} (or \emph{Bond albedo}). Specifically, we assume
-the body is illuminated by a point-like source and the radiance at any point
-is proportional to the cosine of the angle $\phi$ between the incident light
-and the surface normal. Points for which $\phi \ge \frac{\pi}{2}$ are
-unilluminated and therefore have radiance of zero; see Figure~\ref{fig:illum}.
-
-In \citet{Luger2019}, the crux of the problem was to compute the terms in the
-vector $\bvec{s}^\top$, which are surface integrals over
-the region of the occulted body that is visible to
-the observer (Figure 2 in that paper). Here, these integrals are significantly
-more difficult, because they involve not only the intersection of the
-limbs of the two bodies, but also intersections with the elliptical
-day/night terminator of the occulted body. Figure~\ref{fig:cases} shows the
-eight families of cases involving an occultation of an illuminated body by
-a spherical occultor. Each of these cases correspond to distinct ways in
-which the limb of the occultor can intersect with the limb of the occulted
-body and its terminator; together, these cases encompass all possible
-occultation configurations, for any illumination angle, occultor size, and
-occultor position. In the next three sections, we present the solution for the
-$\bvec{s}^\top$, and hence for the total visible flux, for each of these cases.
-
-% case 0: sTr
-% case 1: 0
-% case 2: sTr
-% case 3: sTe * I + ~sTr
-% case 4: sTe * I
-% case 5: sTr - sT0 * I
-% case 6: (sTe + sT0) * I + ~sTr
-% case 7: (sTe - sT0) * I
-% case 8: sT0 * I
-
-\begin{figure}[t!]
-    \begin{centering}
-        \includegraphics[width=\linewidth]{figures/cases.pdf}
-        \oscaption{cases}{%
-            The eight families of cases of occultations in reflected light.
-            In these figures, the night side of the occulted body is colored
-            black (dark grey if occulted), and the dayside is colored blue
-            (light grey if occulted). The cases in the top row involve
-            configurations in which the limb of the occultor does not intersect
-            with the terminator at any point, so the visible flux may be
-            computed in terms of classical \starry integrals. The remaining
-            cases require integration along the red boundary (the curves
-            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ of
-            \S\ref{sec:integration}), which
-            include the terminator. These involve the evaluation of incomplete
-            elliptic integrals and are derived below.
-            \label{fig:cases}
-        }
-    \end{centering}
-\end{figure}
-
-\section{The Solution: Case 0}
-\label{sec:cases-0}
+\section{Case 0}
+\label{app:case0}
 %
-Before we tackle configurations involving occultations, we must address the
-simpler problem of computing the total visible flux from an unocculted
-body in reflected light (see Figure~\ref{fig:illum}). This problem was
-originally solved by \citet{Haggard2018} and subsequently adapted to the
-\starry formalism in \citet{Luger2019b}, but for completeness we present
-the detailed solution below.
-
 Our task is to compute the solution vector for this
-configuration, which we will denote $\bvec{s}^\top_0$.
+configuration, which we will denote $\BF{s}^\top_0$.
 Since in this case there is no occultor, it is
 more convenient to perform the integration in a frame $\mathcal{F}''$ where the
 semi-major axis of the terminator is aligned with the $x$-axis
 (see Figure~\ref{fig:illum}); let us denote the matrix that rotates us
-from $\mathcal{F}'$ to $\mathcal{F}''$ as $\bvec{R}''$.
+from $\mathcal{F}'$ to $\mathcal{F}''$ as $\BF{R}''$.
 It is also far easier to perform the integration
-in the \emph{polynomial basis} $\tilde{\bvec{p}}$
+in the \emph{polynomial basis} $\bp$
 \citep[Equation 7 in][]{Luger2019}:
 %
 \begin{align}
@@ -285,26 +423,26 @@ in the \emph{polynomial basis} $\tilde{\bvec{p}}$
     \end{dcases}
 \end{align}
 %
-where $\tilde{\bvec{p}}$ is again ordered such that the component at
+where $\bp$ is again ordered such that the component at
 index $n$ is $\tilde{p}_{l,m}$, with $l$ and $m$ given by
 Equation~(\ref{eq:lm}).
-Now, if $\bvec{r}^\top$ is the solution to the surface integrals in the
+Now, if $\BF{r}^\top$ is the solution to the surface integrals in the
 polynomial basis in $\mathcal{F}''$,
 we may compute the desired solution vector in the Green's basis from
 %
 \begin{align}
-    \label{eq:sTref}
-    \bvec{s}^\top_0 & = \bvec{r}^\top \bvec{A_1} \bvec{R}'' \bvec{A}^{-1}
+    \label{eq:sT0}
+    \BF{s}^\top_0 & = \BF{r}^\top \BF{A_1} \BF{R}'' \BF{A}^{-1}
     \quad,
 \end{align}
 %
-where $\bvec{A_1}$ \citep[Equation B11 in][]{Luger2019}
+where $\BF{A_1}$ \citep[Equation B11 in][]{Luger2019}
 transforms the solution into the spherical harmonic basis so it can
-be rotated out of the integration frame $\mathcal{F}''$ via $\bvec{R}''$, and
-$\bvec{A}^{-1}$ \citep[Equation B13 in][]{Luger2019} transforms the
-result into the Green's basis (in which $\bvec{s}^\top$ is defined).
+be rotated out of the integration frame $\mathcal{F}''$ via $\BF{R}''$, and
+$\BF{A}^{-1}$ \citep[Equation B13 in][]{Luger2019} transforms the
+result into the Green's basis (in which $\sT$ is defined).
 
-Our task is thus to compute $\bvec{r}^\top$.
+Our task is thus to compute $\BF{r}^\top$.
 In frame $\mathcal{F}''$, the body sits at the origin and is
 illuminated by a point source in the
 $y-z$ plane at coordinates $(0, y_s, z_s)$ as in Figure~\ref{fig:illum}.
@@ -316,7 +454,7 @@ It is straightforward to show
 that the illumination at a point $(x, y)$ on the projected disk is
 given by
 %
-\begin{proof}{illum}
+\begin{proof}{}
     \Psi(b; x, y) & =
     \begin{dcases}
         b_cy - bz(x, y) &
@@ -353,7 +491,7 @@ body.
 Equation~(\ref{eq:rT}) may be solved analytically in terms of purely
 trigonometric and algebraic functions of $b$:
 %
-\begin{proof}{rT}
+\begin{proof}{}
     \label{eq:rTsoln}
     r_{l, m}(b) & =
     \begin{cases}
@@ -397,7 +535,7 @@ trigonometric and algebraic functions of $b$:
 %
 where
 %
-\begin{proof}{rT}
+\begin{proof}{}
     \label{eq:IJK}
     I_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
     \nonumber \\
@@ -428,29 +566,29 @@ Given initial conditions
 %
 \\[1em]
 \begin{minipage}{.33\linewidth}
-    \begin{proof}{rT}
-        I_{0}(b) &= \frac{\arccos(b) - bb_c}{2}
+    \begin{align}
+        I_{0}(b) & = \frac{\arccos(b) - bb_c}{2}
         %
-        \nonumber \\
+        \nonumber                                \\
         %
-        I_{1}(b) &= \frac{b_c^3}{3}
+        I_{1}(b) & = \frac{b_c^3}{3}
         %
         \nonumber
-    \end{proof}
+    \end{align}
 \end{minipage}%
 \begin{minipage}{.32\linewidth}
-    \begin{proof}{rT}
-        J_{0,0} &= \pi
+    \begin{align}
+        J_{0,0} & = \pi
         %
-        \nonumber \\
+        \nonumber               \\
         %
-        J_{0,1} &= \frac{4}{3}
+        J_{0,1} & = \frac{4}{3}
         %
         \nonumber
-    \end{proof}
+    \end{align}
 \end{minipage}%
 \begin{minipage}{.33\linewidth}
-    \begin{proof}{rT}
+    \begin{proof}{}
         \label{eq:IJK0}
         K_{0,0} &= \frac{4}{3}
         %
@@ -462,7 +600,7 @@ Given initial conditions
 %
 we may compute all higher order terms from the recurrence relations
 %
-\begin{proof}{rT}
+\begin{proof}{}
     \label{eq:IJKrec}
     I_{j}(b) &= \frac{b^n b_c^3 + (j - 1) I_{j - 2}(b)}{j + 2}
     %
@@ -483,33 +621,18 @@ we may compute all higher order terms from the recurrence relations
     K_{i,j} &= \left(\frac{i - 1}{i + j + 3}\right) K_{i-2,j}
     \quad.
 \end{proof}
-%
 
+\section{Case 3}
+\label{app:case3}
+Hello.
 
-\section{The Solution: Cases 1--4}
-\label{sec:cases-1-4}
-Cases 1--4 (see Figure~\ref{fig:cases}) involve configurations in which the
-occultor does not intersect with
-the terminator of the occulted body, and are therefore significantly easier to
-solve.
+\section{Case 4}
+\label{app:case4}
+Hello.
 
-\section{The Solution: Cases 5--8}
-\label{sec:cases-5-8}
-Cases 5--8 (see Figure~\ref{fig:cases}).
-
-\begin{figure}[t!]
-    \begin{centering}
-        \includegraphics[width=\linewidth]{figures/geometry.pdf}
-        \oscaption{geometry}{%
-            Geometry of an occultation in reflected light, corresponding
-            to case 5 in Figure~\ref{fig:cases}. The surface integral over
-            the blue region is computed from the antiderivatives of the
-            surface intensity map counter-clockwise along the boundary curves
-            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$.
-            \label{fig:geometry}
-        }
-    \end{centering}
-\end{figure}
+\section{Cases 5--8}
+\label{app:cases-5-8}
+Hello.
 
 As in \citet{Luger2019}, the elements of the solution vector $\mathbf{s}^\top$
 are given by the line integral
@@ -523,7 +646,7 @@ where
 %
 \begin{align}
     \label{eq:G}
-    \bvec{G}_{\mu,\nu} (x, y) & =
+    \BF{G}_{\mu,\nu} (x, y) & =
     \begin{dcases}
         %
         x^{\frac{\mu + 2}{2}}
@@ -564,7 +687,7 @@ where
 and
 %
 \begin{align}
-    \dd \bvec{r} & = -r \sin\varphi \, \dd \varphi \, \xhat +
+    \dd \BF{r} & = -r \sin\varphi \, \dd \varphi \, \xhat +
     r \cos\varphi \, \dd \varphi \, \yhat
     \quad,
 \end{align}
@@ -572,27 +695,8 @@ and
 where $\varphi = \varphi(x, y)$ is the parametrized angle along the
 arc of integration. Generally, there are at most three arcs bounding a given
 closed surface of integration, which we will denote $\mathcal{P}$,
-$\mathcal{Q}$, and $\mathcal{T}$. These are shown for a typical occultor-occulted
-configuration in Figure~\ref{fig:geometry}.
-
-
-\section{Performance}
-\label{sec:performance}
-
-%
-\begin{figure}[h!]
-    \begin{centering}
-        \includegraphics[width=\linewidth]{figures/speed.pdf}
-        \oscaption{speed}{%
-            Evaluation time for the starry algorithm.
-            \label{fig:speed}
-        }
-    \end{centering}
-\end{figure}
-
-
-\section{Integration}
-\label{sec:integration}
+$\mathcal{Q}$, and $\mathcal{T}$. These are shown for a typical
+occultor-occulted configuration in Figure~\ref{fig:geometry}.
 
 \subsection{Definitions}
 %
@@ -600,18 +704,18 @@ Define the pairwise difference operator
 %
 \begin{align}
     \label{eq:pairdiff}
-    \Delta \boldsymbol{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
+    \Delta \BS{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
     \left( v_{2i + 1} - v_{2i} \right)
 \end{align}
 %
 which sums the difference of successive pairs of values in
-an array $\boldsymbol{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
+an array $\BS{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
 
 Define the quantity
 %
 \begin{align}
     \label{eq:q}
-    \boldsymbol{q}(k^2, \bkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
+    \BS{q}(k^2, \bkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
     \quad.
 \end{align}
 
@@ -693,13 +797,13 @@ The function $\mathcal{T}_{2}$ is given by
     \quad.
 \end{align}
 
-\begin{proof}{T2}
-    \mathcal{T}_{2}(b, \bxi) &= -\sgn(b) \Delta \boldsymbol{f}(b, \bxi)
+\begin{proof}{}
+    \mathcal{T}_{2}(b, \bxi) &= -\sgn(b) \Delta \BS{f}(b, \bxi)
 \end{proof}
 %
 where
 %
-\begin{proof}{T2}
+\begin{proof}{}
     \begin{split}
         f_i(b, \xi_i) =
         \frac{1}{3}\scalebox{1.4}{\Bigg(}
@@ -727,7 +831,7 @@ where
 %
 and
 %
-\begin{proof}{T2}
+\begin{proof}{}
     \phi(b, \xi_i) & =
     \begin{cases}
         0                          & \qquad 0 \leq \xi_i < \frac{\pi}{2}     \\
@@ -790,8 +894,8 @@ a trivial lower boundary condition:
 \end{proof}
 %
 where the last expression is valid for all $v > 0$. We find that this algorithm
-is generally stable, except when $\sin\left(\frac{\bkappa}{2}\right)$ is small. In
-that limit, we evaluate $\mathcal{I}_N(\bkappa)$ by numerical integration of
+is generally stable, except when $\sin\left(\frac{\bkappa}{2}\right)$ is small.
+In that limit, we evaluate $\mathcal{I}_N(\bkappa)$ by numerical integration of
 Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
 points. We then recurse downward by substituting $v \rightarrow v + 1$ in
 Equation~(\ref{eq:Irec}) and solving for $\mathcal{I}_v(\bkappa)$.
@@ -834,7 +938,7 @@ recursion relation to obtain analytic solutions for all $\mathcal{J}_v$:
     \frac{1}{3} \bigg(
     2 \left(2 - \frac{1}{k^2}\right) \DE +
     \left(\frac{1}{k^2} - 1\right) \DF +
-    \Delta \boldsymbol{z}_0(k^2, \bkappa)
+    \Delta \BS{z}_0(k^2, \bkappa)
     \bigg)
     %
     \nonumber \\
@@ -843,7 +947,7 @@ recursion relation to obtain analytic solutions for all $\mathcal{J}_v$:
     \frac{1}{15} \bigg(
     \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE +
     \left(3 k^2 - 7 + \frac{4}{k^2}\right) \DF +
-    \Delta \boldsymbol{z}_1(k^2, \bkappa)
+    \Delta \BS{z}_1(k^2, \bkappa)
     \bigg)
     %
     \nonumber \\
@@ -853,7 +957,7 @@ recursion relation to obtain analytic solutions for all $\mathcal{J}_v$:
     \bigg(
     2 \left( v + 1 + (v - 1) k^2 \right) \mathcal{J}_{v - 1} -
     (2v - 3) k^2 \mathcal{J}_{v - 2}
-    + \Delta \boldsymbol{z}_v(k^2, \bkappa)
+    + \Delta \BS{z}_v(k^2, \bkappa)
     \bigg)
 \end{proof}
 %
@@ -862,28 +966,28 @@ where the last expression is valid for all $v > 1$ and
 %
 \begin{proof}{J}
     \label{eq:Jrec_z}
-    \boldsymbol{z}_0(k^2, \boldsymbol{\kappa}) & =
+    \BS{z}_0(k^2, \BS{\kappa}) & =
     \frac{
         \sinhalfkap
         \coshalfkap
-        \boldsymbol{q}(k^2, \bkappa)
+        \BS{q}(k^2, \bkappa)
     }{
         k^2
     }
     %
     \nonumber\\
     %
-    \boldsymbol{z}_1(k^2, \boldsymbol{\kappa}) & =
+    \BS{z}_1(k^2, \BS{\kappa}) & =
     \left(\left(3 \sinhalfkap[2] + 4\right) - 6k^2\right)
-    \boldsymbol{z}_0(k^2, \boldsymbol{\kappa})
+    \BS{z}_0(k^2, \BS{\kappa})
     %
     \nonumber\\
     %
-    \boldsymbol{z}_v(k^2, \boldsymbol{\kappa}) & =
+    \BS{z}_v(k^2, \BS{\kappa}) & =
     k^2
     \sinhalfkap[2v - 3]
     \coshalfkap
-    \boldsymbol{q}(k^2, \boldsymbol{\kappa})^5
+    \BS{q}(k^2, \BS{\kappa})^5
     \quad.
 \end{proof}
 %
@@ -931,7 +1035,7 @@ where the recursion coefficients are given by
     c_v(k^2, \bkappa) &= \Delta
     \bigg(
     \frac{
-            \boldsymbol{z}_v(k^2, \boldsymbol{\kappa})
+            \BS{z}_v(k^2, \BS{\kappa})
         }{
             2v + 3
         }
@@ -965,7 +1069,7 @@ The function $\mathcal{W}_n$ is given by
 %
 This integral has a closed-form solution:
 %
-\begin{align}
+\begin{proof}{}
     \label{eq:Wsol}
     \mathcal{W}_n =
     \frac{\sin^{2n + 2}\left(\frac{\bkappa}{2}\right)}{2n + 5}
@@ -973,7 +1077,7 @@ This integral has a closed-form solution:
     \frac{3}{n+1}
         {_2F_1}\left(-\frac{1}{2}, n + 1; n + 2; 1 - q^2\right) + 2 q^3
     \right)
-\end{align}
+\end{proof}
 %
 where ${_2F_1}(a, b; c; z)$ is the Gauss hypergeometric function.
 
