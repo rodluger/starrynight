@@ -302,15 +302,15 @@ axes.append(ax)
 
 # Indicate the transformations between each image
 add_arrow(axes[0], axes[1], r"$\mathbf{R}$")
-add_arrow(axes[1], axes[2], r"$\mathbf{R}''$", kind="bar_up")
+add_arrow(axes[1], axes[2], r"$\mathbf{R}'$", kind="bar_up")
 add_arrow(axes[2], axes[3], r"$\mathbf{A_1}$")
 add_arrow(axes[3], axes[4], r"$\mathbf{I}$")
-add_arrow(axes[4], axes[5], r"$\mathbf{r}^\top$", eps=0.2)
+add_arrow(axes[4], axes[5], r"$\mathfrak{r}^\top$", eps=0.2)
 add_arrow(axes[1], axes[6], r"$\mathbf{R}'$", kind="bar_down")
 add_arrow(axes[6], axes[7], r"$\mathbf{A_1}$")
 add_arrow(axes[7], axes[8], r"$\mathbf{I}$")
 add_arrow(axes[8], axes[9], r"$\mathbf{A_2}$")
-add_arrow(axes[9], axes[10], r"$\mathbf{s}^\top$", eps=0.2)
+add_arrow(axes[9], axes[10], r"$\mathfrak{s}^\top$", eps=0.2)
 
 # Appearance
 for ax in axes:

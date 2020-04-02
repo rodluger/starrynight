@@ -48,8 +48,11 @@
 \newcommand{\xhat}{\ensuremath{\mathbf{\hat{x}}}\xspace}
 \newcommand{\yhat}{\ensuremath{\mathbf{\hat{y}}}\xspace}
 \newcommand{\zhat}{\ensuremath{\mathbf{\hat{z}}}\xspace}
-\newcommand{\sT}{\ensuremath{\BF{s}^\top}}
-\newcommand{\rT}{\ensuremath{\BF{r}^\top}}
+\newcommand{\sT}{\ensuremath{\mathfrak{s}^\top}}
+\newcommand{\rT}{\ensuremath{\mathfrak{r}^\top}}
+\newcommand{\sTe}{\ensuremath{\BF{s}^\top}}
+\newcommand{\rTe}{\ensuremath{\BF{r}^\top}}
+%
 \newcommand{\bg}{\ensuremath{\tilde{\BF{g}}}}
 \newcommand{\bp}{\ensuremath{\tilde{\BF{p}}}}
 \newcommand{\by}{\ensuremath{\tilde{\BF{y}}}}
@@ -96,46 +99,52 @@ toward the observer; denote this frame by $\mathcal{F}_0$. In $\mathcal{F}_0$,
 the surface (emitted) intensity field of the body is described by the
 spherical harmonic coefficient vector $\mathbf{y}$. Following
 \citet{Luger2019}, when no occultor is present, we may compute the total
-visible flux $f$ from this body as
+visible flux $f_0$ from this body as
 %
 \begin{align}
     \label{eq:rTA1Ry}
-    f = \rT \BF{A_1} \BF{R} \BF{y}
+    f_0 = \rTe \BF{A_1} \BF{R} \BF{y}
     \quad,
 \end{align}
 %
 where, from right to left, $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
 is a Wigner rotation matrix that rotates $\bvec{y}$ to the sky frame
 $\mathcal{F}_\mathrm{sky}$ given the body's inclination $i$, obliquity
-$\lambda$, and rotational phase $\vartheta$,
+$\lambda$, and rotational phase $\vartheta$ (Equation~\ref{eq:R}),
 %
 $\BF{A_1}$ is the change-of-basis matrix from the spherical harmonic
 basis $\by$ to the \emph{polynomial basis} $\bp$ in which the integrals
-are computed,
+are computed (Equation~\ref{eq:A1}),
 %
-and $\rT$ is the vector of solutions to the integral over
-the projected visible disk of the body for each term in $\bp$.
+and $\rTe$ is the vector of solutions to the integral over
+the projected visible disk of the body for each term in $\bp$
+(Equation~\ref{eq:rTe}).
 %
-If an occultor is present, we instead compute the visible flux from
+If instead an occultor of radius $r_o$ is located at position $(x_o, y_o)$,
+we instead compute the visible flux $f$ from
 %
 \begin{align}
     \label{eq:sTARRy}
-    f = \sT \BF{A} \BF{R}' \BF{R} \BF{y}
+    f = \sTe \BF{A} \BF{R}' \BF{R} \BF{y}
     \quad,
 \end{align}
 %
 where, as before, $\BF{R}$ rotates the body from $\mathcal{F}_0$
 to $\mathcal{F}_\mathrm{sky}$,
 %
-$\BF{R}'$ rotates the body on the plane
-of the sky into the frame $\mathcal{F}_\mathrm{greens}$ in which the
-integration is actually performed,
+$\BF{R}' = \BF{R}'(\omega)$ rotates the body on the plane
+of the sky by an angle
+$\omega = \nicefrac{\pi}{2} - \mathrm{arctan2}(y_o, x_o)$
+into a frame $\mathcal{F}_\mathrm{greens}$ in which the
+occultor lies along the $+y$-axis (Equation~\ref{eq:R'}),
 %
 $\BF{A}$ is the change-of-basis matrix from $\by$
-to the \emph{Green's basis} $\bg$ in which the integrals are computed,
+to the \emph{Green's basis} $\bg$ in which the integrals are computed
+(Equation~\ref{eq:A}),
 %
-and $\sT$ is the vector of solutions to the integral over
-the projected visible disk of the body for each term in $\bg$.
+and $\sTe = \sTe(b_o, r_o)$ is the vector of solutions to the integral over
+the projected visible disk of the body for each term in $\bg$
+(Equation~\ref{eq:sTe}), with $b_o = \sqrt{x_o^2 + y_o^2}$.
 For more details, see Appendix~\ref{app:starry} and \citet{Luger2019}.
 
 \subsection{Adapting the algorithm to the reflected light case}
@@ -152,20 +161,24 @@ reflectance, in which case the vector $\mathbf{y}$ is taken to describe the
 surface \emph{reflectivity} (or \emph{Bond albedo}).
 
 Second, we must explicitly model the illumination of the body. We assume the
-body is illuminated by a point-like source, in which case the radiance at any
+body is illuminated by a point-like source of unit luminosity, in which case
+the radiance at any
 point on the surface is proportional to the cosine of the angle $\phi$ between
 the incident light and the surface normal. Points for which
 $\phi \ge \frac{\pi}{2}$ are unilluminated and therefore have radiance of zero.
 %
 If the point-like illumination source is placed at sky coordinates
 $(x_s, y_s, z_s)$, the day/night terminator on the body is a half-ellipse
-of semi-major axis unity that is fully described by its semi-minor axis,
+of semi-major axis unity that is fully described by its (signed) semi-minor
+axis,
 %
 \begin{proof}{}
     \label{eq:b}
-    b = -\frac{z_s}{\sqrt{x_s^2 + y_s^2 + z_s^2}}
+    b = -\frac{z_s}{r_s}
     \quad,
 \end{proof}
+%
+where $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$ is the distance to the source,
 %
 and the angle by which its semi-major axis is rotated away from the
 $+x$-axis,
@@ -177,29 +190,31 @@ $+x$-axis,
 \end{proof}
 %
 Given this formulation, and assuming that
-$x_s^2 + y_s^2 + z_s^2 \gg 1$,
+$r_s \gg 1$,
 it is straightforward to show that the illumination
-$I$ at a point $(x, y)$ on the projected disk of the body is given by
-the polynomial
+$\mathfrak{I}$ at a point $(x, y)$ on the projected disk of the body is given
+by the function
 %
 \begin{proof}{}
-    \frac{I(b, \theta; x, y)}{I_0} &=
+    \label{eq:Psi}
+    \mathfrak{I}(b, \theta, r_s; x, y)&=
+    \mathrm{max}\bigg( 0, I(b, \theta, r_s; x, y) \bigg)
+\end{proof}
+%
+where
+%
+\begin{proof}{}
+    I(b, \theta, r_s; x, y) &= \frac{1}{4\pi r_s^2}
+    \bigg(
     -b_c\sin\theta x + b_c\cos\theta y - bz(x, y)
+    \bigg)
 \end{proof}
 %
-where $b_c = \sqrt{1 - b^2}$, $z(x, y) = \sqrt{1 - x^2 - y^2}$, and
+with $b_c = \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 %
-\begin{proof}{}
-    I_0 = \frac{L}{4\pi\left(x_s^2 + y_s^2 + z_s^2\right)}
-\end{proof}
-%
-is the peak illumination (at the substellar point,
-assuming the illumination source is a star), with $L$ equal to the luminosity
-of the source.
-%
-Since the illumination is just a polynomial in $x$, $y$, and $z(x, y)$, we
+Since $I$ is just a polynomial in $x$, $y$, and $z(x, y)$, we
 can express it as a vector $\BF{i}(b, \theta)$ in the polynomial basis $\bp$.
-Recalling the structure of the basis (c.f. Appendix~\ref{app:starry}),
+Recalling the structure of the basis (Equation~\ref{eq:p}),
 %
 \begin{align}
     \bp & =
@@ -215,8 +230,8 @@ Recalling the structure of the basis (c.f. Appendix~\ref{app:starry}),
 we may write
 %
 \begin{proof}{}
-    \BF{i}(b, \theta) & =
-    I_0
+    \BF{i}(b, \theta, r_s) & =
+    \frac{1}{4\pi r_s^2}
     \begin{pmatrix}
         0              \\
         -b_c\sin\theta \\
@@ -337,8 +352,8 @@ If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
 we can compose $\BF{I}$ out of these column vectors:
 %
 \begin{proof}{}
-    \BF{I}(b, \theta) & =
-    I_0
+    \BF{I}(b, \theta, r_s) & =
+    \frac{1}{4\pi r_s^2}
     \begin{pmatrix}
         0              & 0              & -b             & 0              & \cdots \\
         -b_c\sin\theta & 0              & 0              & 0              & \cdots \\
@@ -356,6 +371,12 @@ we can compose $\BF{I}$ out of these column vectors:
 where the dimensions of the matrix are $\big((l + 2)^2, (l + 1)^2\big)$, where
 $l$ is the spherical harmonic degree of the map (this operator raises the
 degree of the map by one).
+%
+Note, importantly, that this weighting is valid only on the dayside
+hemisphere (see Equation~\ref{eq:Psi}), as the operator $\BF{I}$ weights
+points on the nightside by a \emph{negative} amount, which is clearly
+unphysical. As we will see momentarily, we account for this by excluding the
+nightside from the integration region in our flux integrals.
 
 \begin{figure}[t!]
     \begin{centering}
@@ -381,7 +402,13 @@ is now given by
 %
 \begin{align}
     \label{eq:rTIA1RRy}
-    f = \rT \BF{I} \BF{A_1} \BF{R}'' \BF{R} \BF{y}
+    f_0 & =
+    \mathfrak{r}^\top(b)
+    \BF{I}(b, 0, r_s)
+    \BF{A_1}
+    \BF{R}'(-\theta)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
     \quad,
 \end{align}
 %
@@ -389,19 +416,40 @@ and the flux during an occultation by
 %
 \begin{align}
     \label{eq:sTA2IA1RRy}
-    f = \sT \BF{A_2} \BF{I} \BF{A_1} \BF{R}' \BF{R} \BF{y}
+    f & =
+    \mathfrak{s}^\top(b, \theta, b_o, r_o)
+    \BF{A_2}
+    \BF{I}(b, \theta, r_s)
+    \BF{A_1}
+    \BF{R}'(\omega)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
     \quad.
 \end{align}
 %
-Two notes about these equations. First, we introduced a new rotation matrix
-$\BF{R}''$ in Equation~(\ref{eq:rTIA1RRy}), which rotates the problem so that
-the semi-major axis of the terminator is aligned with the $x$-axis; as will
-become clear in \S\ref{sec:case-0} below, this greatly simplifies the
-integration step. Second, in the derivation of Equation~(\ref{eq:sTA2IA1RRy})
+A few notes about these equations are in order.
+First, we now apply a rotation matrix $\BF{R}'(-\theta)$
+(Equation~\ref{eq:R'}) to the unocculted case,
+which rotates the body so the semi-major axis of the terminator is aligned
+with the $x$-axis; as will become clear in \S\ref{sec:solution-no-occ} below,
+this greatly simplifies the integration step. Note the corresponding change
+in $\BF{I}$, which we call with $\theta = 0$.
+%
+Second, in the derivation of Equation~(\ref{eq:sTA2IA1RRy})
 we used the fact that $\BF{A} = \BF{A_2} \BF{A_1}$
-\citep[c.f. Equation~14 in][]{Luger2019}, where $\BF{A_1}$ transforms from
+(Equation~\ref{eq:A}), where $\BF{A_1}$ transforms from
 the spherical harmonic basis $\by$ to the polynomial basis $\bp$, and
 $\BF{A_2}$ transforms from $\bp$ to the Green's basis $\bg$.
+Finally, note that we replaced the integral vectors
+$\rTe$ and $\sTe(b_o, r_o)$
+with the vectors
+$\mathfrak{r}^\top(b)$ and $\mathfrak{s}^\top(b, \theta, b_o, r_o)$,
+respectively.
+As we mentioned above, we must modify the integration limits to exclude the
+nightside, where the weighting by $\BF{I}$ is unphysical.
+The vectors $\mathfrak{r}^\top$ and $\mathfrak{s}^\top$ correspond to these
+modified integrals, which we devote the rest of this paper to
+computing.
 
 Figure~\ref{fig:frames} summarizes the transformations involved in the two
 equations above. Starting on the right with a map vector $\BF{y}$ in
@@ -409,7 +457,7 @@ the spherical harmonic basis $\by$, defined in some observer-independent frame
 $\mathcal{F}_0$, we first rotate it via $\BF{R}$ to the sky frame
 $\mathcal{F}_\mathrm{sky}$, in which orientation the body is viewed by the
 observer. If there is no occultation (upper branch of the figure), we then
-rotate the map once more via $\BF{R}''$ to the integration frame
+rotate the map once more via $\BF{R}'$ to the integration frame
 $\mathcal{F}_\mathrm{int}$, in which the terminator is parallel to the
 $x$-axis. We then apply $\BF{A_1}$ to change basis to $\bp$, apply the
 illumination transform $\BF{I}$, and finally dot in the solutions to the
@@ -421,13 +469,225 @@ to weight the map by the illumination as above. Finally, we change basis
 via $\BF{A_2}$ to the Green's basis, in which we compute and dot the
 integrals $\sT$.
 
-In \citet{Luger2019}, the crux of the problem was to compute the terms in the
-vectors $\sT$ and $\rT$, which are surface integrals over
-the region of the body that is visible to the observer
-(see Figure 2 in that paper). Here, these integrals are significantly
-more difficult, because they involve not only integration along the
-limb of the body and of a possible occultor, but also along the
-elliptical day/night terminator.
+%
+
+\section{The Solution: No Occultation}
+\label{sec:solution-no-occ}
+%
+Before we tackle configurations involving occultations, we must address the
+simpler problem of computing the total visible flux from an unocculted
+body in reflected light (Equation~\ref{eq:rTIA1RRy}). This problem was
+originally solved by \citet{Haggard2018} and subsequently by
+\citet{Luger2019b}, but for completeness we present the detailed
+derivation in the \starry formalism here.
+
+As we discussed above, we perform the integration in a frame
+$\mathcal{F}_\mathrm{int}$
+in which the semi-major axis of the terminator is aligned with the
+$x$-axis, with the illumination source at $y \ge 0$.
+The solution vector may then be computed from
+%
+\begin{align}
+    \label{eq:rT}
+    \rT(b) & =
+    \int_{-1}^{1}
+    \int_{b\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
+    \bp(x, y)
+    \ \dd y \ \dd x
+    \quad,
+\end{align}
+%
+which is identical to Equation~(20) in \citet{Luger2019} except for the
+lower integration limit of the inner integral. The lower limit is now
+the equation describing the terminator, which ensures we always exclude the
+nightside from the integration region.
+%
+For computational efficiency, in practice we compute the integral of the
+intensity-weighted basis directly,
+%
+\begin{align}
+    \label{eq:rTI}
+    \BS{\rho}^\top(b, r_s) & \equiv
+    \rT(b) \mathbf{I}(b, 0, r_s)
+    \nonumber                       \\
+                           & =
+    \int_{-1}^{1}
+    \int_{b\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
+    \bp(x, y)
+    \mathbf{I}(b, 0, r_s)
+    \ \dd y \ \dd x
+    \quad,
+\end{align}
+%
+recalling that in frame $\mathcal{F}_\mathrm{int}$, $\theta = 0$ by
+definition.
+%
+Equation~(\ref{eq:rTI}) may be solved analytically in terms of purely
+trigonometric and algebraic functions of $b$. The component of $\BS{\rho}^\top$
+at index $n$ is given by
+%
+\begin{proof}{}
+    \label{eq:rTsoln}
+    \rho_n(b, r_s) & =
+    \frac{1}{4\pi r_s^2}
+    \begin{cases}
+        \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
+        J_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
+        b I_\frac{\nu}{2}(b) K_{\frac{\mu}{2}, \frac{\nu}{2}}
+        %
+         &
+        %
+        \qquad
+        \mu, \nu \ \mathrm{even}
+        %
+        \\[1em]
+        %
+        b_c
+        I_{\frac{\nu + 1}{2}}(b) K_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
+        %
+        \\[0.5em]
+        \qquad
+        %
+        - \frac{b}{2} \bigg\{
+        \left(1 - b^{\frac{\nu + 1}{2}}\right)
+        \left(
+        J_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}} -
+        J_{\frac{\mu + 3}{2}, \frac{\nu - 1}{2}}
+        \right)
+        \\[0.5em]
+        \qquad\qquad
+        -
+        \left(1 - b^{\frac{\nu + 5}{2}}\right)
+        J_{\frac{\mu - 1}{2}, \frac{\nu + 3}{2}}
+        \bigg\}
+        %
+         &
+        %
+        \qquad
+        \mathrm{otherwise}
+        %
+    \end{cases}
+\end{proof}
+%
+where we make use of the indices
+%
+\begin{align}
+    \label{eq:l-m-mu-nu}
+    \mu & = l - m
+    \nonumber                 \\
+    \nu & = l + m
+    \nonumber                 \\
+    l   & = \floor*{\sqrt{n}}
+    \nonumber                 \\
+    m   & = n - l^2 - l
+\end{align}
+%
+as in \citet{Luger2019} and we define the helper functions
+%
+\begin{proof}{}
+    \label{eq:HJK}
+    H_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
+    \nonumber \\
+    %
+    J_{i,j} &=
+    \frac{
+        \Gamma\left(\frac{i + 1}{2}\right)
+        \Gamma\left(\frac{j + 1}{2}\right)
+    }
+    {
+        \Gamma\left(\frac{i + j + 4}{2}\right)
+    }
+    %
+    \nonumber \\
+    %
+    K_{i,j} &=
+    \frac{
+        \Gamma\left(\frac{i + 1}{2}\right)
+        \Gamma\left(\frac{j + 4}{2}\right)
+    }
+    {
+        \Gamma\left(\frac{i + j + 5}{2}\right)
+    }
+    \quad.
+\end{proof}
+%
+Given initial conditions
+%
+\\[1em]
+\begin{minipage}{.33\linewidth}
+    \begin{align}
+        H_{0}(b) & = \frac{\arccos(b) - bb_c}{2}
+        %
+        \nonumber                                \\
+        %
+        H_{1}(b) & = \frac{b_c^3}{3}
+        %
+        \nonumber
+    \end{align}
+\end{minipage}%
+\begin{minipage}{.32\linewidth}
+    \begin{align}
+        J_{0,0} & = \pi
+        %
+        \nonumber               \\
+        %
+        J_{0,1} & = \frac{4}{3}
+        %
+        \nonumber
+    \end{align}
+\end{minipage}%
+\begin{minipage}{.33\linewidth}
+    \begin{proof}{}
+        \label{eq:IJK0}
+        K_{0,0} &= \frac{4}{3}
+        %
+        \nonumber \\
+        K_{0,1} &= \frac{3\pi}{8}
+    \end{proof}
+\end{minipage}
+\\[1em]
+%
+we may compute all higher order terms from the recurrence relations
+%
+\begin{proof}{}
+    \label{eq:IJKrec}
+    H_{j}(b) &= \frac{b^n b_c^3 + (j - 1) H_{j - 2}(b)}{j + 2}
+    %
+    \nonumber \\
+    %
+    J_{0,j} &= \left(\frac{j - 1}{j + 2}\right) J_{0,j-2}
+    %
+    \nonumber \\
+    %
+    K_{0,j} &= \left(\frac{j + 2}{j + 3}\right) K_{0,j-2}
+    %
+    \nonumber \\
+    %
+    J_{i,j} &= \left(\frac{i - 1}{i + j + 2}\right) J_{i-2,j}
+    %
+    \nonumber \\
+    %
+    K_{i,j} &= \left(\frac{i - 1}{i + j + 3}\right) K_{i-2,j}
+    \quad.
+\end{proof}
+%
+Once $\BS{\rho}^\top$ is known, the observed flux is computed from
+(c.f. Equation~\ref{eq:rTIA1RRy})
+%
+\begin{proof}{}
+    \label{eq:f0}
+    f_0 & =
+    \BS{\rho}^\top(b, r_s)
+    \BF{A_1}
+    \BF{R}'(-\theta)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
+    \quad.
+\end{proof}
+%
+
+\section{The Solution: Occultation}
+\label{sec:solution-occ}
 
 \begin{figure}[t!]
     \begin{centering}
@@ -454,34 +714,16 @@ elliptical day/night terminator.
     \end{centering}
 \end{figure}
 
-%
-
-\subsection{Problem Setup}
-\label{sec:setup}
-%
-
 Figure~\ref{fig:cases} shows the
 eight families of cases involving an occultation of an illuminated body by
 a spherical occultor. Each of these cases correspond to distinct ways in
 which the limb of the occultor can intersect with the limb of the occulted
 body and its terminator; together, these cases encompass all possible
 occultation configurations, for any illumination angle, occultor size, and
-occultor position. In the next three sections, we present the solution for the
+occultor position. In the following sections, we present the solution for the
 $\sT$, and hence for the total visible flux, for each of these cases.
 
-\section{The Solution}
-\label{sec:solution}
-%
-\subsection{Case 0}
-\label{sec:case-0}
-%
-Before we tackle configurations involving occultations, we must address the
-simpler problem of computing the total visible flux from an unocculted
-body in reflected light (see Figure~\ref{fig:illum}). This problem was
-originally solved by \citet{Haggard2018} and subsequently adapted to the
-\starry formalism in \citet{Luger2019b}, but for completeness we present
-the detailed solution in Appendix~\ref{app:case0}. We will refer to the
-solution vector for this case as $\sT_0$ (Equation~\ref{eq:sT0}).
+\xxx{How do we determine which case we're modeling?}
 
 \subsection{Cases 1--4}
 \label{sec:cases-1-4}
@@ -491,23 +733,24 @@ occultor does not intersect with
 the terminator of the occulted body, and are therefore fairly
 straightforward to solve.
 %
-Case 1 corresponds to any complete occultation of the body, so its
-solution vector is trivial:
+Case 1 corresponds to any complete occultation of the body, so the
+solution for the flux is trivial:
 %
 \begin{align}
     \label{eq:sT1}
-    \sT_1 = \BS{0}
+    f_1 = 0
     \quad.
 \end{align}
 %
 Case 2 involves any occultation in which the occultor blocks \emph{only} the
 night side of the body (regardless of whether or not it intersects with the
 limb of the body). Since the night side intensity is zero everywhere, this case
-is also trivial, as the integration is the same as in case 0:
+is also trivial, as the flux is equal to the flux in the no occultation case
+(Equation~\ref{eq:f0}):
 %
 \begin{align}
     \label{eq:sT2}
-    \sT_2 = \sT_0(b, \theta)
+    f_2 = f_0
     \quad.
 \end{align}
 %
@@ -519,36 +762,47 @@ we may compute the total flux using the \starry formalism from
 \citet{Luger2019}, provided we weight the intensity map by the illumination
 field:
 %
-\begin{align}
-    \label{eq:sT3}
-    \sT_3 = \sT_\star(b_o, r_o) \BS{\Psi}(b, \theta, d_s)
-    \quad,
-\end{align}
-%
-where $\sT_\star$ is the usual \starry solution vector
-\citep[Equation~26 in][]{Luger2019} and $\BS{\Psi}$ is an illumination
-matrix (Appendix~\ref{app:case3}).
+\begin{proof}{}
+    \label{eq:f3}
+    f_3 = \sTe(b_o, r_o)
+    \BF{A_2}
+    \BF{I}(b, \theta, r_s)
+    \BF{A_1}
+    \BF{R}'(\omega)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
+    \quad.
+\end{proof}
 %
 Finally, case 4 involves any occultation in which the occultor blocks
 \emph{only} the day side of the body (regardless of whether or not it
-intersects with the limb).
+intersects with the limb):
 %
-\begin{align}
+\begin{proof}{}
     \label{eq:sT4}
-    \sT_4 = \sT_\star(b_o, r_o) + \sT_0(-b, \theta + \pi)
-    \quad.
-\end{align}
+    f_4 = f_3 + \hat{f}_0
+    \quad,
+\end{proof}
 %
+where we define
+%
+\begin{proof}{}
+    \label{eq:f0hat}
+    \hat{f}_0 & =
+    \BS{\rho}^\top(-b, r_s)
+    \BF{A_1}
+    \BF{R}'(-\theta - \pi)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
+    \quad.
+\end{proof}
 
-% case 1: 0
-% case 2: s0
-% case 3: sTe * I
-% case 4: sTe * I + ~sT0
+%
 
 \subsection{Cases 5--8}
 \label{sec:cases-5-8}
 %
-Cases 5--8 (see Figure~\ref{fig:cases}, Figure~\ref{fig:geometry}).
+\xxx{Cases 5--8} (see Figure~\ref{fig:cases}, Figure~\ref{fig:geometry}).
 
 % case 5: sT0 - sT0 * I
 % case 6: (sTe + sT0) * I + ~sT0
@@ -573,7 +827,7 @@ Cases 5--8 (see Figure~\ref{fig:cases}, Figure~\ref{fig:geometry}).
 \section{Performance}
 \label{sec:performance}
 %
-See Figure~\ref{fig:speed}.
+\xxx{Performance!} See Figure~\ref{fig:speed}.
 %
 \begin{figure}[h!]
     \begin{centering}
@@ -586,6 +840,8 @@ See Figure~\ref{fig:speed}.
 \end{figure}
 
 \appendix
+
+\xxx{Work in progress below here.}
 
 \section{The \starry formalism}
 \label{app:starry}
@@ -668,18 +924,7 @@ actually performed, with the occultor along the $+y$-axis.
 For more information on all of these terms, the reader is referred to
 \citet{Luger2019}.
 
-\section{Case 0}
-\label{app:case0}
-%
-Our task is to compute the solution vector for this
-configuration, which we will denote $\BF{s}^\top_0$.
-Since in this case there is no occultor, it is
-more convenient to perform the integration in a frame $\mathcal{F}''$ where the
-semi-major axis of the terminator is aligned with the $x$-axis
-(see Figure~\ref{fig:illum}); let us denote the matrix that rotates us
-from $\mathcal{F}'$ to $\mathcal{F}''$ as $\BF{R}''$.
-It is also far easier to perform the integration
-in the \emph{polynomial basis} $\bp$
+The \emph{polynomial basis} $\bp$
 \citep[Equation 7 in][]{Luger2019}:
 %
 \begin{align}
@@ -696,213 +941,6 @@ in the \emph{polynomial basis} $\bp$
 where $\bp$ is again ordered such that the component at
 index $n$ is $\tilde{p}_{l,m}$, with $l$ and $m$ given by
 Equation~(\ref{eq:lm}).
-Now, if $\BF{r}^\top$ is the solution to the surface integrals in the
-polynomial basis in $\mathcal{F}''$,
-we may compute the desired solution vector in the Green's basis from
-%
-\begin{align}
-    \label{eq:sT0}
-    \BF{s}^\top_0 & = \BF{r}^\top \BF{A_1} \BF{R}'' \BF{A}^{-1}
-    \quad,
-\end{align}
-%
-where $\BF{A_1}$ \citep[Equation B11 in][]{Luger2019}
-transforms the solution into the spherical harmonic basis so it can
-be rotated out of the integration frame $\mathcal{F}''$ via $\BF{R}''$, and
-$\BF{A}^{-1}$ \citep[Equation B13 in][]{Luger2019} transforms the
-result into the Green's basis (in which $\sT$ is defined).
-
-Our task is thus to compute $\BF{r}^\top$.
-In frame $\mathcal{F}''$, the body sits at the origin and is
-illuminated by a point source in the
-$y-z$ plane at coordinates $(0, y_s, z_s)$ as in Figure~\ref{fig:illum}.
-The day/night terminator is a half-ellipse whose semi-major axis
-is unity and is aligned with the $x$-axis. The semi-minor axis is given
-by $b = -\nicefrac{z_s}{\sqrt{y_s^2 + z_s^2}}$, where $b > 0$ corresponds to
-a half-ellipse that is concave down and $b < 0$ to one that is concave up.
-It is straightforward to show
-that the illumination at a point $(x, y)$ on the projected disk is
-given by
-%
-\begin{proof}{}
-    \Psi(b; x, y) & =
-    \begin{dcases}
-        b_cy - bz(x, y) &
-        \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
-        y \geq b \sqrt{1 - x^2}
-        \\
-        0               &
-        \quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
-        \mathrm{otherwise}
-    \end{dcases}
-    \quad ,
-    \label{eq:illum}
-\end{proof}
-%
-where $b_c = \sqrt{1 - b^2}$.
-%
-The elements of the solution vector may then be computed from
-%
-\begin{align}
-    \label{eq:rT}
-    r_{l, m}(b) & =
-    \int_{-1}^{1}
-    \int_{b\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
-    \tilde{p}_{n(\mu,\nu)}(x, y)
-    \Psi(b; x, y)
-    \ \dd y \ \dd x
-    \quad.
-\end{align}
-%
-This is the integral of the illumination-weighted intensity of each
-term in the polynomial basis over the projected visible dayside of the
-body.
-%
-Equation~(\ref{eq:rT}) may be solved analytically in terms of purely
-trigonometric and algebraic functions of $b$:
-%
-\begin{proof}{}
-    \label{eq:rTsoln}
-    r_{l, m}(b) & =
-    \begin{cases}
-        \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
-        J_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
-        b I_\frac{\nu}{2}(b) K_{\frac{\mu}{2}, \frac{\nu}{2}}
-        %
-         &
-        %
-        \qquad
-        \mu, \nu \ \mathrm{even}
-        %
-        \\[1em]
-        %
-        b_c
-        I_{\frac{\nu + 1}{2}}(b) K_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
-        %
-        \\[0.5em]
-        \qquad
-        %
-        - \frac{b}{2} \bigg\{
-        \left(1 - b^{\frac{\nu + 1}{2}}\right)
-        \left(
-        J_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}} -
-        J_{\frac{\mu + 3}{2}, \frac{\nu - 1}{2}}
-        \right)
-        \\[0.5em]
-        \qquad\qquad
-        -
-        \left(1 - b^{\frac{\nu + 5}{2}}\right)
-        J_{\frac{\mu - 1}{2}, \frac{\nu + 3}{2}}
-        \bigg\}
-        %
-         &
-        %
-        \qquad
-        \mathrm{otherwise}
-        %
-    \end{cases}
-\end{proof}
-%
-where
-%
-\begin{proof}{}
-    \label{eq:IJK}
-    I_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
-    \nonumber \\
-    %
-    J_{i,j} &=
-    \frac{
-        \Gamma\left(\frac{i + 1}{2}\right)
-        \Gamma\left(\frac{j + 1}{2}\right)
-    }
-    {
-        \Gamma\left(\frac{i + j + 4}{2}\right)
-    }
-    %
-    \nonumber \\
-    %
-    K_{i,j} &=
-    \frac{
-        \Gamma\left(\frac{i + 1}{2}\right)
-        \Gamma\left(\frac{j + 4}{2}\right)
-    }
-    {
-        \Gamma\left(\frac{i + j + 5}{2}\right)
-    }
-    \quad.
-\end{proof}
-%
-Given initial conditions
-%
-\\[1em]
-\begin{minipage}{.33\linewidth}
-    \begin{align}
-        I_{0}(b) & = \frac{\arccos(b) - bb_c}{2}
-        %
-        \nonumber                                \\
-        %
-        I_{1}(b) & = \frac{b_c^3}{3}
-        %
-        \nonumber
-    \end{align}
-\end{minipage}%
-\begin{minipage}{.32\linewidth}
-    \begin{align}
-        J_{0,0} & = \pi
-        %
-        \nonumber               \\
-        %
-        J_{0,1} & = \frac{4}{3}
-        %
-        \nonumber
-    \end{align}
-\end{minipage}%
-\begin{minipage}{.33\linewidth}
-    \begin{proof}{}
-        \label{eq:IJK0}
-        K_{0,0} &= \frac{4}{3}
-        %
-        \nonumber \\
-        K_{0,1} &= \frac{3\pi}{8}
-    \end{proof}
-\end{minipage}
-\\[1em]
-%
-we may compute all higher order terms from the recurrence relations
-%
-\begin{proof}{}
-    \label{eq:IJKrec}
-    I_{j}(b) &= \frac{b^n b_c^3 + (j - 1) I_{j - 2}(b)}{j + 2}
-    %
-    \nonumber \\
-    %
-    J_{0,j} &= \left(\frac{j - 1}{j + 2}\right) J_{0,j-2}
-    %
-    \nonumber \\
-    %
-    K_{0,j} &= \left(\frac{j + 2}{j + 3}\right) K_{0,j-2}
-    %
-    \nonumber \\
-    %
-    J_{i,j} &= \left(\frac{i - 1}{i + j + 2}\right) J_{i-2,j}
-    %
-    \nonumber \\
-    %
-    K_{i,j} &= \left(\frac{i - 1}{i + j + 3}\right) K_{i-2,j}
-    \quad.
-\end{proof}
-
-\section{Case 3}
-\label{app:case3}
-Hello.
-
-\section{Case 4}
-\label{app:case4}
-Hello.
-
-\section{Cases 5--8}
-\label{app:cases-5-8}
-Hello.
 
 As in \citet{Luger2019}, the elements of the solution vector $\mathbf{s}^\top$
 are given by the line integral
