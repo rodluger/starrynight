@@ -49,9 +49,10 @@
 \newcommand{\yhat}{\ensuremath{\mathbf{\hat{y}}}\xspace}
 \newcommand{\zhat}{\ensuremath{\mathbf{\hat{z}}}\xspace}
 \newcommand{\sT}{\ensuremath{\BF{s}^\top}}
+\newcommand{\rT}{\ensuremath{\BF{r}^\top}}
 \newcommand{\bg}{\ensuremath{\tilde{\BF{g}}}}
 \newcommand{\bp}{\ensuremath{\tilde{\BF{p}}}}
-
+\newcommand{\by}{\ensuremath{\tilde{\BF{y}}}}
 
 % Bibliography stuff
 \bibliographystyle{aasjournal}
@@ -60,7 +61,7 @@
 \begin{document}
 
 % Title
-\title{Occultation Light Curves in Reflected Light}
+\title{Analytic Occultation Light Curves in Reflected Light}
 
 % Author list
 \author[0000-0002-0296-3826]{Rodrigo Luger}
@@ -84,17 +85,38 @@ This is an extension of \citet{Luger2019}.
 \section{The Problem}
 \label{sec:the-problem}
 %
-\subsection{Overview}
-\label{sec:overview}
+\subsection{Review of the \starry algorithm in emitted light}
+\label{sec:starry-review}
 %
 Without loss of generality, assume the body whose flux we wish to compute
 has radius unity and sits at the origin of a right-handed Cartesian coordinate
 system with the $x$-axis pointing to the right on the sky, the $y$-axis
 pointing up on the sky, and the $z$-axis pointing out of the sky
 toward the observer; denote this frame by $\mathcal{F}_0$. In $\mathcal{F}_0$,
-the surface intensity field of the body is described by the spherical harmonic
-coefficient vector $\mathbf{y}$. Following \citet{Luger2019}, we may compute
-the total visible flux $f$ from this body as
+the surface (emitted) intensity field of the body is described by the
+spherical harmonic coefficient vector $\mathbf{y}$. Following
+\citet{Luger2019}, when no occultor is present, we may compute the total
+visible flux $f$ from this body as
+%
+\begin{align}
+    \label{eq:rTA1Ry}
+    f = \rT \BF{A_1} \BF{R} \BF{y}
+    \quad,
+\end{align}
+%
+where, from right to left, $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
+is a Wigner rotation matrix that rotates $\bvec{y}$ to the sky frame
+$\mathcal{F}_\mathrm{sky}$ given the body's inclination $i$, obliquity
+$\lambda$, and rotational phase $\vartheta$,
+%
+$\BF{A_1}$ is the change-of-basis matrix from the spherical harmonic
+basis $\by$ to the \emph{polynomial basis} $\bp$ in which the integrals
+are computed,
+%
+and $\rT$ is the vector of solutions to the integral over
+the projected visible disk of the body for each term in $\bp$.
+%
+If an occultor is present, we instead compute the visible flux from
 %
 \begin{align}
     \label{eq:sTARRy}
@@ -102,62 +124,310 @@ the total visible flux $f$ from this body as
     \quad,
 \end{align}
 %
-where, from right to left, $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
-is a Wigner rotation matrix that
-rotates $\bvec{y}$ to the sky frame $\mathcal{F}_\mathrm{sky}$
-given the body's inclination $i$, obliquity $\lambda$, and
-rotational phase $\vartheta$,
+where, as before, $\BF{R}$ rotates the body from $\mathcal{F}_0$
+to $\mathcal{F}_\mathrm{sky}$,
 %
 $\BF{R}'$ rotates the body on the plane
-of the sky into the frame $\mathcal{F}_\mathrm{int}$ in which the
+of the sky into the frame $\mathcal{F}_\mathrm{greens}$ in which the
 integration is actually performed,
 %
-$\BF{A}$ is the change-of-basis matrix from spherical harmonics
-to the basis in which the integrals are computed
-%,
-and $\sT$ is the \emph{solution vector}, the integral of each
-of the basis functions over
-the projected visible disk of the body (which may be partially occulted by
-another spherical body). For more details, see Appendix~\ref{app:starry}.
+$\BF{A}$ is the change-of-basis matrix from $\by$
+to the \emph{Green's basis} $\bg$ in which the integrals are computed,
+%
+and $\sT$ is the vector of solutions to the integral over
+the projected visible disk of the body for each term in $\bg$.
+For more details, see Appendix~\ref{app:starry} and \citet{Luger2019}.
+
+\subsection{Adapting the algorithm to the reflected light case}
+\label{sec:starry-review}
+%
+In order to compute light curves in reflected light, we must make two
+modifications to the \starry algorithm. First,
+the expressions above assume that the coefficient vector
+$\mathbf{y}$ describes the \emph{emissivity} of the body, which (in the
+absence of limb darkening) is assumed to be Lambertian, i.e., all points on the
+surface emit equally in all directions.
+Here, we wish to derive the solution for the flux in the case of Lambertian
+reflectance, in which case the vector $\mathbf{y}$ is taken to describe the
+surface \emph{reflectivity} (or \emph{Bond albedo}).
+
+Second, we must explicitly model the illumination of the body. We assume the
+body is illuminated by a point-like source, in which case the radiance at any
+point on the surface is proportional to the cosine of the angle $\phi$ between
+the incident light and the surface normal. Points for which
+$\phi \ge \frac{\pi}{2}$ are unilluminated and therefore have radiance of zero.
+%
+If the point-like illumination source is placed at sky coordinates
+$(x_s, y_s, z_s)$, the day/night terminator on the body is a half-ellipse
+of semi-major axis unity that is fully described by its semi-minor axis,
+%
+\begin{proof}{}
+    \label{eq:b}
+    b = -\frac{z_s}{\sqrt{x_s^2 + y_s^2 + z_s^2}}
+    \quad,
+\end{proof}
+%
+and the angle by which its semi-major axis is rotated away from the
+$+x$-axis,
+%
+\begin{proof}{}
+    \label{eq:theta}
+    \theta = \mathrm{arctan2}(y_s, x_s)
+    \quad.
+\end{proof}
+%
+Given this formulation, and assuming that
+$x_s^2 + y_s^2 + z_s^2 \gg 1$,
+it is straightforward to show that the illumination
+$I$ at a point $(x, y)$ on the projected disk of the body is given by
+the polynomial
+%
+\begin{proof}{}
+    \frac{I(b, \theta; x, y)}{I_0} &=
+    -b_c\sin\theta x + b_c\cos\theta y - bz(x, y)
+\end{proof}
+%
+where $b_c = \sqrt{1 - b^2}$, $z(x, y) = \sqrt{1 - x^2 - y^2}$, and
+%
+\begin{proof}{}
+    I_0 = \frac{L}{4\pi\left(x_s^2 + y_s^2 + z_s^2\right)}
+\end{proof}
+%
+is the peak illumination (at the substellar point,
+assuming the illumination source is a star), with $L$ equal to the luminosity
+of the source.
+%
+Since the illumination is just a polynomial in $x$, $y$, and $z(x, y)$, we
+can express it as a vector $\BF{i}(b, \theta)$ in the polynomial basis $\bp$.
+Recalling the structure of the basis (c.f. Appendix~\ref{app:starry}),
+%
+\begin{align}
+    \bp & =
+    \begin{pmatrix}
+        1   &
+        x   & z  & y  &
+        x^2 & xz & xy & yz & y^2 &
+        \cdot\cdot\cdot
+    \end{pmatrix}^\mathsf{T}
+    \quad,
+\end{align}
+%
+we may write
+%
+\begin{proof}{}
+    \BF{i}(b, \theta) & =
+    I_0
+    \begin{pmatrix}
+        0              \\
+        -b_c\sin\theta \\
+        -b             \\
+        b_c\cos\theta
+    \end{pmatrix}
+    \quad.
+\end{proof}
+%
+This fact allows us to construct a linear operator $\BF{I}$ to weight a map
+vector in the polynomial basis by the illumination profile.
+If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
+%
+\\[1em]
+%
+\begin{minipage}{0.22\linewidth}
+    \begin{align}
+        \begin{pmatrix}
+            1 \\
+            0 \\
+            0 \\
+            0
+        \end{pmatrix}
+         & \BS{\rightarrow}
+        \begin{pmatrix}
+            \bvec{i}_0 \\ %1
+            \bvec{i}_1 \\ %x
+            \bvec{i}_2 \\ %z
+            \bvec{i}_3 \\ %y
+            0          \\ %x^2
+            0          \\ %xz
+            0          \\ %xy
+            0          \\ %yz
+            0             %y^2
+        \end{pmatrix}
+        \nonumber
+    \end{align}
+\end{minipage}
+%
+\begin{minipage}{0.22\linewidth}
+    \begin{align}
+        \begin{pmatrix}
+            0 \\
+            1 \\
+            0 \\
+            0
+        \end{pmatrix}
+         & \BS{\rightarrow}
+        \begin{pmatrix}
+            0          \\ %1
+            \bvec{i}_0 \\ %x
+            0          \\ %z
+            0          \\ %y
+            \bvec{i}_1 \\ %x^2
+            \bvec{i}_2 \\ %xz
+            \bvec{i}_3 \\ %xy
+            0          \\ %yz
+            0    %y^2
+        \end{pmatrix}
+        \nonumber
+    \end{align}
+\end{minipage}
+%
+\begin{minipage}{0.22\linewidth}
+    \begin{align}
+        \begin{pmatrix}
+            0 \\
+            0 \\
+            1 \\
+            0
+        \end{pmatrix}
+         & \BS{\rightarrow}
+        \begin{pmatrix}
+            \bvec{i}_2  \\ %1
+            0           \\ %x
+            \bvec{i}_0  \\ %z
+            0           \\ %y
+            -\bvec{i}_2 \\ %x^2
+            \bvec{i}_1  \\ %xz
+            0           \\ %xy
+            \bvec{i}_3  \\ %yz
+            -\bvec{i}_2    %y^2
+        \end{pmatrix}
+        \nonumber
+    \end{align}
+\end{minipage}
+%
+\begin{minipage}{0.22\linewidth}
+    \begin{align}
+        \begin{pmatrix}
+            0 \\
+            0 \\
+            0 \\
+            1
+        \end{pmatrix}
+         & \BS{\rightarrow}
+        \begin{pmatrix}
+            0          \\ %1
+            0          \\ %x
+            0          \\ %z
+            \bvec{i}_0 \\ %y
+            0          \\ %x^2
+            0          \\ %xz
+            \bvec{i}_1 \\ %xy
+            \bvec{i}_2 \\ %yz
+            \bvec{i}_3    %y^2
+        \end{pmatrix}
+        \nonumber
+    \end{align}
+\end{minipage}
+\begin{minipage}{0.05\linewidth}
+    \begin{align}
+    \end{align}
+\end{minipage}
+%
+\\[1em]
+%
+we can compose $\BF{I}$ out of these column vectors:
+%
+\begin{proof}{}
+    \BF{I}(b, \theta) & =
+    I_0
+    \begin{pmatrix}
+        0              & 0              & -b             & 0              & \cdots \\
+        -b_c\sin\theta & 0              & 0              & 0              & \cdots \\
+        -b             & 0              & 0              & 0              & \cdots \\
+        b_c\cos\theta  & 0              & 0              & 0              & \cdots \\
+        0              & -b_c\sin\theta & b              & 0              & \cdots \\
+        0              & -b             & -b_c\sin\theta & 0              & \cdots \\
+        0              & b_c\cos\theta  & 0              & -b_c\sin\theta & \cdots \\
+        0              & 0              & b_c\cos\theta  & -b             & \cdots \\
+        0              & 0              & b              & b_c\cos\theta  & \cdots \\
+        \vdots         & \vdots         & \vdots         & \vdots         & \ddots
+    \end{pmatrix}
+\end{proof}
+%
+where the dimensions of the matrix are $\big((l + 2)^2, (l + 1)^2\big)$, where
+$l$ is the spherical harmonic degree of the map (this operator raises the
+degree of the map by one).
 
 \begin{figure}[t!]
     \begin{centering}
-        \includegraphics[width=0.35\linewidth]{figures/illum.pdf}
-        \oscaption{illum}{%
-            Illumination geometry for the unocculted case.
-            A point source at Cartesian coordinates
-            $(0, y_s, z_s)$ illuminates a uniform,
-            Lambertian, spherical body of radius unity. The observed
-            radiance falls off as the cosine of the angle $\phi$ between the
-            source and the surface normal. Beyond the terminator
-            (defined by $\phi = \frac{\pi}{2}$), the radiance is zero. In
-            projection, the terminator is a segment of an ellipse of semi-major
-            axis unity and semi-minor axis
-            $b = -\nicefrac{z_s}{\sqrt{y_s^2 + z_s^2}}$.
-            \label{fig:illum}
+        \includegraphics[width=\linewidth]{figures/frames.pdf}
+        \oscaption{frames}{%
+            How \starry computes the flux from a body in reflected light,
+            tracking each of the linear transformations from the input map
+            (far right) to the output (far left). The label below each map
+            denotes the reference frame, while the label above
+            each map denotes the basis in which the map is represented.
+            Arrows indicate linear operations and are labeled accordingly.
+            The upper branch corresponds to the unocculted case, while the
+            lower branch corresponds to the case where an occultor is present.
+            See text for details.
+            \label{fig:frames}
         }
     \end{centering}
 \end{figure}
 
-The derivations in \citet{Luger2019} assume that the coefficient vector
-$\mathbf{y}$ describes the \emph{emissivity} of the body, which (in the
-absence of limb darkening) is assumed to be Lambertian, i.e., all points on the
-surface emit equally in all directions.
-Here, we derive the solution to the occultation problem for Lambertian
-reflectance, in which case the vector $\mathbf{y}$ describes the
-surface \emph{reflectivity} (or \emph{Bond albedo}). Specifically, we assume
-the body is illuminated by a point-like source and the radiance at any point
-is proportional to the cosine of the angle $\phi$ between the incident light
-and the surface normal. Points for which $\phi \ge \frac{\pi}{2}$ are
-unilluminated and therefore have radiance of zero; see Figure~\ref{fig:illum}.
+We may now re-write Equations~(\ref{eq:rTA1Ry}) and (\ref{eq:sTARRy}) to
+account for this illumination transformation. The flux outside of occultation
+is now given by
+%
+\begin{align}
+    \label{eq:rTIA1RRy}
+    f = \rT \BF{I} \BF{A_1} \BF{R}'' \BF{R} \BF{y}
+    \quad,
+\end{align}
+%
+and the flux during an occultation by
+%
+\begin{align}
+    \label{eq:sTA2IA1RRy}
+    f = \sT \BF{A_2} \BF{I} \BF{A_1} \BF{R}' \BF{R} \BF{y}
+    \quad.
+\end{align}
+%
+Two notes about these equations. First, we introduced a new rotation matrix
+$\BF{R}''$ in Equation~(\ref{eq:rTIA1RRy}), which rotates the problem so that
+the semi-major axis of the terminator is aligned with the $x$-axis; as will
+become clear in \S\ref{sec:case-0} below, this greatly simplifies the
+integration step. Second, in the derivation of Equation~(\ref{eq:sTA2IA1RRy})
+we used the fact that $\BF{A} = \BF{A_2} \BF{A_1}$
+\citep[c.f. Equation~14 in][]{Luger2019}, where $\BF{A_1}$ transforms from
+the spherical harmonic basis $\by$ to the polynomial basis $\bp$, and
+$\BF{A_2}$ transforms from $\bp$ to the Green's basis $\bg$.
+
+Figure~\ref{fig:frames} summarizes the transformations involved in the two
+equations above. Starting on the right with a map vector $\BF{y}$ in
+the spherical harmonic basis $\by$, defined in some observer-independent frame
+$\mathcal{F}_0$, we first rotate it via $\BF{R}$ to the sky frame
+$\mathcal{F}_\mathrm{sky}$, in which orientation the body is viewed by the
+observer. If there is no occultation (upper branch of the figure), we then
+rotate the map once more via $\BF{R}''$ to the integration frame
+$\mathcal{F}_\mathrm{int}$, in which the terminator is parallel to the
+$x$-axis. We then apply $\BF{A_1}$ to change basis to $\bp$, apply the
+illumination transform $\BF{I}$, and finally dot in the solutions to the
+surface integrals $\rT$. If, on the other hand, an occultor is present,
+we rotate the map from $\mathcal{F}_\mathrm{sky}$ via $\BF{R}'$ to the frame
+$\mathcal{F}_\mathrm{greens}$, in which the occultor lies along the
+$+y$-axis. We then apply $\BF{A_1}$ to change basis to $\bp$ and $\BF{I}$
+to weight the map by the illumination as above. Finally, we change basis
+via $\BF{A_2}$ to the Green's basis, in which we compute and dot the
+integrals $\sT$.
 
 In \citet{Luger2019}, the crux of the problem was to compute the terms in the
-vector $\sT$, which are surface integrals over
-the region of the occulted body that is visible to
-the observer (Figure 2 in that paper). Here, these integrals are significantly
-more difficult, because they involve not only the intersection of the
-limbs of the two bodies, but also intersections with the elliptical
-day/night terminator of the occulted body.
+vectors $\sT$ and $\rT$, which are surface integrals over
+the region of the body that is visible to the observer
+(see Figure 2 in that paper). Here, these integrals are significantly
+more difficult, because they involve not only integration along the
+limb of the body and of a possible occultor, but also along the
+elliptical day/night terminator.
 
 \begin{figure}[t!]
     \begin{centering}
