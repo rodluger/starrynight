@@ -88,6 +88,13 @@ This is an extension of \citet{Luger2019}.
 \section{The Problem}
 \label{sec:the-problem}
 %
+\textbf{Note:}
+This section closely follows the
+notation and formalism introduced in \citet{Luger2019}. While we
+include all of the relevant equations and definitions in
+Appendix~\ref{app:starry}, the reader is strongly encouraged to
+review \S2--3 of \citet{Luger2019} before proceeding.
+
 \subsection{Review of the \starry algorithm in emitted light}
 \label{sec:starry-review}
 %
@@ -114,7 +121,7 @@ $\lambda$, and rotational phase $\vartheta$ (Equation~\ref{eq:R}),
 %
 $\BF{A_1}$ is the change-of-basis matrix from the spherical harmonic
 basis $\by$ to the \emph{polynomial basis} $\bp$ in which the integrals
-are computed (Equation~\ref{eq:A1}),
+are computed (Equations~\ref{eq:by}, \ref{eq:bp}, and \ref{eq:A1}),
 %
 and $\rTe$ is the vector of solutions to the integral over
 the projected visible disk of the body for each term in $\bp$
@@ -134,7 +141,7 @@ to $\mathcal{F}_\mathrm{sky}$,
 %
 $\BF{R}' = \BF{R}'(\omega)$ rotates the body on the plane
 of the sky by an angle
-$\omega = \nicefrac{\pi}{2} - \mathrm{arctan2}(y_o, x_o)$
+$\omega = \mathrm{arctan2}(x_o, y_o)$
 into a frame $\mathcal{F}_\mathrm{greens}$ in which the
 occultor lies along the $+y$-axis (Equation~\ref{eq:R'}),
 %
@@ -181,12 +188,18 @@ axis,
 where $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$ is the distance to the source,
 %
 and the angle by which its semi-major axis is rotated away from the
-$+x$-axis,
+$+x$-axis \xxx{CHECK ME},
 %
 \begin{proof}{}
     \label{eq:theta}
-    \theta = \mathrm{arctan2}(y_s, x_s)
-    \quad.
+    \theta &=
+    \begin{cases}
+        -\mathrm{arctan2}(x_s, y_s)
+         & \qquad \mathcal{F} = \mathcal{F}_\mathrm{term}   \\
+        \omega - \mathrm{arctan2}(x_s, y_s)
+         & \qquad \mathcal{F} = \mathcal{F}_\mathrm{greens}
+        \quad.
+    \end{cases}
 \end{proof}
 %
 Given this formulation, and assuming that
@@ -214,19 +227,7 @@ with $b_c = \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 %
 Since $I$ is just a polynomial in $x$, $y$, and $z(x, y)$, we
 can express it as a vector $\BF{i}(b, \theta)$ in the polynomial basis $\bp$.
-Recalling the structure of the basis (Equation~\ref{eq:p}),
-%
-\begin{align}
-    \bp & =
-    \begin{pmatrix}
-        1   &
-        x   & z  & y  &
-        x^2 & xz & xy & yz & y^2 &
-        \cdot\cdot\cdot
-    \end{pmatrix}^\mathsf{T}
-    \quad,
-\end{align}
-%
+Recalling the structure of the basis (Equation~\ref{eq:bp}),
 we may write
 %
 \begin{proof}{}
@@ -458,7 +459,7 @@ $\mathcal{F}_0$, we first rotate it via $\BF{R}$ to the sky frame
 $\mathcal{F}_\mathrm{sky}$, in which orientation the body is viewed by the
 observer. If there is no occultation (upper branch of the figure), we then
 rotate the map once more via $\BF{R}'$ to the integration frame
-$\mathcal{F}_\mathrm{int}$, in which the terminator is parallel to the
+$\mathcal{F}_\mathrm{term}$, in which the terminator is parallel to the
 $x$-axis. We then apply $\BF{A_1}$ to change basis to $\bp$, apply the
 illumination transform $\BF{I}$, and finally dot in the solutions to the
 surface integrals $\rT$. If, on the other hand, an occultor is present,
@@ -482,7 +483,7 @@ originally solved by \citet{Haggard2018} and subsequently by
 derivation in the \starry formalism here.
 
 As we discussed above, we perform the integration in a frame
-$\mathcal{F}_\mathrm{int}$
+$\mathcal{F}_\mathrm{term}$
 in which the semi-major axis of the terminator is aligned with the
 $x$-axis, with the illumination source at $y \ge 0$.
 The solution vector may then be computed from
@@ -519,7 +520,7 @@ intensity-weighted basis directly,
     \quad,
 \end{align}
 %
-recalling that in frame $\mathcal{F}_\mathrm{int}$, $\theta = 0$ by
+recalling that in frame $\mathcal{F}_\mathrm{term}$, $\theta = 0$ by
 definition.
 %
 Equation~(\ref{eq:rTI}) may be solved analytically in terms of purely
@@ -714,16 +715,51 @@ Once $\BS{\rho}^\top$ is known, the observed flux is computed from
     \end{centering}
 \end{figure}
 
-Figure~\ref{fig:cases} shows the
-eight families of cases involving an occultation of an illuminated body by
-a spherical occultor. Each of these cases correspond to distinct ways in
-which the limb of the occultor can intersect with the limb of the occulted
-body and its terminator; together, these cases encompass all possible
+The integration in the unocculted case presented above is relatively
+straightforward, since
+the boundaries of integration are always the half-ellipse defining the
+terminator and the half-circle defining the upper limb of the body
+(Equation~\ref{eq:rT}). When an occultor is present, however, the
+integration boundaries are far less trivial, since they may or may not
+include sections of the terminator, sections of the limb of the body,
+and sections of the limb of the occultor. There are in total eight families of
+configurations, each defined by a distinct combination of integration
+boundaries; these are shown in Figure~\ref{fig:cases}.
+Together, these cases encompass all possible
 occultation configurations, for any illumination angle, occultor size, and
-occultor position. In the following sections, we present the solution for the
-$\sT$, and hence for the total visible flux, for each of these cases.
+occultor position.
 
-\xxx{How do we determine which case we're modeling?}
+Before we discuss how to compute the occultation integrals, we must first
+develop a procedure to identify the relevant case given the occultor
+position $(x_o, y_o)$ and radius $r_o$ and the terminator semi-minor
+axis $b$ and angle $\theta$. Then, once the case is determined, we must
+identify the relevant integration boundaries, which depend on the points
+of intesection between the limb of the body, the limb of the occultor, and
+the terminator. We do so in the following section.
+
+\subsection{Case determination and integration boundaries}
+\label{sec:which-case}
+%
+The key to identifying the case corresponding to a given configuration is
+to determine whether or not the limb of the occultor intersects the terminator
+of the body, and if so, the points of intersection.
+Switching momentarily to the frame $\mathcal{F}_\mathrm{term}$,
+the equations defining the
+\begin{align}
+    y_1(x) & = b \sqrt{1 - x^2}
+    \nonumber                                       \\
+    y_2(x) & = y'_o \pm \sqrt{r_o^2 - (x - x'_o)^2}
+\end{align}
+%
+where $x'_o = $ and $y'_o = $ are the coordinates of the occultor in
+$\mathcal{F}_\mathrm{term}$.
+
+
+Recall that we perform the integration in frame
+$\mathcal{F}_\mathrm{greens}$, in which the occultor lies along the $+y$-axis
+at $(0, b_o)$, with $b_o = \sqrt{x_o^2 + y_o^2}$. In this frame, the
+semi-major axis of the terminator is at an angle $\theta$ with respect to the
+$+x$-axis (Equation~\ref{eq:theta}).
 
 \subsection{Cases 1--4}
 \label{sec:cases-1-4}
@@ -845,6 +881,55 @@ where we define
 
 \section{The \starry formalism}
 \label{app:starry}
+%
+Equations:
+%
+\begin{align}
+    \label{eq:R}
+    \BF{R} = ?
+\end{align}
+%
+\begin{align}
+    \label{eq:by}
+    \by = ?
+\end{align}
+%
+\begin{align}
+    \label{eq:bp}
+    \bp & =
+    \begin{pmatrix}
+        1   &
+        x   & z  & y  &
+        x^2 & xz & xy & yz & y^2 &
+        \cdot\cdot\cdot
+    \end{pmatrix}^\mathsf{T}
+    \quad,
+\end{align}
+%
+\begin{align}
+    \label{eq:A1}
+    \BF{A_1} = ?
+\end{align}
+%
+\begin{align}
+    \label{eq:rTe}
+    \rTe = ?
+\end{align}
+%
+\begin{align}
+    \label{eq:R'}
+    \BF{R}' = ?
+\end{align}
+%
+\begin{align}
+    \label{eq:A}
+    \BF{A} = ?
+\end{align}
+%
+\begin{align}
+    \label{eq:sTe}
+    \sTe = ?
+\end{align}
 %
 The basis $\bg$ is called the \emph{Green's basis}; its name
 stems from the fact that its components have a structure that makes integration
