@@ -219,6 +219,7 @@ by the function
 where
 %
 \begin{proof}{}
+    \label{eq:illum_poly}
     I(b, \theta, r_s; x, y) &= \frac{1}{4\pi r_s^2}
     \bigg(
     -b_c\sin\theta x + b_c\cos\theta y - bz(x, y)
@@ -554,7 +555,7 @@ at index $n$ is given by
     \begin{cases}
         \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
         J_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
-        b I_\frac{\nu}{2}(b) K_{\frac{\mu}{2}, \frac{\nu}{2}}
+        b H_\frac{\nu}{2}(b) K_{\frac{\mu}{2}, \frac{\nu}{2}}
         %
          &
         %
@@ -564,7 +565,7 @@ at index $n$ is given by
         \\[1em]
         %
         b_c
-        I_{\frac{\nu + 1}{2}}(b) K_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
+        H_{\frac{\nu + 1}{2}}(b) K_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
         %
         \\[0.5em]
         \qquad
@@ -709,32 +710,7 @@ Once $\BS{\rho}^\top$ is known, the observed flux is computed from
 
 \section{The Solution: Occultation}
 \label{sec:solution-occ}
-
-\begin{figure}[t!]
-    \begin{centering}
-        \includegraphics[width=\linewidth]{figures/cases.pdf}
-        \oscaption{cases}{%
-            The eight families of cases of occultations in reflected light.
-            In these figures, the body with the solid outline
-            is the one whose flux we are interested in, and the body with the
-            dashed outline is the occultor.
-            The night side of the occulted body is colored
-            black (dark grey if occulted), and the dayside is colored blue
-            (light grey if occulted).
-            The cases in the top row involve
-            configurations in which the limb of the occultor does not intersect
-            with the terminator at any point, so the visible flux may be
-            computed in terms of classical \starry integrals. The remaining
-            cases require integration along the red boundary (the curves
-            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ of
-            \S\ref{sec:cases-5-8}), which
-            include the terminator. These involve the evaluation of incomplete
-            elliptic integrals and are derived below.
-            \label{fig:cases}
-        }
-    \end{centering}
-\end{figure}
-
+%
 The integration in the unocculted case presented above is relatively
 straightforward, since
 the boundaries of integration are always the half-ellipse defining the
@@ -751,16 +727,44 @@ occultor position.
 
 Before we discuss how to compute the occultation integrals, we must first
 develop a procedure to identify the relevant case given the occultor
-impact parameter $b_o$ and radius $r_o$ and the terminator semi-minor
+impact parameter $b_o = \sqrt{x_o^2 + y_o^2}$ and radius $r_o$ and
+the terminator semi-minor
 axis $b$ and angle $\theta'$ in the frame $\mathcal{F}'$.
 Then, once the case is determined, we must
 identify the relevant integration boundaries, which depend on the points
 of intesection between the limb of the body, the limb of the occultor, and
-the terminator. We do so in the following section.
+the terminator. We do so in the following sections.
 
-\subsection{Case determination and integration boundaries}
-\label{sec:which-case}
 %
+
+\subsection{Case determination}
+\label{sec:which-case}
+
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/cases.pdf}
+        \oscaption{cases}{%
+            The eight families of cases of occultations in reflected light.
+            In these figures, the body with the solid outline
+            is the one whose flux we are interested in, and the body with the
+            dashed outline is the occultor.
+            The night side of the occulted body is colored
+            black (dark grey if occulted), and the dayside is colored blue
+            (light grey if occulted).
+            The cases in the top row involve
+            configurations in which the limb of the occultor does not intersect
+            with the terminator at any point, so the visible flux may be
+            computed in terms of classical \starry integrals. The remaining
+            cases require integration along the orange boundary (the curves
+            $P$, $T$, and $Q$ of
+            \S\ref{sec:cases-5-8}), which
+            include the terminator. These involve the evaluation of incomplete
+            elliptic integrals and are derived below.
+            \label{fig:cases}
+        }
+    \end{centering}
+\end{figure}
+
 The key to identifying the case corresponding to a given configuration is
 to determine whether or not the limb of the occultor intersects the terminator
 of the body, and if so, the points of intersection.
@@ -788,7 +792,7 @@ where
 are the coordinates of the occultor in $\mathcal{F}''$.
 %
 We wish to find the set of $N$ points
-$\{{x''}_n~\big|~0~\le~n~<~N\}$
+$\{x_n''~\big|~0~\le~n~<~N\}$
 for which
 $y''_1(x_n'') - y''_2(x_n'') = 0$. Following \citet{Luger2017}, we may
 express this condition as the quartic equation
@@ -841,12 +845,18 @@ terminator ellipse (i.e., the section of the terminator on the far side
 of the body). After excluding the unphysical solutions, we are still left with
 anywhere between zero and four roots.
 
-\xxx{More here...}
+Cases with zero roots (case 1 -- case 4) are treated in \S\ref{sec:cases-1-4},
+while cases with one or two roots (case 5 -- case 8) are treated in
+\S\ref{sec:cases-5-8}. Cases with three or four roots
+(case 9 -- case 10) are rarely encountered
+in practice, but are possible for some pathological configurations; these are
+treated in \S\ref{sec:cases-9-10}.
+
+%
 
 \subsection{Cases 1--4}
 \label{sec:cases-1-4}
 %
-\xxx{This section needs to be revised.}
 Cases 1--4 (see Figure~\ref{fig:cases}) involve configurations in which the
 occultor does not intersect with
 the terminator of the occulted body, and are therefore fairly
@@ -856,7 +866,7 @@ Case 1 corresponds to any complete occultation of the body, so the
 solution for the flux is trivial:
 %
 \begin{align}
-    \label{eq:sT1}
+    \label{eq:f1}
     f_1 = 0
     \quad.
 \end{align}
@@ -868,7 +878,7 @@ is also trivial, as the flux is equal to the flux in the no occultation case
 (Equation~\ref{eq:f0}):
 %
 \begin{align}
-    \label{eq:sT2}
+    \label{eq:f2}
     f_2 = f_0
     \quad.
 \end{align}
@@ -885,9 +895,9 @@ field:
     \label{eq:f3}
     f_3 = \sTe(b_o, r_o)
     \BF{A_2}
-    \BF{I}(b, \theta, r_s)
+    \BF{I}(b, \theta', r_s)
     \BF{A_1}
-    \BF{R}'(\omega)
+    \BF{R}'(x_o, y_o)
     \BF{R}(i, \lambda, \vartheta)
     \BF{y}
     \quad.
@@ -895,24 +905,31 @@ field:
 %
 Finally, case 4 involves any occultation in which the occultor blocks
 \emph{only} the day side of the body (regardless of whether or not it
-intersects with the limb):
-%
-\begin{proof}{}
-    \label{eq:sT4}
-    f_4 = f_3 + \hat{f}_0
-    \quad,
-\end{proof}
-%
-where we define
+intersects with the limb). We compute this by first weighting the solution
+for the occultation in emitted light by the intensity profile as in
+case 3. The flux $f_3$ obtained in this fashion contains the contribution
+from the entire nightside, which as we discuss above is unphysically weighted
+by the negative part of Equation~(\ref{eq:illum_poly}). We can compute what
+this contribution is from the complement of case 0:
 %
 \begin{proof}{}
     \label{eq:f0hat}
     \hat{f}_0 & =
-    \BS{\rho}^\top(-b, r_s)
+    -\BS{\rho}^\top(-b, r_s)
     \BF{A_1}
-    \BF{R}'(-\theta - \pi)
+    \BF{R}''(-x_s, -y_s)
     \BF{R}(i, \lambda, \vartheta)
     \BF{y}
+    \quad,
+\end{proof}
+%
+i.e., the flux we would get if we placed a negative illumination source
+at the antipode $(-x_s, -y_s, -z_s)$ of the true source.
+The total flux in this case is thus
+%
+\begin{proof}{}
+    \label{eq:f4}
+    f_4 = f_3 - \hat{f}_0
     \quad.
 \end{proof}
 
@@ -921,12 +938,6 @@ where we define
 \subsection{Cases 5--8}
 \label{sec:cases-5-8}
 %
-\xxx{Cases 5--8} (see Figure~\ref{fig:cases}, Figure~\ref{fig:geometry}).
-
-% case 5: sT0 - sT0 * I
-% case 6: (sTe + sT0) * I + ~sT0
-% case 7: (sTe - sT0) * I
-% case 8: sT0 * I
 
 \begin{figure}[t!]
     \begin{centering}
@@ -934,14 +945,139 @@ where we define
         \oscaption{geometry}{%
             Geometry of an occultation in reflected light, corresponding
             to case 5 in Figure~\ref{fig:cases}. The surface integral over
-            the blue region is computed from the antiderivatives of the
-            surface intensity map counter-clockwise along the boundary curves
-            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$.
+            the occulted portion of the dayside (light gray region)
+            is computed from the line integrals of the antiderivatives of the
+            surface intensity map along the boundary curves
+            $P$, $T$, and $Q$. See text for details.
             \label{fig:geometry}
         }
     \end{centering}
 \end{figure}
 
+Cases 5--8 (see Figure~\ref{fig:cases}) correspond to configurations in which
+the limb of the occultor intersects with the terminator at either one point
+(case 5) or two points (cases 6, 7, and 8). Because of these intersections, we
+cannot simply re-weight the emitted light solution, as the integration
+boundaries are now different. In general, we may compute the flux by
+integrating the components of the Green's basis $\bg$
+over the region $S$ bounded by three curves, which we denote
+$P$, $T$, and $Q$. These are shown in orange
+in Figure~\ref{fig:cases} and presented in more detail in
+Figure~\ref{fig:geometry}.
+Curve $P$ is a segment of the limb of
+the occultor, parametrized by the angle $\phi \in [\phi_1, \phi_2]$;
+curve $T$ is a segment of the terminator,
+parametrized by the angle $\xi \in [\xi_1, \xi_2]$;
+and curve $Q$ is a segment of the limb of the occulted body,
+parametrized by the angle $\lambda \in [\lambda_1, \lambda_2]$.
+The endpoints $\phi_1, \phi_2, \xi_1, \xi_2, \lambda_1,$ and
+$\lambda_2$ are functions of the solutions to the quartic from
+\S\ref{sec:which-case} and will be presented below.
+
+As in \citet{Luger2019}, the approach to computing the surface integrals
+of each of the terms in $\bg$ over $S$
+is to use Green's theorem to transform them into line integrals along the
+curves $P$, $T$, and $Q$. Let $\mathfrak{p}^\top$,
+$\mathfrak{t}^\top$, and $\mathfrak{q}^\top$ denote the vectors
+corresponding to the line integrals
+along the curves $P$, $T$, and $Q$, respectively, for each of the terms in
+$\bg$. The integration is performed in the frame $\mathcal{F}'$,
+in a counter-clockwise direction relative to the center
+of the integration region $S$.
+Then the integral of $\bg$ over $S$ is%
+\footnote{%
+    The components of the vectors $\mathfrak{p}^\top$ and
+    $\mathfrak{q}^\top$ are analogous to the ``primitive integrals''
+    $\mathcal{P}$ and $\mathcal{Q}$
+    defined in Equations~(30)--(32) in \citet{Luger2019}, although the
+    integration limits of both and the sense of integration of $\mathcal{P}$
+    are different.
+}
+%
+\begin{align}
+    \label{eq:sT}
+    \sT & =
+    \mathfrak{p}^\top + \mathfrak{t}^\top + \mathfrak{q}^\top
+    \quad,
+\end{align}
+%
+where the dependence on $b, \theta', b_o,$ and $r_o$ is implicit.
+%
+We defer the solution to Equation~(\ref{eq:sT}) to \S\ref{sec:sT} below,
+as it is quite lengthy. Given $\sT$, the flux $f_S$ over the integration
+region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
+%
+\begin{align}
+    f_S & =
+    \mathfrak{s}^\top(b, \theta', b_o, r_o)
+    \BF{A_2}
+    \BF{I}(b, \theta', r_s)
+    \BF{A_1}
+    \BF{R}'(x_o, y_o)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
+    \quad.
+\end{align}
+%
+Note that this is not necessarily the \emph{observed} flux, which we must
+compute on a case-by-case basis below.
+
+Case 5 corresponds to configurations in which the limb of the occultor
+intersects the terminator at a single point. The integration region
+(see Figures~\ref{fig:cases} and \ref{fig:geometry}) is the occulted
+portion of the dayside, which is bounded by all three curves $P$, $Q$, and $T$.
+The total flux may
+be computed by subtracting the occulted flux $f_S$ from the total dayside
+flux $f_0$:
+%
+\begin{proof}{}
+    \label{eq:f5}
+    f_5 = f_0 - f_S
+    \quad.
+\end{proof}
+%
+Cases 6--8 involve two points of intersection between the occultor limb and
+the terminator. Case 6 corresponds to occultors that block some of the
+nightside and some of the dayside, regardless of whether the occultor
+is fully within the disk of the occulted body. We begin by computing the
+flux over the unocculted region, $f_3$, which includes the spurious
+nightside contribution. We then remove this contribution by noting that it
+is equal to the total nightside contribution, $\hat{f}_0$, minus the
+occulted nightside flux, $f_S$:
+%
+\begin{proof}{}
+    \label{eq:f6}
+    f_6 = f_3 - (\hat{f}_0 - f_S)
+    \quad.
+\end{proof}
+%
+Case 7 corresponds to occultors that \xxx{what?}
+%
+\begin{proof}{}
+    \label{eq:7}
+    f_7 = f_3 - f_S
+    \quad.
+\end{proof}
+%
+Finally, case 8 corresponds to occultors that \xxx{what?}
+%
+\begin{proof}{}
+    \label{eq:f8}
+    f_8 = f_S
+    \quad.
+\end{proof}
+%
+
+\subsection{Cases 9--10}
+\label{sec:cases-9-10}
+%
+Pathological cases with 3 or 4 roots here.
+
+%
+
+\subsection{Computing the integrals $\sT$}
+\label{sec:sT}
+\xxx{This is going to be be painful.}
 
 \section{Performance}
 \label{sec:performance}

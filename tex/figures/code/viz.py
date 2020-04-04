@@ -223,14 +223,14 @@ def visualize(b, theta, bo, ro, res=4999):
     if len(lam):
         fig, ax = plt.subplots(1, 3, figsize=(14, 5))
         fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.825)
-        ax[1].set_title(r"$\mathcal{T}$", color="C1", fontsize=24)
-        ax[0].set_title(r"$\mathcal{P}$", color="C1", fontsize=24)
-        ax[2].set_title(r"$\mathcal{Q}$", color="C1", fontsize=24)
+        ax[1].set_title(r"$T$", color="C1", fontsize=24)
+        ax[0].set_title(r"$P$", color="C1", fontsize=24)
+        ax[2].set_title(r"$Q$", color="C1", fontsize=24)
     else:
         fig, ax = plt.subplots(1, 2, figsize=(9, 5))
         fig.subplots_adjust(left=0.025, right=0.975, bottom=0.05, top=0.825)
-        ax[1].set_title(r"$\mathcal{T}$", color="C1", fontsize=24)
-        ax[0].set_title(r"$\mathcal{P}$", color="C1", fontsize=24)
+        ax[1].set_title(r"$T$", color="C1", fontsize=24)
+        ax[0].set_title(r"$P$", color="C1", fontsize=24)
 
     # Labels
     for i in range(len(phi)):
@@ -266,7 +266,7 @@ def visualize(b, theta, bo, ro, res=4999):
     # Draw basic shapes
     for axis in ax:
         axis.axis("off")
-        axis.add_artist(plt.Circle((0, bo), ro, fill=False))
+        axis.add_artist(plt.Circle((0, bo), ro, lw=1.5, ls="--", fill=False))
         axis.add_artist(plt.Circle((0, 0), 1, fill=False))
         axis.plot(x_t, y_t, "k-", lw=1)
         axis.set_xlim(-1.25, 1.25)
