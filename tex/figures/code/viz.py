@@ -13,7 +13,12 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
     phi = kappa - np.pi / 2
 
     # HACK
-    if code == FLUX_NIGHT_VIS or code == FLUX_DAY_VIS:
+    if (
+        code == FLUX_NIGHT_VIS
+        or code == FLUX_DAY_VIS
+        or code == FLUX_QUAD_DAY_VIS
+        or code == FLUX_QUAD_NIGHT_VIS
+    ):
         phi = phi[::-1]
 
     color_night = (0, 0, 0, 0.75)
@@ -110,10 +115,21 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
     # Draw integration paths
     # T
     if len(xi):
-        if code == FLUX_NIGHT_VIS or code == FLUX_DAY_VIS:
-            inds = x_t ** 2 + (y_t - bo) ** 2 > ro ** 2
+        if (
+            code == FLUX_NIGHT_VIS
+            or code == FLUX_DAY_VIS
+            or code == FLUX_QUAD_DAY_VIS
+            or code == FLUX_QUAD_NIGHT_VIS
+        ):
+            inds = np.where(x_t ** 2 + (y_t - bo) ** 2 > ro ** 2)[0]
+            if code == FLUX_QUAD_DAY_VIS or code == FLUX_QUAD_NIGHT_VIS:
+                midpt = np.arange(len(x_t))[inds[1:]][np.diff(inds) > 1][0]
+                x_t[midpt] = np.nan
         else:
-            inds = x_t ** 2 + (y_t - bo) ** 2 < ro ** 2
+            inds = np.where(x_t ** 2 + (y_t - bo) ** 2 < ro ** 2)[0]
+            if code == FLUX_TRIP_DAY_OCC or code == FLUX_TRIP_NIGHT_OCC:
+                midpt = np.arange(len(x_t))[inds[1:]][np.diff(inds) > 1][0]
+                x_t[midpt] = np.nan
         ax.plot(x_t[inds], y_t[inds], "C1-", lw=2)
 
     if len(phi):

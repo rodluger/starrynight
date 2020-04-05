@@ -707,6 +707,25 @@ Once $\BS{\rho}^\top$ is known, the observed flux is computed from
     \quad.
 \end{proof}
 %
+Finally, for future reference, we can also compute what we will call the
+\emph{complement} of case 0:
+%
+\begin{proof}{}
+    \label{eq:f0hat}
+    \hat{f}_0 & =
+    -\BS{\rho}^\top(-b, r_s)
+    \BF{A_1}
+    \BF{R}''(-x_s, -y_s)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
+    \quad,
+\end{proof}
+%
+This is the flux we would get if we placed a \emph{negative} illumination
+source at the antipode $(-x_s, -y_s, -z_s)$ of the true source, and
+will be useful in negating the unphysical negative contribution from our
+polynomial illumination function (Equation~\ref{eq:illum_poly}) in
+the following section.
 
 \section{The Solution: Occultation}
 \label{sec:solution-occ}
@@ -860,10 +879,33 @@ treated in \S\ref{sec:cases-9-10}.
 Cases 1--4 (see Figure~\ref{fig:cases}) involve configurations in which the
 occultor does not intersect with
 the terminator of the occulted body, and are therefore fairly
-straightforward to solve.
+straightforward to solve. In particular, we can use the original emitted
+light solution from \citet{Luger2019}, provided we weight the map by our
+polynomial illumination function:
 %
-Case 1 corresponds to any complete occultation of the body, so the
-solution for the flux is trivial:
+\begin{proof}{}
+    \label{eq:fI}
+    f_I &=
+    \sTe(b_o, r_o)
+    \BF{A_2}
+    \BF{I}(b, \theta', r_s)
+    \BF{A_1}
+    \BF{R}'(x_o, y_o)
+    \BF{R}(i, \lambda, \vartheta)
+    \BF{y}
+    \quad,
+\end{proof}
+%
+where $\sTe(b_o, r_o)$ is the emitted light solution vector
+\citep[Equation~26 in][]{Luger2019}. The flux $f_I$ is the flux one would
+measure from a body whose surface map is weighted by the illumination function
+$\BF{I}(b, \theta', r_s)$ during an occultation. Note that this is not
+necessarily the \emph{observed} flux, since this may include the unphysical
+negative contribution from the nightside. We must compute the actual
+observed flux on a case-by-case basis.
+
+Case 1 corresponds to any complete occultation of the body
+($b_o \le r_o - 1$), so the solution for the flux is trivial:
 %
 \begin{align}
     \label{eq:f1}
@@ -885,51 +927,24 @@ is also trivial, as the flux is equal to the flux in the no occultation case
 %
 Case 3 corresponds to occultations in which the occultor blocks \emph{all} of
 the night side of the body and \emph{some} of the day side. In this
-configuration, the unocculted part of the disk consists only of dayside.
-Since we have no intersections with the terminator to worry about,
-we may compute the total flux using the \starry formalism from
-\citet{Luger2019}, provided we weight the intensity map by the illumination
-field:
+configuration, the unocculted part of the disk consists only of dayside, and
+we can simply use the weighted solution in emitted light
+(Equation~\ref{eq:fI}):
 %
 \begin{proof}{}
     \label{eq:f3}
-    f_3 = \sTe(b_o, r_o)
-    \BF{A_2}
-    \BF{I}(b, \theta', r_s)
-    \BF{A_1}
-    \BF{R}'(x_o, y_o)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
-    \quad.
+    f_3 = f_\mathrm{I}
 \end{proof}
 %
 Finally, case 4 involves any occultation in which the occultor blocks
 \emph{only} the day side of the body (regardless of whether or not it
-intersects with the limb). We compute this by first weighting the solution
-for the occultation in emitted light by the intensity profile as in
-case 3. The flux $f_3$ obtained in this fashion contains the contribution
-from the entire nightside, which as we discuss above is unphysically weighted
-by the negative part of Equation~(\ref{eq:illum_poly}). We can compute what
-this contribution is from the complement of case 0:
-%
-\begin{proof}{}
-    \label{eq:f0hat}
-    \hat{f}_0 & =
-    -\BS{\rho}^\top(-b, r_s)
-    \BF{A_1}
-    \BF{R}''(-x_s, -y_s)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
-    \quad,
-\end{proof}
-%
-i.e., the flux we would get if we placed a negative illumination source
-at the antipode $(-x_s, -y_s, -z_s)$ of the true source.
-The total flux in this case is thus
+intersects with the limb). We first compute the illumination-weighted flux
+$f_I$ as above, then negate the unphysical nightside contribution
+using Equation~(\ref{eq:f0hat}):
 %
 \begin{proof}{}
     \label{eq:f4}
-    f_4 = f_3 - \hat{f}_0
+    f_4 = f_I - \hat{f}_0
     \quad.
 \end{proof}
 
@@ -1008,6 +1023,7 @@ as it is quite lengthy. Given $\sT$, the flux $f_S$ over the integration
 region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
 %
 \begin{align}
+    \label{eq:fS}
     f_S & =
     \mathfrak{s}^\top(b, \theta', b_o, r_o)
     \BF{A_2}
@@ -1019,7 +1035,7 @@ region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
     \quad.
 \end{align}
 %
-Note that this is not necessarily the \emph{observed} flux, which we must
+Note again that this is not necessarily the \emph{observed} flux, which we must
 compute on a case-by-case basis below.
 
 Case 5 corresponds to configurations in which the limb of the occultor
@@ -1038,8 +1054,8 @@ flux $f_0$:
 %
 Cases 6--8 involve two points of intersection between the occultor limb and
 the terminator. Case 6 corresponds to occultors that block some of the
-nightside and some of the dayside, regardless of whether the occultor
-is fully within the disk of the occulted body. We begin by computing the
+nightside and some of the dayside, but \emph{neither} of the extrema of the
+terminator ellipse. We begin by computing the
 flux over the unocculted region, $f_3$, which includes the spurious
 nightside contribution. We then remove this contribution by noting that it
 is equal to the total nightside contribution, $\hat{f}_0$, minus the
@@ -1047,19 +1063,27 @@ occulted nightside flux, $f_S$:
 %
 \begin{proof}{}
     \label{eq:f6}
-    f_6 = f_3 - (\hat{f}_0 - f_S)
+    f_6 = f_I - (\hat{f}_0 - f_S)
     \quad.
 \end{proof}
 %
-Case 7 corresponds to occultors that \xxx{what?}
+Cases 7 and 8 correspond to occultors that also block some nightside and some
+dayside, along with \emph{both} of the extrema of the ellipse; these are
+therefore exclusively for large occultors ($r_o > 1$). Case 7
+involves occultations in which only a small lens-shaped region of the
+nightside is visible. The total flux is the visible dayside plus unphysical
+nightside contribution, $f_I$, minus the nightside contribution, which we
+compute from Equation~(\ref{eq:fS}):
 %
 \begin{proof}{}
     \label{eq:7}
-    f_7 = f_3 - f_S
+    f_7 = f_I - f_S
     \quad.
 \end{proof}
 %
-Finally, case 8 corresponds to occultors that \xxx{what?}
+Conversely, case 8 involves occultations in which only a small lens-shaped
+region of the dayside is visible. In this case, we may compute the observed
+flux from Equation~(\ref{eq:fS}) directly:
 %
 \begin{proof}{}
     \label{eq:f8}
@@ -1070,8 +1094,25 @@ Finally, case 8 corresponds to occultors that \xxx{what?}
 
 \subsection{Cases 9--10}
 \label{sec:cases-9-10}
-%
-Pathological cases with 3 or 4 roots here.
+
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/pathological.pdf}
+        \oscaption{pathological}{%
+            Two additional families of occultations in reflected light,
+            involving rare triple (case 9, left) and quadruple
+            (case 10, right) intersections between the limb of the
+            occultor and the terminator of the occulted body. Both cases
+            involve integration over two disjoint regions (bounded by
+            the orange curves in the figure). The insets next to each case
+            show a zoomed-in version of two such regions. See text for
+            more details.
+            \label{fig:pathological}
+        }
+    \end{centering}
+\end{figure}
+
+Pathological cases with 3 or 4 roots here (Figure~\ref{fig:pathological}).
 
 %
 
