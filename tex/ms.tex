@@ -433,7 +433,7 @@ $\BF{A} = \BF{A_2} \BF{A_1}$
 the spherical harmonic basis $\by$ to the polynomial basis $\bp$, and
 $\BF{A_2}$ transforms from $\bp$ to the Green's basis $\bg$.
 
-Similarly, the flux outside of an occultation is now given by
+Similarly, the flux when there is no occultation is now given by
 %
 \begin{align}
     \label{eq:rTIA1RRy}
@@ -1003,40 +1003,20 @@ and curve $Q$ is a segment of the limb of the occulted body,
 parametrized by the angle $\lambda \in [\lambda_1, \lambda_2]$.
 The endpoints $\phi_1, \phi_2, \xi_1, \xi_2, \lambda_1,$ and
 $\lambda_2$ are functions of the solutions to the quartic from
-\S\ref{sec:which-case} and will be presented below.
+\S\ref{sec:which-case} and will be presented in \S\ref{sec:sT}.
 
-As in \citet{Luger2019}, the approach to computing the surface integrals
-of each of the terms in $\bg$ over $S$
-is to use Green's theorem to transform them into line integrals along the
-curves $P$, $T$, and $Q$. Let $\mathfrak{p}^\top$,
-$\mathfrak{t}^\top$, and $\mathfrak{q}^\top$ denote the vectors
-corresponding to the line integrals
-along the curves $P$, $T$, and $Q$, respectively, of the anti-exterior
-derivatives of each of the terms in
-$\bg$ (see Appendix~\ref{sec:sT}).
-The integration is performed in the frame $\mathcal{F}'$,
-in a counter-clockwise direction relative to the center
-of the integration region $S$.
-Then the integral of $\bg$ over $S$ is%
-\footnote{%
-    The components of the vectors $\mathfrak{p}^\top$ and
-    $\mathfrak{q}^\top$ are analogous to the ``primitive integrals''
-    $\mathcal{P}$ and $\mathcal{Q}$
-    defined in Equations~(30)--(32) in \citet{Luger2019}, although the
-    integration limits of both (and the sense of integration of $\mathcal{P}$)
-    are different.
-}
+Let $\sT$ be the integral of $\bg^\top$ over $S$:
 %
 \begin{align}
-    \label{eq:sT}
-    \sT & =
-    \mathfrak{p}^\top + \mathfrak{t}^\top + \mathfrak{q}^\top
+    \label{eq:sTint}
+    \sT(b, \theta', b_o, r_o) & =
+    \iint\limits_{S(b, \theta', b_o, r_o)}
+    \bg^\top(x', y')
+    \ \dd x' \ \dd y'
     \quad,
 \end{align}
 %
-where the dependence on $b, \theta', b_o,$ and $r_o$ is implicit.
-%
-We defer the solution to Equation~(\ref{eq:sT}) to \S\ref{sec:sT} below,
+We defer the solution to Equation~(\ref{eq:sTint}) to \S\ref{sec:sT} below,
 as it is quite lengthy. Given $\sT$, the flux $f_S$ over the integration
 region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
 %
@@ -1071,9 +1051,7 @@ flux $f_0$:
 \end{proof}
 %
 Cases 7--10 involve two points of intersection between the occultor limb and
-the terminator. The region we integrate over is bounded only by the terminator
-and the limb of the occultor, so when computing $f_S$ below we set
-$\mathfrak{q}^\top = \boldsymbol{0}$.
+the terminator.
 %
 Cases 7 and 8 correspond to occultors that block some of the
 nightside and some of the dayside, but \emph{neither} of the extrema of the
@@ -1190,14 +1168,201 @@ visible portion of the dayside, so this case is equivalent to case 10:
 %
 \begin{proof}{}
     \label{eq:f14}
-    f_{14} = (f_{S_1} + f_{S_2})
+    f_{14} = f_{S_1} + f_{S_2}
     \quad.
 \end{proof}
 %
 
 \subsection{Computing the integrals $\sT$}
 \label{sec:sT}
-\xxx{This is going to be be painful.}
+%
+In the previous sections, we discussed how to identify the case
+corresponding to a specific configuration of the occultor and the
+illumination source. We showed how in some cases
+(1--5; \S\ref{sec:cases-easy}) the total flux may be
+computed by exploiting the classical \starry integrals (Equation~\ref{eq:fI}).
+In all other cases (6--14; \S\ref{sec:cases-hard} and
+\S\ref{sec:cases-pathological}), however, the flux computation involves
+evaluation of
+Equation~(\ref{eq:fS}), where the solution vector $\mathfrak{s}^\top$
+is the vector of integrals of each of the terms in the Green's basis $\bg$
+over a region $S$ of the
+projected disk of the occultor (Equation~\ref{eq:sTint}).
+%
+As in \citet{Luger2019}, the approach to computing $\sT$
+is to use Green's theorem to transform the surface integrals into line
+integrals along the curves $P$, $T$, and $Q$
+(see Figure~\ref{fig:geometry}). Specifically, we write%
+\footnote{%
+    In this section, we deliberately drop the prime symbols from $x'$ and
+    $y'$ for clarity. We also drop the dependence of $\sT$ and the primitive
+    integrals on the geometrical parameters $b, \theta', b_o, r_o$.
+}
+%
+\begin{align}
+    \label{eq:greens}
+    \sT
+     & =
+    \iint\limits_{S}
+    \bg^\top(x, y)
+    \ \dd x \ \dd y
+    \nonumber \\[0.5em]
+     & =
+    \oint \bvec{G} (x, y) \cdot
+    \dd \bvec{r} (x, y)
+    \quad,
+\end{align}
+%
+where $\bvec{G} (x, y)$
+is an array of two-dimensional Cartesian vectors chosen such that its
+exterior derivative is $\bg$,
+%
+\begin{align}
+    \label{eq:DGg}
+    \frac{\dd \bvec{G}_{y}(x, y)}{\dd x}
+    - \frac{\dd \bvec{G}_{x}(x, y)}{\dd y} = \bg(x, y)
+    \quad,
+\end{align}
+%
+and
+%
+\begin{align}
+    \dd \BF{r} (x, y) & =
+    \left(\frac{\dd x}{\dd \varphi}\right) \dd \varphi \, \xhat +
+    \left(\frac{\dd y}{\dd \varphi}\right) \dd \varphi \, \yhat
+    \quad,
+\end{align}
+%
+where $\varphi$ is the parametrized angle along the integration path.
+%
+\citet{Luger2019} showed that one possible solution to
+Equation~(\ref{eq:DGg}) consists of the vector whose $n^\mathrm{th}$
+component is given by
+%
+\begin{align}
+    \label{eq:G}
+    \BF{G}_n (x, y) & =
+    \begin{dcases}
+        %
+        x^{\frac{\mu + 2}{2}}
+        y^{\frac{\nu}{2}}
+        \,\yhat
+         & \qquad \mu, \nu \, \mathrm{even}
+        \\[1em]
+        %
+        \frac{1-z(x, y)^3}{3(1-z(x, y)^2)}\bigg(-y \, \xhat + x \, \yhat\bigg)
+         & \qquad \mu = \nu = 1
+        \\[1em]
+        %
+        x^{l-2}
+        z(x, y)^3
+        \,\xhat
+         & \qquad \nu \, \mathrm{odd}, \,
+        \mu = 1, \,
+        \frac{\mu + \nu}{2} \, \mathrm{even}
+        \\[1em]
+        %
+        x^{l-3}
+        y
+        z(x, y)^3
+        \,\xhat
+         & \qquad \nu \, \mathrm{odd}, \,
+        \mu = 1, \,
+        \frac{\mu + \nu}{2} \, \mathrm{odd}
+        \\[1em]
+        %
+        x^{\frac{\mu-3}{2}}
+        y^{\frac{\nu-1}{2}}
+        z(x, y)^3
+        \,\yhat
+         & \qquad \mathrm{otherwise,}
+    \end{dcases}
+\end{align}
+%
+where the indices $l, m, \mu, \nu$ are given by Equation~(\ref{eq:l-m-mu-nu}).
+
+We showed in the previous sections that there are at most three curves
+$P$, $T$, and $Q$ bounding a given closed surface of integration
+(see Figure~\ref{fig:geometry}). We may therefore express
+Equation~(\ref{eq:greens}) as
+%
+\begin{align}
+    \label{eq:sT}
+    \sT & =
+    \mathfrak{p}^\top + \mathfrak{t}^\top + \mathfrak{q}^\top
+    \quad,
+\end{align}
+%
+where we define the primitive integrals
+%
+\begin{align}
+    \label{eq:pT}
+    \mathfrak{p}^\top
+     & =
+    \int\limits_{\phi_1}^{\phi_2}
+    \mathbf{G}(x_p, y_p)
+    \cdot \dd \mathbf{r}(x_p, y_p)
+    %
+    \\
+    %
+    \label{eq:tT}
+    \mathfrak{t}^\top
+     & =
+    \int\limits_{\xi_1}^{\xi_2}
+    \mathbf{G}(x_t, y_t)
+    \cdot \dd \mathbf{r}(x_t, y_t)
+    %
+    \\
+    %
+    \label{eq:qT}
+    \mathfrak{q}^\top
+     & =
+    \int\limits_{\lambda_1}^{\lambda_2}
+    \mathbf{G}(x_q, y_q)
+    \cdot \dd \mathbf{r}(x_q, y_q)
+\end{align}
+%
+to be the line integrals of $\mathbf{G}$ along each of the curves
+$P$, $T$, and $Q$, respectively, where the coordinates are parametrized
+in terms of $\varphi$ as follows:
+%
+\\[1em]
+%
+\begin{minipage}{0.31\linewidth}
+    \begin{align}
+        x_p & = r_o \cos\varphi
+        \nonumber                     \\
+        y_p & = b_o + r_o \sin\varphi
+        \nonumber
+    \end{align}
+\end{minipage}
+%
+\begin{minipage}{0.35\linewidth}
+    \begin{align}
+        x_t & = \cos\theta' \cos\varphi - b \sin\theta' \sin\varphi
+        \nonumber                                                   \\
+        y_t & = \sin\theta' \cos\varphi + b \cos\theta' \sin\varphi
+        \nonumber
+    \end{align}
+\end{minipage}
+%
+\begin{minipage}{0.31\linewidth}
+    \begin{align}
+        \label{eq:xy_pqt}
+        x_q & =\cos\varphi
+        \nonumber           \\
+        y_q & = \sin\varphi
+        \quad.
+    \end{align}
+\end{minipage}
+%
+\\[1em]
+
+\xxx{We perform the integration in a frame $\mathcal{F}'$
+    in which the occultor is aligned with the $+y'$-axis,
+    in a counter-clockwise direction relative to the center
+    of the integration region $S$.}
+
 
 \section{Performance}
 \label{sec:performance}
