@@ -737,12 +737,15 @@ terminator and the half-circle defining the upper limb of the body
 (Equation~\ref{eq:rT}). When an occultor is present, however, the
 integration boundaries are far less trivial, since they may or may not
 include sections of the terminator, sections of the limb of the body,
-and sections of the limb of the occultor. There are in total eight families of
+and sections of the limb of the occultor. There are in total ten families of
 configurations, each defined by a distinct combination of integration
-boundaries; these are shown in Figure~\ref{fig:cases}.
+boundaries; these are shown in Figures~\ref{fig:cases} and
+\ref{fig:pathological}.
 Together, these cases encompass all possible
 occultation configurations, for any illumination angle, occultor size, and
 occultor position.
+
+\xxx{In general, we do not just integrate over the dayside.}
 
 Before we discuss how to compute the occultation integrals, we must first
 develop a procedure to identify the relevant case given the occultor
@@ -763,7 +766,8 @@ the terminator. We do so in the following sections.
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/cases.pdf}
         \oscaption{cases}{%
-            The eight families of cases of occultations in reflected light.
+            The eight principal families of cases of occultations in
+            reflected light.
             In these figures, the body with the solid outline
             is the one whose flux we are interested in, and the body with the
             dashed outline is the occultor.
@@ -1053,7 +1057,11 @@ flux $f_0$:
 \end{proof}
 %
 Cases 6--8 involve two points of intersection between the occultor limb and
-the terminator. Case 6 corresponds to occultors that block some of the
+the terminator. The region we integrate over is bounded only by the terminator
+and the limb of the occultor, so when computing $f_S$ below we set
+$\mathfrak{q}^\top = \boldsymbol{0}$.
+%
+Case 6 corresponds to occultors that block some of the
 nightside and some of the dayside, but \emph{neither} of the extrema of the
 terminator ellipse. We begin by computing the
 flux over the unocculted region, $f_3$, which includes the spurious
@@ -1112,7 +1120,9 @@ flux from Equation~(\ref{eq:fS}) directly:
     \end{centering}
 \end{figure}
 
-Pathological cases with 3 or 4 roots here (Figure~\ref{fig:pathological}).
+Finally, cases 9 and 10 correspond to (rare) configurations involving three
+or four roots to Equation~\ref{eq:quartic}, respectively, and are
+illustrated in Figure~\ref{fig:pathological}.
 
 %
 

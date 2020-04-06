@@ -2,9 +2,6 @@ from code import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-# DEBUG
-plt.switch_backend("MacOSX")
-
 # Setup figure
 fig, ax = plt.subplots(1, 4, figsize=(12, 3))
 
