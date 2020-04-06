@@ -1263,7 +1263,7 @@ component is given by
         \,\xhat
          & \qquad \nu \, \mathrm{odd}, \,
         \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \mathrm{even}
+        l \, \mathrm{even}
         \\[1em]
         %
         x'^{l-3}
@@ -1272,7 +1272,7 @@ component is given by
         \,\xhat
          & \qquad \nu \, \mathrm{odd}, \,
         \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \mathrm{odd}
+        l \, \mathrm{odd}
         \\[1em]
         %
         x'^{\frac{\mu-3}{2}}
@@ -1452,9 +1452,60 @@ integration limit $\phi_1 = 223.3^\circ$ corresponds to the
 limb-terminator intersection. Both angles are measured counter-clockwise
 from the $x'$-axis.
 
-\xxx{OK, now solve the integral.}
-
-Let
+In order to evaluate the integral in Equation~(\ref{eq:pT}),
+we follow the reparametrization tricks of \S{D.2.3} in \citet{Luger2019}.
+The algebra is long and tedious, so we merely present the result
+(alongside the usual validation links). The $n^\mathrm{th}$ component
+of $\mathfrak{p}^\top$ is
+%
+\begin{proof}{}
+    \label{eq:pTsoln}
+    \mathfrak{p}_n &=
+    \begin{dcases}
+        %
+        2(2r_o)^{l+2} \mathcal{K}_{\frac{\mu+4}{4}, \frac{\nu}{2}}
+         & \qquad \frac{\mu}{2} \, \mathrm{even}
+        \\[1em]
+        %
+        P_2
+         & \qquad \mu = \nu = 1
+        \\[1em]
+        %
+        (2r_o)^{l-1}
+        \left(1 - b_o^2 + 2 b_o r_o - r_o^2\right)^\frac{3}{2}
+        \left(\mathcal{L}^{(0)}_{\frac{l-2}{2},0} -
+        2\mathcal{L}^{(1)}_{\frac{l-2}{2}, 0} \right)
+         & \qquad \mu = 1, \,
+        l \, \mathrm{even}
+        \\[1em]
+        %
+        (2r_o)^{l-1}
+        \left(1 - b_o^2 + 2 b_o r_o - r_o^2\right)^\frac{3}{2}
+        \left(\mathcal{L}^{(0)}_{\frac{l-3}{2},1} -
+        2\mathcal{L}^{(1)}_{\frac{l-3}{2},1}   \right)
+        %
+         & \qquad \mu = 1, \, l \ne 1, \,
+        l \, \mathrm{odd}
+        \\[1em]
+        %
+        2(2r_o)^{l-1}
+        \left(1 - b_o^2 + 2 b_o r_o - r_o^2\right)^\frac{3}{2}
+        \mathcal{L}^{(0)}_{\frac{\mu-1}{4}, \frac{\nu-1}{2}}
+         & \qquad \frac{\mu-1}{2} \, \mathrm{even}, \, l \ne 1
+        \\[1em]
+        %
+        X
+         & \qquad \mu, \nu \, \mathrm{even}
+        \\[1em]
+        %
+        Y
+         & \qquad \mu, \nu \, \mathrm{odd}
+        \quad,
+    \end{dcases}
+    %
+\end{proof}
+%
+where \xxx{...}
 %
 \begin{align}
     \BS{\kappa} = \BS{\phi} + \frac{\pi}{2}
