@@ -816,7 +816,7 @@ where
 are the coordinates of the occultor in $\mathcal{F}''$.
 %
 We wish to find the set of $N$ points
-$\{x_n''~\big|~0~\le~n~<~N\}$
+$\BS{x''} = \{x_n''~\big|~0~\le~n~<~N\}$
 for which
 $y''_1(x_n'') - y''_2(x_n'') = 0$. Following \citet{Luger2017}, we may
 express this condition as the quartic equation
@@ -996,13 +996,13 @@ $P$, $T$, and $Q$. These are shown in orange
 in Figure~\ref{fig:cases} and presented in more detail in
 Figure~\ref{fig:geometry}.
 Curve $P$ is a segment of the limb of
-the occultor, parametrized by the angle $\phi \in [\phi_1, \phi_2]$;
+the occultor, parametrized by the angle $\phi \in [\phi_0, \phi_1]$;
 curve $T$ is a segment of the terminator,
-parametrized by the angle $\xi \in [\xi_1, \xi_2]$;
+parametrized by the angle $\xi \in [\xi_0, \xi_1]$;
 and curve $Q$ is a segment of the limb of the occulted body,
-parametrized by the angle $\lambda \in [\lambda_1, \lambda_2]$.
-The endpoints $\phi_1, \phi_2, \xi_1, \xi_2, \lambda_1,$ and
-$\lambda_2$ are functions of the solutions to the quartic from
+parametrized by the angle $\lambda \in [\lambda_0, \lambda_1]$.
+The endpoints $\phi_0, \phi_1, \xi_0, \xi_1, \lambda_0,$ and
+$\lambda_1$ are functions of the solutions to the quartic from
 \S\ref{sec:which-case} and will be presented in \S\ref{sec:sT}.
 
 Let $\sT$ be the integral of $\bg^\top$ over $S$:
@@ -1185,7 +1185,8 @@ In all other cases (6--14; \S\ref{sec:cases-hard} and
 \S\ref{sec:cases-pathological}), however, the flux computation involves
 evaluation of
 Equation~(\ref{eq:fS}), where the solution vector $\mathfrak{s}^\top$
-is the vector of integrals of each of the terms in the Green's basis $\bg$
+is the vector of integrals (in the frame $\mathcal{F}'$)
+of each of the terms in the Green's basis $\bg$
 over a region $S$ of the
 projected disk of the occultor (Equation~\ref{eq:sTint}).
 %
@@ -1194,9 +1195,10 @@ is to use Green's theorem to transform the surface integrals into line
 integrals along the curves $P$, $T$, and $Q$
 (see Figure~\ref{fig:geometry}). Specifically, we write%
 \footnote{%
-    In this section, we deliberately drop the prime symbols from $x'$ and
-    $y'$ for clarity. We also drop the dependence of $\sT$ and the primitive
-    integrals on the geometrical parameters $b, \theta', b_o, r_o$.
+    In this section, we deliberately drop the dependence of $\sT$ and
+    the primitive
+    integrals on the geometrical parameters $b, \theta', b_o, r_o$
+    for clarity.
 }
 %
 \begin{align}
@@ -1204,36 +1206,38 @@ integrals along the curves $P$, $T$, and $Q$
     \sT
      & =
     \iint\limits_{S}
-    \bg^\top(x, y)
-    \ \dd x \ \dd y
+    \bg^\top(x', y')
+    \ \dd x' \ \dd y'
     \nonumber \\[0.5em]
      & =
-    \oint \bvec{G} (x, y) \cdot
-    \dd \bvec{r} (x, y)
+    \oint \bvec{G}^\top (x', y') \cdot
+    \dd \bvec{r} (x', y')
     \quad,
 \end{align}
 %
-where $\bvec{G} (x, y)$
+where $\bvec{G} (x', y')$
 is an array of two-dimensional Cartesian vectors chosen such that its
 exterior derivative is $\bg$,
 %
 \begin{align}
     \label{eq:DGg}
-    \frac{\dd \bvec{G}_{y}(x, y)}{\dd x}
-    - \frac{\dd \bvec{G}_{x}(x, y)}{\dd y} = \bg(x, y)
+    \frac{\dd \bvec{G}_{y'}(x', y')}{\dd x'}
+    - \frac{\dd \bvec{G}_{x'}(x', y')}{\dd y'} = \bg(x', y')
     \quad,
 \end{align}
 %
 and
 %
 \begin{align}
-    \dd \BF{r} (x, y) & =
-    \left(\frac{\dd x}{\dd \varphi}\right) \dd \varphi \, \xhat +
-    \left(\frac{\dd y}{\dd \varphi}\right) \dd \varphi \, \yhat
+    \dd \BF{r} (x', y') & =
+    \left(\frac{\dd x'}{\dd \varphi}\right) \dd \varphi \, \xhat' +
+    \left(\frac{\dd y'}{\dd \varphi}\right) \dd \varphi \, \yhat'
     \quad,
 \end{align}
 %
-where $\varphi$ is the parametrized angle along the integration path.
+where $\varphi$ is the parametrized angle along the integration path
+and the integral is taken in a counter-clockwise direction relative to
+the center of the integration region.
 %
 \citet{Luger2019} showed that one possible solution to
 Equation~(\ref{eq:DGg}) consists of the vector whose $n^\mathrm{th}$
@@ -1244,36 +1248,36 @@ component is given by
     \BF{G}_n (x, y) & =
     \begin{dcases}
         %
-        x^{\frac{\mu + 2}{2}}
-        y^{\frac{\nu}{2}}
-        \,\yhat
+        x'^{\frac{\mu + 2}{2}}
+        y'^{\frac{\nu}{2}}
+        \,\yhat'
          & \qquad \mu, \nu \, \mathrm{even}
         \\[1em]
         %
-        \frac{1-z(x, y)^3}{3(1-z(x, y)^2)}\bigg(-y \, \xhat + x \, \yhat\bigg)
+        \frac{1-z(x', y')^3}{3(1-z(x', y')^2)}\bigg(-y' \, \xhat' + x' \, \yhat'\bigg)
          & \qquad \mu = \nu = 1
         \\[1em]
         %
-        x^{l-2}
-        z(x, y)^3
+        x'^{l-2}
+        z(x', y')^3
         \,\xhat
          & \qquad \nu \, \mathrm{odd}, \,
         \mu = 1, \,
         \frac{\mu + \nu}{2} \, \mathrm{even}
         \\[1em]
         %
-        x^{l-3}
-        y
-        z(x, y)^3
+        x'^{l-3}
+        y'
+        z(x', y')^3
         \,\xhat
          & \qquad \nu \, \mathrm{odd}, \,
         \mu = 1, \,
         \frac{\mu + \nu}{2} \, \mathrm{odd}
         \\[1em]
         %
-        x^{\frac{\mu-3}{2}}
-        y^{\frac{\nu-1}{2}}
-        z(x, y)^3
+        x'^{\frac{\mu-3}{2}}
+        y'^{\frac{\nu-1}{2}}
+        z(x', y')^3
         \,\yhat
          & \qquad \mathrm{otherwise,}
     \end{dcases}
@@ -1286,83 +1290,175 @@ $P$, $T$, and $Q$ bounding a given closed surface of integration
 (see Figure~\ref{fig:geometry}). We may therefore express
 Equation~(\ref{eq:greens}) as
 %
-\begin{align}
+\begin{proof}{}
     \label{eq:sT}
     \sT & =
     \mathfrak{p}^\top + \mathfrak{t}^\top + \mathfrak{q}^\top
     \quad,
-\end{align}
+\end{proof}
 %
-where we define the primitive integrals
+where we define the primitive integrals%
+\footnote{%
+    The components of the vectors $\mathfrak{p}^\top$ and
+    $\mathfrak{q}^\top$ are analogous to the primitive integrals
+    $\mathcal{P}$ and $\mathcal{Q}$
+    defined in Equations~(30)--(32) in \citet{Luger2019}, although the
+    integration limits of both and the sense of integration of $\mathcal{P}$
+    are different.
+}
 %
-\begin{align}
+\begin{proof}{}
     \label{eq:pT}
     \mathfrak{p}^\top
-     & =
-    \int\limits_{\phi_1}^{\phi_2}
-    \mathbf{G}(x_p, y_p)
-    \cdot \dd \mathbf{r}(x_p, y_p)
+    & =
+    \int\limits_{\BS{\phi}}
+    \mathbf{G}^\top(x'_p, y'_p)
+    \cdot \dd \mathbf{r}(x'_p, y'_p)
     %
     \\
     %
     \label{eq:tT}
     \mathfrak{t}^\top
-     & =
-    \int\limits_{\xi_1}^{\xi_2}
-    \mathbf{G}(x_t, y_t)
-    \cdot \dd \mathbf{r}(x_t, y_t)
+    & =
+    \int\limits_{\BS{\xi}}
+    \mathbf{G}^\top(x'_t, y'_t)
+    \cdot \dd \mathbf{r}(x'_t, y'_t)
     %
     \\
     %
     \label{eq:qT}
     \mathfrak{q}^\top
-     & =
-    \int\limits_{\lambda_1}^{\lambda_2}
-    \mathbf{G}(x_q, y_q)
-    \cdot \dd \mathbf{r}(x_q, y_q)
-\end{align}
+    & =
+    \int\limits_{\BS{\lambda}}
+    \mathbf{G}^\top(x'_q, y'_q)
+    \cdot \dd \mathbf{r}(x'_q, y'_q)
+\end{proof}
 %
 to be the line integrals of $\mathbf{G}$ along each of the curves
-$P$, $T$, and $Q$, respectively, where the coordinates are parametrized
+$P$, $T$, and $Q$, respectively, where the coordinates along each
+curve are parametrized
 in terms of $\varphi$ as follows:
 %
 \\[1em]
 %
 \begin{minipage}{0.31\linewidth}
     \begin{align}
-        x_p & = r_o \cos\varphi
-        \nonumber                     \\
-        y_p & = b_o + r_o \sin\varphi
+        x'_p & = r_o \cos\varphi
+        \nonumber                      \\
+        y'_p & = b_o + r_o \sin\varphi
         \nonumber
     \end{align}
 \end{minipage}
 %
 \begin{minipage}{0.35\linewidth}
     \begin{align}
-        x_t & = \cos\theta' \cos\varphi - b \sin\theta' \sin\varphi
-        \nonumber                                                   \\
-        y_t & = \sin\theta' \cos\varphi + b \cos\theta' \sin\varphi
+        x'_t & = \cos\theta' \cos\varphi - b \sin\theta' \sin\varphi
+        \nonumber                                                    \\
+        y'_t & = \sin\theta' \cos\varphi + b \cos\theta' \sin\varphi
         \nonumber
     \end{align}
 \end{minipage}
 %
 \begin{minipage}{0.31\linewidth}
-    \begin{align}
+    \begin{proof}{}
         \label{eq:xy_pqt}
-        x_q & =\cos\varphi
+        x'_q & =\cos\varphi
         \nonumber           \\
-        y_q & = \sin\varphi
-        \quad.
-    \end{align}
+        y'_q & = \sin\varphi
+        \quad,
+    \end{proof}
 \end{minipage}
 %
 \\[1em]
+%
+and we define
+%
+\begin{align}
+    \int\limits_{\BS{\varphi}} & \equiv
+    %
+    \int\limits_{\varphi_{0}}^{\varphi_{1}}
+    +
+    \int\limits_{\varphi_{2}}^{\varphi_{3}}
+    +
+    \cdots
+    +
+    \int\limits_{\varphi_{N - 2}}^{\varphi_{N - 1}}
+    %
+    \nonumber                           \\
+                               & \equiv
+    \sum_{i = 0}^{\frac{N - 1}{2}}
+    \int\limits_{\varphi_{2i}}^{\varphi_{2i+1}}
+\end{align}
+%
+to be the sum of definite integrals between pairs of limits $\varphi_i$
+arranged in an array $\BS{\varphi}$ of length $N$.
+For cases involving integration over a single closed region, this
+corresponds to a single integral. For cases 11--14, this corresponds to
+the sum of two integrals, one for each of the two disjoint regions.
+In the next three sections, we derive the solutions to each of these
+primitive integrals.
 
-\xxx{We perform the integration in a frame $\mathcal{F}'$
-    in which the occultor is aligned with the $+y'$-axis,
-    in a counter-clockwise direction relative to the center
-    of the integration region $S$.}
+\subsection{The integral along the occultor limb, $\mathfrak{p}^\top$}
+\label{sec:pT}
+%
+In this section we present a solution to Equation~(\ref{eq:pT}). The first
+order of business is to derive expressions for the integration limits
+$\BS{\phi}$. Depending on the integration case, these limits will correspond
+to the point of intersection between the limb of the occultor and the
+limb of the occulted body and/or the point of intersection between the limb
+of the occultor and the terminator of the occulted body.
+The former is given by
+\citep[c.f. Equation~24 in][]{Luger2019}
+%
+\begin{align}
+    \phi_l & = \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
+    \quad,
+\end{align}
+%
+where the sign is chosen such that the point
+$(r_o\cos\phi_l, b_o + r_o\sin\phi_l)$ is on the dayside of the occulted body,
+and the latter (of which there may be multiple) is given by
+%
+% Introduce the function
+% %
+% \begin{proof}{}
+%     \textrm{\faAdjust}(x, y) &=
+%     \begin{cases}
+%         \textrm{\faCircleO} & \qquad -x \sin\theta' + y\cos\theta' \ge b \sqrt{1 - (x\cos\theta' + y\sin\theta') ^ 2}
+%         \\
+%         \textrm{\faCircle}  & \qquad \mathrm{otherwise}
+%     \end{cases}
+% \end{proof}
+% %
+% which returns \faCircleO\ if point $(x, y)$ is on the dayside of the body and
+% \faCircle\ if it is on the nightside.
+%
+%
+\begin{align}
+    \BS{\phi_t} & =
+    \theta' + \mathrm{arctan2}\left(b\sqrt{1 - \BS{x''}^2 - y''_o}, \BS{x''} - x''_o\right)
+    \quad
+\end{align}
+%
+where $\BS{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
+These angles are then sorted and placed in the array $\BS{\phi}$ such that
+the integration is always performed in a counter-clockwise sense about
+the center of the integration region.
+%
+The left panel in Figure~\ref{fig:geometry} shows a configuration in which
+the lower integration limit $\phi_0 = 158.2^\circ$ corresponds to the
+point of intersection between the limbs of the two bodies and the upper
+integration limit $\phi_1 = 223.3^\circ$ corresponds to the
+limb-terminator intersection. Both angles are measured counter-clockwise
+from the $x'$-axis.
 
+\xxx{OK, now solve the integral.}
+
+Let
+%
+\begin{align}
+    \BS{\kappa} = \BS{\phi} + \frac{\pi}{2}
+\end{align}
 
 \section{Performance}
 \label{sec:performance}

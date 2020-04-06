@@ -251,7 +251,7 @@ def visualize(b, theta, bo, ro, res=4999):
     # Labels
     for i in range(len(phi)):
         ax[1].annotate(
-            r"$\xi_{} = {:.1f}^\circ$".format(i + 1, xi[i] * 180 / np.pi),
+            r"$\xi_{} = {:.1f}^\circ$".format(i, xi[i] * 180 / np.pi),
             xy=(0, 0),
             xycoords="axes fraction",
             xytext=(5, 25 - i * 20),
@@ -260,7 +260,7 @@ def visualize(b, theta, bo, ro, res=4999):
             color="k",
         )
         ax[0].annotate(
-            r"$\phi_{} = {:.1f}^\circ$".format(i + 1, phi[i] * 180 / np.pi),
+            r"$\phi_{} = {:.1f}^\circ$".format(i, phi[i] * 180 / np.pi),
             xy=(0, 0),
             xycoords="axes fraction",
             xytext=(5, 25 - i * 20),
@@ -270,7 +270,7 @@ def visualize(b, theta, bo, ro, res=4999):
         )
     for i in range(len(lam)):
         ax[2].annotate(
-            r"$\lambda_{} = {:.1f}^\circ$".format(i + 1, lam[i] * 180 / np.pi),
+            r"$\lambda_{} = {:.1f}^\circ$".format(i, lam[i] * 180 / np.pi),
             xy=(0, 0),
             xycoords="axes fraction",
             xytext=(5, 25 - i * 20),
@@ -459,7 +459,7 @@ def visualize(b, theta, bo, ro, res=4999):
             ax[1].add_patch(arc)
 
             ax[1].annotate(
-                r"$\xi_{}$".format(i + 1),
+                r"$\xi_{}$".format(i),
                 xy=(
                     0.5 * sz[i] * np.cos(0.5 * np.sign(b) * xi_i + theta),
                     0.5 * sz[i] * np.sin(0.5 * np.sign(b) * xi_i + theta),
@@ -522,7 +522,7 @@ def visualize(b, theta, bo, ro, res=4999):
         )
         ax[0].add_patch(arc)
         ax[0].annotate(
-            r"${}\phi_{}$".format("-" if phi_i < 0 else "", i + 1),
+            r"${}\phi_{}$".format("-" if phi_i < 0 else "", i),
             xy=(
                 0.5 * sz[i] * np.cos(0.5 * (phi_i % (2 * np.pi))),
                 bo + 0.5 * sz[i] * np.sin(0.5 * (phi_i % (2 * np.pi))),
@@ -566,7 +566,7 @@ def visualize(b, theta, bo, ro, res=4999):
         )
         ax[2].add_patch(arc)
         ax[2].annotate(
-            r"${}\lambda_{}$".format("-" if lam_i < 0 else "", i + 1),
+            r"${}\lambda_{}$".format("-" if lam_i < 0 else "", i),
             xy=(0.5 * sz[i] * np.cos(0.5 * lam_i), 0.5 * sz[i] * np.sin(0.5 * lam_i),),
             xycoords="data",
             xytext=(7 * np.cos(0.5 * lam_i), 7 * np.sin(0.5 * lam_i),),
