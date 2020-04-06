@@ -737,7 +737,7 @@ terminator and the half-circle defining the upper limb of the body
 (Equation~\ref{eq:rT}). When an occultor is present, however, the
 integration boundaries are far less trivial, since they may or may not
 include sections of the terminator, sections of the limb of the body,
-and sections of the limb of the occultor. There are in total ten families of
+and sections of the limb of the occultor. There are in total 14 families of
 configurations, each defined by a distinct combination of integration
 boundaries; these are shown in Figures~\ref{fig:cases} and
 \ref{fig:pathological}.
@@ -766,21 +766,22 @@ the terminator. We do so in the following sections.
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/cases.pdf}
         \oscaption{cases}{%
-            The eight principal families of cases of occultations in
+            The 10 principal families of cases of occultations in
             reflected light.
             In these figures, the body with the solid outline
             is the one whose flux we are interested in, and the body with the
             dashed outline is the occultor.
-            The night side of the occulted body is colored
+            The nightside of the occulted body is colored
             black (dark grey if occulted), and the dayside is colored blue
-            (light grey if occulted).
-            The cases in the top row involve
+            (bluish-grey if occulted).
+            Case 0 is the unocculted case (\S\ref{sec:solution-no-occ}),
+            while cases 1--5 involve
             configurations in which the limb of the occultor does not intersect
             with the terminator at any point, so the visible flux may be
             computed in terms of classical \starry integrals. The remaining
             cases require integration along the orange boundary (the curves
             $P$, $T$, and $Q$ of
-            \S\ref{sec:cases-5-8}), which
+            \S\ref{sec:cases-hard}), which
             include the terminator. These involve the evaluation of incomplete
             elliptic integrals and are derived below.
             \label{fig:cases}
@@ -868,19 +869,19 @@ terminator ellipse (i.e., the section of the terminator on the far side
 of the body). After excluding the unphysical solutions, we are still left with
 anywhere between zero and four roots.
 
-Cases with zero roots (case 1 -- case 4) are treated in \S\ref{sec:cases-1-4},
+Cases with zero roots (case 1 -- case 4) are treated in \S\ref{sec:cases-easy},
 while cases with one or two roots (case 5 -- case 8) are treated in
-\S\ref{sec:cases-5-8}. Cases with three or four roots
+\S\ref{sec:cases-hard}. Cases with three or four roots
 (case 9 -- case 10) are rarely encountered
 in practice, but are possible for some pathological configurations; these are
-treated in \S\ref{sec:cases-9-10}.
+treated in \S\ref{sec:cases-pathological}.
 
 %
 
-\subsection{Cases 1--4}
-\label{sec:cases-1-4}
+\subsection{Cases 1--5}
+\label{sec:cases-easy}
 %
-Cases 1--4 (see Figure~\ref{fig:cases}) involve configurations in which the
+Cases 1--5 (see Figure~\ref{fig:cases}) involve configurations in which the
 occultor does not intersect with
 the terminator of the occulted body, and are therefore fairly
 straightforward to solve. In particular, we can use the original emitted
@@ -917,22 +918,21 @@ Case 1 corresponds to any complete occultation of the body
     \quad.
 \end{align}
 %
-Case 2 involves any occultation in which the occultor blocks \emph{only} the
-night side of the body (regardless of whether or not it intersects with the
-limb of the body). Since the night side intensity is zero everywhere, this case
-is also trivial, as the flux is equal to the flux in the no occultation case
-(Equation~\ref{eq:f0}):
+Case 2 corresponds to occultations in which the occultor blocks \emph{all} of
+the dayside of the body and \emph{some} of the nightside. In this
+configuration, the unocculted part of the disk consists only of nightside, so
+the solution is again trivial:
 %
-\begin{align}
+\begin{align}{}
     \label{eq:f2}
-    f_2 = f_0
+    f_2 = 0
     \quad.
 \end{align}
 %
-Case 3 corresponds to occultations in which the occultor blocks \emph{all} of
-the night side of the body and \emph{some} of the day side. In this
-configuration, the unocculted part of the disk consists only of dayside, and
-we can simply use the weighted solution in emitted light
+Conversely, case 3 corresponds to occultations in which the occultor blocks
+\emph{all} of the nightside of the body and \emph{some} of the dayside.
+Since the visible portion of the disk consistss only of dayside, we can
+simply use the weighted solution in emitted light
 (Equation~\ref{eq:fI}):
 %
 \begin{proof}{}
@@ -940,22 +940,34 @@ we can simply use the weighted solution in emitted light
     f_3 = f_\mathrm{I}
 \end{proof}
 %
-Finally, case 4 involves any occultation in which the occultor blocks
-\emph{only} the day side of the body (regardless of whether or not it
+Case 4 involves any occultation in which the occultor blocks \emph{only} the
+nightside of the body (regardless of whether or not it intersects with the
+limb of the body). Since the nightside intensity is zero everywhere, this case
+is also trivial, as the flux is equal to the flux in the no occultation case
+(Equation~\ref{eq:f0}):
+%
+\begin{align}
+    \label{eq:f4}
+    f_2 = f_0
+    \quad.
+\end{align}
+%
+Finally, case 5 involves any occultation in which the occultor blocks
+\emph{only} the dayside of the body (regardless of whether or not it
 intersects with the limb). We first compute the illumination-weighted flux
 $f_I$ as above, then negate the unphysical nightside contribution
 using Equation~(\ref{eq:f0hat}):
 %
 \begin{proof}{}
-    \label{eq:f4}
-    f_4 = f_I - \hat{f}_0
+    \label{eq:f5}
+    f_5 = f_I - \hat{f}_0
     \quad.
 \end{proof}
 
 %
 
-\subsection{Cases 5--8}
-\label{sec:cases-5-8}
+\subsection{Cases 6--10}
+\label{sec:cases-hard}
 %
 
 \begin{figure}[t!]
@@ -963,8 +975,8 @@ using Equation~(\ref{eq:f0hat}):
         \includegraphics[width=\linewidth]{figures/geometry.pdf}
         \oscaption{geometry}{%
             Geometry of an occultation in reflected light, corresponding
-            to case 5 in Figure~\ref{fig:cases}. The surface integral over
-            the occulted portion of the dayside (light gray region)
+            to case 6 in Figure~\ref{fig:cases}. The surface integral over
+            the occulted portion of the dayside (bluish-grey region)
             is computed from the line integrals of the antiderivatives of the
             surface intensity map along the boundary curves
             $P$, $T$, and $Q$. See text for details.
@@ -973,9 +985,9 @@ using Equation~(\ref{eq:f0hat}):
     \end{centering}
 \end{figure}
 
-Cases 5--8 (see Figure~\ref{fig:cases}) correspond to configurations in which
+Cases 6--10 (see Figure~\ref{fig:cases}) correspond to configurations in which
 the limb of the occultor intersects with the terminator at either one point
-(case 5) or two points (cases 6, 7, and 8). Because of these intersections, we
+(case 6) or two points (cases 7--10). Because of these intersections, we
 cannot simply re-weight the emitted light solution, as the integration
 boundaries are now different. In general, we may compute the flux by
 integrating the components of the Green's basis $\bg$
@@ -999,8 +1011,10 @@ is to use Green's theorem to transform them into line integrals along the
 curves $P$, $T$, and $Q$. Let $\mathfrak{p}^\top$,
 $\mathfrak{t}^\top$, and $\mathfrak{q}^\top$ denote the vectors
 corresponding to the line integrals
-along the curves $P$, $T$, and $Q$, respectively, for each of the terms in
-$\bg$. The integration is performed in the frame $\mathcal{F}'$,
+along the curves $P$, $T$, and $Q$, respectively, of the anti-exterior
+derivatives of each of the terms in
+$\bg$ (see Appendix~\ref{sec:sT}).
+The integration is performed in the frame $\mathcal{F}'$,
 in a counter-clockwise direction relative to the center
 of the integration region $S$.
 Then the integral of $\bg$ over $S$ is%
@@ -1009,7 +1023,7 @@ Then the integral of $\bg$ over $S$ is%
     $\mathfrak{q}^\top$ are analogous to the ``primitive integrals''
     $\mathcal{P}$ and $\mathcal{Q}$
     defined in Equations~(30)--(32) in \citet{Luger2019}, although the
-    integration limits of both and the sense of integration of $\mathcal{P}$
+    integration limits of both (and the sense of integration of $\mathcal{P}$)
     are different.
 }
 %
@@ -1042,7 +1056,7 @@ region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
 Note again that this is not necessarily the \emph{observed} flux, which we must
 compute on a case-by-case basis below.
 
-Case 5 corresponds to configurations in which the limb of the occultor
+Case 6 corresponds to configurations in which the limb of the occultor
 intersects the terminator at a single point. The integration region
 (see Figures~\ref{fig:cases} and \ref{fig:geometry}) is the occulted
 portion of the dayside, which is bounded by all three curves $P$, $Q$, and $T$.
@@ -1051,79 +1065,134 @@ be computed by subtracting the occulted flux $f_S$ from the total dayside
 flux $f_0$:
 %
 \begin{proof}{}
-    \label{eq:f5}
-    f_5 = f_0 - f_S
+    \label{eq:f6}
+    f_6 = f_0 - f_S
     \quad.
 \end{proof}
 %
-Cases 6--8 involve two points of intersection between the occultor limb and
+Cases 7--10 involve two points of intersection between the occultor limb and
 the terminator. The region we integrate over is bounded only by the terminator
 and the limb of the occultor, so when computing $f_S$ below we set
 $\mathfrak{q}^\top = \boldsymbol{0}$.
 %
-Case 6 corresponds to occultors that block some of the
+Cases 7 and 8 correspond to occultors that block some of the
 nightside and some of the dayside, but \emph{neither} of the extrema of the
-terminator ellipse. We begin by computing the
-flux over the unocculted region, $f_3$, which includes the spurious
+terminator ellipse. In case 7 a lens-shaped region is formed by the
+intersection of the occultor limb and the terminator on the
+\emph{nightside}, while in case 8 this region is formed on the \emph{dayside}.
+%
+In case 7, we begin by computing the
+flux over the unocculted region, $f_I$, which includes the spurious
 nightside contribution. We then remove this contribution by noting that it
 is equal to the total nightside contribution, $\hat{f}_0$, minus the
 occulted nightside flux, $f_S$:
 %
 \begin{proof}{}
-    \label{eq:f6}
-    f_6 = f_I - (\hat{f}_0 - f_S)
+    \label{eq:f7}
+    f_7 = f_I - (\hat{f}_0 - f_S)
     \quad.
 \end{proof}
 %
-Cases 7 and 8 correspond to occultors that also block some nightside and some
+Case 8, on the other hand, is topologically equivalent to case 6, since
+the integration region consists of occulted dayside:
+%
+\begin{proof}{}
+    \label{eq:f8}
+    f_8 = f_0 - f_S
+    \quad.
+\end{proof}
+%
+Cases 9 and 10 correspond to occultors that also block some nightside and some
 dayside, along with \emph{both} of the extrema of the ellipse; these are
-therefore exclusively for large occultors ($r_o > 1$). Case 7
+therefore exclusively for large occultors ($r_o > 1$). Case 9
 involves occultations in which only a small lens-shaped region of the
 nightside is visible. The total flux is the visible dayside plus unphysical
 nightside contribution, $f_I$, minus the nightside contribution, which we
 compute from Equation~(\ref{eq:fS}):
 %
 \begin{proof}{}
-    \label{eq:7}
-    f_7 = f_I - f_S
+    \label{eq:f9}
+    f_9 = f_I - f_S
     \quad.
 \end{proof}
 %
-Conversely, case 8 involves occultations in which only a small lens-shaped
+Conversely, case 10 involves occultations in which only a small lens-shaped
 region of the dayside is visible. In this case, we may compute the observed
 flux from Equation~(\ref{eq:fS}) directly:
 %
 \begin{proof}{}
-    \label{eq:f8}
-    f_8 = f_S
+    \label{eq:f10}
+    f_{10} = f_S
     \quad.
 \end{proof}
 %
 
-\subsection{Cases 9--10}
-\label{sec:cases-9-10}
+\subsection{Cases 11--14}
+\label{sec:cases-pathological}
 
 \begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/pathological.pdf}
         \oscaption{pathological}{%
-            Two additional families of occultations in reflected light,
-            involving rare triple (case 9, left) and quadruple
-            (case 10, right) intersections between the limb of the
-            occultor and the terminator of the occulted body. Both cases
+            Four additional families of occultations in reflected light,
+            involving rare triple (cases 11 and 12, top) and quadruple
+            (cases 13 and 14, bottom) intersections between the limb of the
+            occultor and the terminator of the occulted body. All four cases
             involve integration over two disjoint regions (bounded by
             the orange curves in the figure). The insets next to each case
-            show a zoomed-in version of two such regions. See text for
+            show a zoomed-in version of four such regions. See text for
             more details.
             \label{fig:pathological}
         }
     \end{centering}
 \end{figure}
 
-Finally, cases 9 and 10 correspond to (rare) configurations involving three
-or four roots to Equation~\ref{eq:quartic}, respectively, and are
-illustrated in Figure~\ref{fig:pathological}.
-
+Cases 11--14 correspond to (rare) configurations involving three
+or four roots to Equation~\ref{eq:quartic} and are
+illustrated in Figure~\ref{fig:pathological}. All four involve integration over
+two disjoint regions (see the figure).
+%
+Cases 11 and 12 involve three points of intersection between the terminator
+and the occultor limb. In case 11, the regions of integration $S_1$ and
+$S_2$ are the
+occulted portion of the dayside, so the solution is similar to
+that of cases 6 and 8:
+%
+\begin{proof}{}
+    \label{eq:f11}
+    f_{11} = f_0 - (f_{S_1} + f_{S_2})
+    \quad,
+\end{proof}
+%
+where $f_{S_1}$ and $f_{S_2}$ are computed from Equation~(\ref{eq:fS}) for
+each of the integration regions. Conversely, in case 12 the two regions
+are the occulted portion of the nightside, so the solution is similar to that
+of case 7:
+%
+\begin{proof}{}
+    \label{eq:f12}
+    f_{12} = f_I - \big(\hat{f}_0 - (f_{S_1} + f_{S_2})\big)
+    \quad,
+\end{proof}
+%
+Finally, cases 13 and 14 involve four points of intersection between the
+terminator and the occultor limb. The regions of integration in case 13 are
+the visible portion of the nightside, so this case is equivalent to case 9:
+%
+\begin{proof}{}
+    \label{eq:f13}
+    f_{13} = f_I - (f_{S_1} + f_{S_2})
+    \quad.
+\end{proof}
+%
+Conversely, the regions of integration in case 14 are the
+visible portion of the dayside, so this case is equivalent to case 10:
+%
+\begin{proof}{}
+    \label{eq:f14}
+    f_{14} = (f_{S_1} + f_{S_2})
+    \quad.
+\end{proof}
 %
 
 \subsection{Computing the integrals $\sT$}

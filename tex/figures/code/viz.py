@@ -22,11 +22,11 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
         phi = phi[::-1]
 
     color_night = (0, 0, 0, 0.75)
-    color_day_occ = (0, 0, 0, 0.25)
+    color_day_occ = (0.314, 0.431, 0.514, 0.5)
     color_night_occ = (0, 0, 0, 0.5)
 
     # Equation of half-ellipse
-    x = np.linspace(-1, 1, 1000)
+    x = np.linspace(-1, 1, 10000)
     y = b * np.sqrt(1 - x ** 2)
     x_t = x * np.cos(theta) - y * np.sin(theta)
     y_t = x * np.sin(theta) + y * np.cos(theta)
@@ -204,7 +204,7 @@ def visualize(b, theta, bo, ro, res=4999):
     phi = kappa - np.pi / 2
 
     color_night = (0, 0, 0, 0.75)
-    color_day_occ = (0, 0, 0, 0.25)
+    color_day_occ = (0.314, 0.431, 0.514, 0.5)
     color_night_occ = (0, 0, 0, 0.5)
 
     # Equation of half-ellipse
