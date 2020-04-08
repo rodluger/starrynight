@@ -4,27 +4,22 @@
 % Load the corTeX style definitions
 \input{cortex}
 
+
+\usepackage{amsmath}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+
+
 % Shorthand for this paper
 \usepackage{xifthen}
 \newcommand{\BF}[1]{\ensuremath{\mathbf{#1}}}
-\newcommand{\BS}[1]{\ensuremath{\boldsymbol{#1}}}
-\newcommand{\dd}{\ensuremath{\mathrm{d}}}
+\newcommand{\BS}[1]{\ensuremath{\pmb{#1}}}
+\newcommand{\dd}{\ensuremath{\text{d}}}
 \newcommand{\STARRYQUADPOINTS}{100\xspace}
 \newcommand{\bkappa}{\BS{\kappa}}
 \newcommand{\blambda}{\BS{\lambda}}
 \newcommand{\bxi}{\BS{\xi}}
-\newcommand{\vmax}{{v_\mathrm{max}}}
-\newcommand{\kapint}[1]{%
-\sum_{i = 0}^{\frac{N - 1}{2}}
-\int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
-#1
-\dd\varphi
-}
-\newcommand{\lamint}[1]{%
-\sum_{i = 0}^{\frac{N - 1}{2}}
-\int\limits_{\frac{1}{2}\lambda_{2i}}^{\frac{1}{2}\lambda_{2i+1}}
-#1
-}
+\newcommand{\vmax}{{v_\text{max}}}
 \newcommand{\coshalfkap}[1][]{%
 \ifthenelse{%
     \equal{#1}{}
@@ -43,18 +38,42 @@
 }}
 \newcommand{\DE}{\Delta \BS{E}(k^2, \bkappa)}
 \newcommand{\DF}{\Delta \BS{F}(k^2, \bkappa)}
-\newcommand{\sgn}{{\mathrm{sgn}}}
-\newcommand{\xhat}{\ensuremath{\mathbf{\hat{x}}}\xspace}
-\newcommand{\yhat}{\ensuremath{\mathbf{\hat{y}}}\xspace}
-\newcommand{\zhat}{\ensuremath{\mathbf{\hat{z}}}\xspace}
-\newcommand{\sT}{\ensuremath{\mathfrak{s}^\top}}
-\newcommand{\rT}{\ensuremath{\mathfrak{r}^\top}}
+\newcommand{\sgn}{{\text{sgn}}}
+\newcommand{\xhat}{\ensuremath{\pmb{\hat{x}}}\xspace}
+\newcommand{\yhat}{\ensuremath{\pmb{\hat{y}}}\xspace}
+\newcommand{\zhat}{\ensuremath{\pmb{\hat{z}}}\xspace}
+\newcommand{\sT}{\ensuremath{\mathbbb{s}^\top}}
+\newcommand{\rT}{\ensuremath{\mathbbb{r}^\top}}
+\newcommand{\pT}{\ensuremath{\mathbbb{p}^\top}}
+\newcommand{\tT}{\ensuremath{\mathbbb{t}^\top}}
+\newcommand{\qT}{\ensuremath{\mathbbb{q}^\top}}
 \newcommand{\sTe}{\ensuremath{\BF{s}^\top}}
 \newcommand{\rTe}{\ensuremath{\BF{r}^\top}}
-%
 \newcommand{\bg}{\ensuremath{\tilde{\BF{g}}}}
 \newcommand{\bp}{\ensuremath{\tilde{\BF{p}}}}
 \newcommand{\by}{\ensuremath{\tilde{\BF{y}}}}
+\newcommand{\iI}{\ensuremath{\mathbbb{i}}}
+\newcommand{\iJ}{\ensuremath{\mathbbb{j}}}
+\newcommand{\iU}{\ensuremath{\mathbbb{u}}}
+\newcommand{\iW}{\ensuremath{\mathbbb{w}}}
+\newcommand{\vint}[2]{%
+\int\limits_{#1}
+#2
+\dd\varphi
+}
+
+% REMOVE
+\newcommand{\kapint}[1]{%
+\sum_{i = 0}^{\frac{N - 1}{2}}
+\int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
+#1
+\dd\varphi
+}
+\newcommand{\lamint}[1]{%
+\sum_{i = 0}^{\frac{N - 1}{2}}
+\int\limits_{\frac{1}{2}\lambda_{2i}}^{\frac{1}{2}\lambda_{2i+1}}
+#1
+}
 
 % Bibliography stuff
 \bibliographystyle{aasjournal}
@@ -207,13 +226,13 @@ $+x$-axis (defined \xxx{below}).
 Given this formulation, and assuming that
 $r_s \gg 1$,
 it is straightforward to show that the illumination
-$\mathfrak{I}$ at a point $(x, y)$ on the projected disk of the body is given
+$\mathcal{I}$ at a point $(x, y)$ on the projected disk of the body is given
 by the function
 %
 \begin{proof}{}
     \label{eq:illum}
-    \mathfrak{I}(b, \theta, r_s; x, y)&=
-    \mathrm{max}\bigg( 0, I(b, \theta, r_s; x, y) \bigg)
+    \mathcal{I}(b, \theta, r_s; x, y)&=
+    \text{max}\bigg( 0, I(b, \theta, r_s; x, y) \bigg)
 \end{proof}
 %
 where
@@ -409,7 +428,7 @@ is now given by
 \begin{align}
     \label{eq:sTA2IA1RRy}
     f & =
-    \mathfrak{s}^\top(b, \theta', b_o, r_o)
+    \sT(b, \theta', b_o, r_o)
     \BF{A_2}
     \BF{I}(b, \theta', r_s)
     \BF{A_1}
@@ -423,7 +442,7 @@ where
 %
 \begin{align}
     \label{eq:theta'}
-    \theta' = \mathrm{arctan2}(x_o, y_o) - \mathrm{arctan2}(x_s, y_s)
+    \theta' = \text{arctan2}(x_o, y_o) - \text{arctan2}(x_s, y_s)
 \end{align}
 %
 is the angle of the terminator in the frame $\mathcal{F}'$.
@@ -438,7 +457,7 @@ Similarly, the flux when there is no occultation is now given by
 \begin{align}
     \label{eq:rTIA1RRy}
     f_0 & =
-    \mathfrak{r}^\top(b)
+    \rT(b)
     \BF{I}(b, \theta'', r_s)
     \BF{A_1}
     \BF{R}''(x_s, y_s)
@@ -464,11 +483,11 @@ this greatly simplifies the integration step.
 Note that in both equations we replaced the integral vectors
 $\rTe$ and $\sTe(b_o, r_o)$
 with the vectors
-$\mathfrak{r}^\top(b)$ and $\mathfrak{s}^\top(b, \theta', b_o, r_o)$,
+$\rT(b)$ and $\sT(b, \theta', b_o, r_o)$,
 respectively.
 As we mentioned above, we must modify the integration limits to exclude the
 nightside, where the weighting by $\BF{I}$ is unphysical.
-The vectors $\mathfrak{r}^\top$ and $\mathfrak{s}^\top$ correspond to these
+The vectors $\rT$ and $\sT$ correspond to these
 modified integrals, which we devote the rest of this paper to
 computing.
 
@@ -560,7 +579,7 @@ at index $n$ is given by
          &
         %
         \qquad
-        \mu, \nu \ \mathrm{even}
+        \mu, \nu \ \text{even}
         %
         \\[1em]
         %
@@ -586,7 +605,7 @@ at index $n$ is given by
          &
         %
         \qquad
-        \mathrm{otherwise}
+        \text{otherwise}
         %
     \end{cases}
 \end{proof}
@@ -745,7 +764,10 @@ Together, these cases encompass all possible
 occultation configurations, for any illumination angle, occultor size, and
 occultor position.
 
-\xxx{In general, we do not just integrate over the dayside.}
+\xxx{In general, we do not just integrate over the dayside. We integrate over
+    the simplest region -- usually the one with the fewest boundaries --
+    and combine it with the formalism from \S\ref{sec:solution-no-occ} to
+    compute the visible flux.}
 
 Before we discuss how to compute the occultation integrals, we must first
 develop a procedure to identify the relevant case given the occultor
@@ -937,7 +959,7 @@ simply use the weighted solution in emitted light
 %
 \begin{proof}{}
     \label{eq:f3}
-    f_3 = f_\mathrm{I}
+    f_3 = f_I
 \end{proof}
 %
 Case 4 involves any occultation in which the occultor blocks \emph{only} the
@@ -1023,7 +1045,7 @@ region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
 \begin{align}
     \label{eq:fS}
     f_S & =
-    \mathfrak{s}^\top(b, \theta', b_o, r_o)
+    \sT(b, \theta', b_o, r_o)
     \BF{A_2}
     \BF{I}(b, \theta', r_s)
     \BF{A_1}
@@ -1184,7 +1206,7 @@ computed by exploiting the classical \starry integrals (Equation~\ref{eq:fI}).
 In all other cases (6--14; \S\ref{sec:cases-hard} and
 \S\ref{sec:cases-pathological}), however, the flux computation involves
 evaluation of
-Equation~(\ref{eq:fS}), where the solution vector $\mathfrak{s}^\top$
+Equation~(\ref{eq:fS}), where the solution vector $\sT$
 is the vector of integrals (in the frame $\mathcal{F}'$)
 of each of the terms in the Green's basis $\bg$
 over a region $S$ of the
@@ -1240,7 +1262,7 @@ and the integral is taken in a counter-clockwise direction relative to
 the center of the integration region.
 %
 \citet{Luger2019} showed that one possible solution to
-Equation~(\ref{eq:DGg}) consists of the vector whose $n^\mathrm{th}$
+Equation~(\ref{eq:DGg}) consists of the vector whose $n^\text{th}$
 component is given by
 %
 \begin{align}
@@ -1251,7 +1273,7 @@ component is given by
         x'^{\frac{\mu + 2}{2}}
         y'^{\frac{\nu}{2}}
         \,\yhat'
-         & \qquad \mu, \nu \, \mathrm{even}
+         & \qquad \mu, \nu \, \text{even}
         \\[1em]
         %
         \frac{1-z(x', y')^3}{3(1-z(x', y')^2)}\bigg(-y' \, \xhat' + x' \, \yhat'\bigg)
@@ -1261,25 +1283,25 @@ component is given by
         x'^{l-2}
         z(x', y')^3
         \,\xhat
-         & \qquad \nu \, \mathrm{odd}, \,
+         & \qquad \nu \, \text{odd}, \,
         \mu = 1, \,
-        l \, \mathrm{even}
+        l \, \text{even}
         \\[1em]
         %
         x'^{l-3}
         y'
         z(x', y')^3
         \,\xhat
-         & \qquad \nu \, \mathrm{odd}, \,
+         & \qquad \nu \, \text{odd}, \,
         \mu = 1, \,
-        l \, \mathrm{odd}
+        l \, \text{odd}
         \\[1em]
         %
         x'^{\frac{\mu-3}{2}}
         y'^{\frac{\nu-1}{2}}
         z(x', y')^3
         \,\yhat
-         & \qquad \mathrm{otherwise,}
+         & \qquad \text{otherwise,}
     \end{dcases}
 \end{align}
 %
@@ -1293,14 +1315,14 @@ Equation~(\ref{eq:greens}) as
 \begin{proof}{}
     \label{eq:sT}
     \sT & =
-    \mathfrak{p}^\top + \mathfrak{t}^\top + \mathfrak{q}^\top
+    \pT + \tT + \qT
     \quad,
 \end{proof}
 %
 where we define the primitive integrals%
 \footnote{%
-    The components of the vectors $\mathfrak{p}^\top$ and
-    $\mathfrak{q}^\top$ are analogous to the primitive integrals
+    The components of the vectors $\pT$ and
+    $\qT$ are analogous to the primitive integrals
     $\mathcal{P}$ and $\mathcal{Q}$
     defined in Equations~(30)--(32) in \citet{Luger2019}, although the
     integration limits of both and the sense of integration of $\mathcal{P}$
@@ -1309,7 +1331,7 @@ where we define the primitive integrals%
 %
 \begin{proof}{}
     \label{eq:pT}
-    \mathfrak{p}^\top
+    \pT
     & =
     \int\limits_{\BS{\phi}}
     \mathbf{G}^\top(x'_p, y'_p)
@@ -1318,7 +1340,7 @@ where we define the primitive integrals%
     \\
     %
     \label{eq:tT}
-    \mathfrak{t}^\top
+    \tT
     & =
     \int\limits_{\BS{\xi}}
     \mathbf{G}^\top(x'_t, y'_t)
@@ -1327,7 +1349,7 @@ where we define the primitive integrals%
     \\
     %
     \label{eq:qT}
-    \mathfrak{q}^\top
+    \qT
     & =
     \int\limits_{\BS{\lambda}}
     \mathbf{G}^\top(x'_q, y'_q)
@@ -1341,7 +1363,7 @@ in terms of $\varphi$ as follows:
 %
 \\[1em]
 %
-\begin{minipage}{0.31\linewidth}
+\begin{minipage}{0.3\linewidth}
     \begin{align}
         x'_p & = r_o \cos\varphi
         \nonumber                      \\
@@ -1350,7 +1372,7 @@ in terms of $\varphi$ as follows:
     \end{align}
 \end{minipage}
 %
-\begin{minipage}{0.35\linewidth}
+\begin{minipage}{0.34\linewidth}
     \begin{align}
         x'_t & = \cos\theta' \cos\varphi - b \sin\theta' \sin\varphi
         \nonumber                                                    \\
@@ -1359,7 +1381,7 @@ in terms of $\varphi$ as follows:
     \end{align}
 \end{minipage}
 %
-\begin{minipage}{0.31\linewidth}
+\begin{minipage}{0.3\linewidth}
     \begin{proof}{}
         \label{eq:xy_pqt}
         x'_q & =\cos\varphi
@@ -1398,7 +1420,18 @@ the sum of two integrals, one for each of the two disjoint regions.
 In the next three sections, we derive the solutions to each of these
 primitive integrals.
 
-\subsection{The integral along the occultor limb, $\mathfrak{p}^\top$}
+\xxx{It is useful to} define the pairwise difference operator
+%
+\begin{align}
+    \label{eq:pairdiff}
+    \Delta \BS{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
+    \left( v_{2i + 1} - v_{2i} \right)
+\end{align}
+%
+which sums the difference of successive pairs of values in
+an array $\BS{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
+
+\subsection{The integral along the occultor limb, $\pT$}
 \label{sec:pT}
 %
 In this section we present a solution to Equation~(\ref{eq:pT}). The first
@@ -1426,7 +1459,7 @@ and the latter (of which there may be multiple) is given by
 %     \begin{cases}
 %         \textrm{\faCircleO} & \qquad -x \sin\theta' + y\cos\theta' \ge b \sqrt{1 - (x\cos\theta' + y\sin\theta') ^ 2}
 %         \\
-%         \textrm{\faCircle}  & \qquad \mathrm{otherwise}
+%         \textrm{\faCircle}  & \qquad \text{otherwise}
 %     \end{cases}
 % \end{proof}
 % %
@@ -1436,7 +1469,7 @@ and the latter (of which there may be multiple) is given by
 %
 \begin{align}
     \BS{\phi_t} & =
-    \theta' + \mathrm{arctan2}\left(b\sqrt{1 - \BS{x''}^2 - y''_o}, \BS{x''} - x''_o\right)
+    \theta' + \text{arctan2}\left(b\sqrt{1 - \BS{x''}^2 - y''_o}, \BS{x''} - x''_o\right)
     \quad
 \end{align}
 %
@@ -1455,60 +1488,215 @@ from the $x'$-axis.
 In order to evaluate the integral in Equation~(\ref{eq:pT}),
 we follow the reparametrization tricks of \S{D.2.3} in \citet{Luger2019}.
 The algebra is long and tedious, so we merely present the result
-(alongside the usual validation links). The $n^\mathrm{th}$ component
-of $\mathfrak{p}^\top$ is
+(alongside the usual validation links). The $n^\text{th}$ component
+of $\pT$ is
 %
 \begin{proof}{}
     \label{eq:pTsoln}
-    \mathfrak{p}_n &=
+    \mathbb{p}_n &=
     \begin{dcases}
         %
-        2(2r_o)^{l+2} \mathcal{K}_{\frac{\mu+4}{4}, \frac{\nu}{2}}
-         & \qquad \frac{\mu}{2} \, \mathrm{even}
+        %
+        2(2r_o)^{l+2}
+        \mathbb{V}
+        \left(
+        \frac{\mu+4}{4},
+        \frac{\nu}{2},
+        0;
+        \iI
+        \right)
+        %
+         & \qquad \frac{\mu}{2} \, \text{even}
         \\[1em]
         %
-        P_2
+        %
+        \mathbb{p}_2
+        %
          & \qquad \mu = \nu = 1
         \\[1em]
         %
-        (2r_o)^{l-1}
-        \left(1 - b_o^2 + 2 b_o r_o - r_o^2\right)^\frac{3}{2}
-        \left(\mathcal{L}^{(0)}_{\frac{l-2}{2},0} -
-        2\mathcal{L}^{(1)}_{\frac{l-2}{2}, 0} \right)
+        %
+        (2r_o)^{l-1} \beta
+        \left\{
+        \mathbb{V}
+        \left(
+        \frac{l-2}{2},
+        0,
+        0;
+        \iJ
+        \right) -
+        2
+        \mathbb{V}
+        \left(
+        \frac{l-2}{2},
+        0,
+        1;
+        \iJ
+        \right)
+        \right\}
+        %
          & \qquad \mu = 1, \,
-        l \, \mathrm{even}
+        l \, \text{even}
         \\[1em]
         %
-        (2r_o)^{l-1}
-        \left(1 - b_o^2 + 2 b_o r_o - r_o^2\right)^\frac{3}{2}
-        \left(\mathcal{L}^{(0)}_{\frac{l-3}{2},1} -
-        2\mathcal{L}^{(1)}_{\frac{l-3}{2},1}   \right)
+        %
+        (2r_o)^{l-1} \beta
+        \left\{
+        \mathbb{V}
+        \left(
+        \frac{l-3}{2},
+        1,
+        0;
+        \iJ
+        \right) -
+        \mathbb{V}
+        \left(
+        \frac{l-3}{2},
+        1,
+        1;
+        \iJ
+        \right)
+        \right\}
         %
          & \qquad \mu = 1, \, l \ne 1, \,
-        l \, \mathrm{odd}
+        l \, \text{odd}
         \\[1em]
         %
-        2(2r_o)^{l-1}
-        \left(1 - b_o^2 + 2 b_o r_o - r_o^2\right)^\frac{3}{2}
-        \mathcal{L}^{(0)}_{\frac{\mu-1}{4}, \frac{\nu-1}{2}}
-         & \qquad \frac{\mu-1}{2} \, \mathrm{even}, \, l \ne 1
+        %
+        2(2r_o)^{l-1} \beta\,
+        \mathbb{V}
+        \left(
+        \frac{\mu-1}{4},
+        \frac{\nu-1}{2},
+        0;
+        \iJ
+        \right)
+        %
+         & \qquad \frac{\mu-1}{2} \, \text{even}, \, l \ne 1
         \\[1em]
         %
-        X
-         & \qquad \mu, \nu \, \mathrm{even}
+        %
+        2(2r_o)^{l+2}
+        \mathbb{V}
+        \left(
+        \Big\lfloor\frac{\mu + 4}{4}\Big\rfloor,
+        \frac{\nu}{2},
+        0;
+        \iU
+        \right)
+        %
+         & \qquad \mu, \nu \, \text{even}
         \\[1em]
         %
-        Y
-         & \qquad \mu, \nu \, \mathrm{odd}
+        %
+        (2r_o)^{l-1} \beta\,
+        \mathbb{V}
+        \left(
+        \frac{\mu-1}{4},
+        \frac{\nu-1}{2},
+        0;
+        \iW
+        \right)
+         & \qquad \mu, \nu \, \text{odd}
         \quad,
+        %
+        %
     \end{dcases}
     %
 \end{proof}
 %
-where \xxx{...}
+where $\beta = \left(1 - (b_o - r_o)^2\right)^\frac{3}{2}$
+and we define the Vieta operator
+%
+\begin{align}
+    \mathbb{V}\left(u, v, w; \mathbbb{x}\right) \equiv
+    \sum_{i=0}^{u + v}
+    \mathcal{A}_{u, v, i}
+    \mathbb{x}_{u + w + i}
+\end{align}
+%
+as the dot product of a vector $\mathbbb{x}$ and
+the vector of Vieta's theorem coefficients $\BS{\mathcal{A}}_{u, v}$, where
+\citep[c.f. Equation~D34 in][]{Luger2019}
+%
+\begin{align}
+    \label{eq:vieta}
+    \mathcal{A}_{u,v,i} & =
+    \sum_{j=\text{max}(0,u-i)}^{\text{min}(u+v-i,u)}
+    \binom{u}{j}
+    \binom{v}{u+v-i-j}
+    (-1)^{u+j}\left(\frac{b_o-r_o}{2r_o}\right)^{u+v-i-j}
+    \quad.
+\end{align}
+%
+The vectors $\iI$, $\iJ$,
+$\iU$, and $\iW$ are solutions
+to specific integrals, which we compute recursively below. As in
+\citet{Luger2019} the $n = 2$ term of $\mathbb{p}$ (second case in the
+equation above) is handled separately; we also compute this below.
+
+%
+
+\subsubsection{The vector $\iI$}
+\label{sec:i}
+%
+The components of the vector $\iI$ are given by the integral
+%
+\begin{align}
+    \label{eq:I}
+    \mathbb{i}_v(\bkappa) & =
+    \vint{\bkappa}{\sinhalfkap[2v]}
+    \quad,
+\end{align}
+%
+for $v \in [0, \vmax]$,
+where we define the helper angle
 %
 \begin{align}
     \BS{\kappa} = \BS{\phi} + \frac{\pi}{2}
+    \quad.
+\end{align}
+%
+The integral in the expression above is the same as that in Equation (D38)
+of \citet{Luger2019}, except for a change in the limits of integration.
+As in \citet{Luger2019}, we can compute the vector $\iI$ recursively given
+a trivial lower boundary condition:
+%
+\begin{proof}{I}
+    \label{eq:Irec}
+    \mathbb{i}_0(\bkappa) &=
+    \frac{\Delta \bkappa}{2}
+    %
+    \nonumber \\
+    %
+    \mathbb{i}_v(\bkappa) &=
+    \frac{1}{2v}
+    \bigg(
+    (2v - 1) \mathbb{i}_{v-1}(\bkappa) -
+    \Delta \left(\sinhalfkap[2v - 1]\coshalfkap\right)
+    \bigg)
+\end{proof}
+%
+where the last expression is valid for all $v > 0$. We find that this algorithm
+is generally stable, except when
+$\sin\left(\nicefrac{\bkappa}{2}\right)$ is small.
+In that limit, we evaluate $\mathbb{i}_\vmax(\bkappa)$
+by numerical integration of
+Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
+points. We then recurse downward by substituting $v \rightarrow v + 1$ in
+Equation~(\ref{eq:Irec}) and solving for $\mathbb{i}_v(\bkappa)$.
+
+\xxx{Work in progress below here.}
+
+\subsubsection{The vector $\mathbbb{j}$}
+\label{sec:j}
+%
+Define the quantity
+%
+\begin{align}
+    \label{eq:q}
+    \BS{q}(k^2, \bkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
+    \quad.
 \end{align}
 
 \section{Performance}
@@ -1553,7 +1741,7 @@ Equations:
         x   & z  & y  &
         x^2 & xz & xy & yz & y^2 &
         \cdot\cdot\cdot
-    \end{pmatrix}^\mathsf{T}
+    \end{pmatrix}^\top
     \quad,
 \end{align}
 %
@@ -1597,7 +1785,7 @@ Equation~11 of \citet{Luger2019b}:
     \begin{dcases}
         %
         \frac{\mu+2}{2}x^\frac{\mu}{2} y^\frac{\nu}{2}
-         & \qquad \mu, \nu \, \mathrm{even}
+         & \qquad \mu, \nu \, \text{even}
         \\[1em]
         %
         z(x, y)
@@ -1605,18 +1793,18 @@ Equation~11 of \citet{Luger2019b}:
         \\[1em]
         %
         3x^{l-2}yz(x, y)
-         & \qquad \nu \, \mathrm{odd}, \,
+         & \qquad \nu \, \text{odd}, \,
         \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \mathrm{even}
+        \frac{\mu + \nu}{2} \, \text{even}
         \\[1em]
         %
         z(x, y)
         \bigg(
         -x^{l-3} + x^{l-1} + 4x^{l-3}y^2
         \bigg)
-         & \qquad \nu \, \mathrm{odd}, \,
+         & \qquad \nu \, \text{odd}, \,
         \mu = 1, \,
-        \, \mathrm{odd}
+        \, \text{odd}
         \\[1em]
         %
         z(x, y)
@@ -1628,7 +1816,7 @@ Equation~11 of \citet{Luger2019b}:
         \qquad\qquad \ - \
         \frac{\mu+3}{2} x^\frac{\mu-1}{2} y^\frac{\nu-1}{2}
         \bigg)
-         & \qquad \mathrm{otherwise}
+         & \qquad \text{otherwise}
         \quad,
     \end{dcases}
     \label{eq:bg}
@@ -1672,10 +1860,10 @@ The \emph{polynomial basis} $\bp$
     \tilde{p}_{l,m}(x, y) & =
     \begin{dcases}
         x^\frac{\mu}{2} y^\frac{\nu}{2}
-         & \qquad \mu, \nu \, \mathrm{even}
+         & \qquad \mu, \nu \, \text{even}
         \\[1em]
         x^\frac{\mu-1}{2} y^\frac{\nu-1}{2} z(x, y)
-         & \qquad \mathrm{otherwise} \quad,
+         & \qquad \text{otherwise} \quad,
     \end{dcases}
 \end{align}
 %
@@ -1701,7 +1889,7 @@ where
         x^{\frac{\mu + 2}{2}}
         y^{\frac{\nu}{2}}
         \,\yhat
-         & \qquad \mu, \nu \, \mathrm{even}
+         & \qquad \mu, \nu \, \text{even}
         \\[1em]
         %
         \frac{1-z(x, y)^3}{3(1-z(x, y)^2)}\bigg(-y \, \xhat + x \, \yhat\bigg)
@@ -1711,25 +1899,25 @@ where
         x^{l-2}
         z(x, y)^3
         \,\xhat
-         & \qquad \nu \, \mathrm{odd}, \,
+         & \qquad \nu \, \text{odd}, \,
         \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \mathrm{even}
+        \frac{\mu + \nu}{2} \, \text{even}
         \\[1em]
         %
         x^{l-3}
         y
         z(x, y)^3
         \,\xhat
-         & \qquad \nu \, \mathrm{odd}, \,
+         & \qquad \nu \, \text{odd}, \,
         \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \mathrm{odd}
+        \frac{\mu + \nu}{2} \, \text{odd}
         \\[1em]
         %
         x^{\frac{\mu-3}{2}}
         y^{\frac{\nu-1}{2}}
         z(x, y)^3
         \,\yhat
-         & \qquad \mathrm{otherwise,}
+         & \qquad \text{otherwise,}
     \end{dcases}
 \end{align}
 %
@@ -1746,27 +1934,6 @@ arc of integration. Generally, there are at most three arcs bounding a given
 closed surface of integration, which we will denote $\mathcal{P}$,
 $\mathcal{Q}$, and $\mathcal{T}$. These are shown for a typical
 occultor-occulted configuration in Figure~\ref{fig:geometry}.
-
-\subsection{Definitions}
-%
-Define the pairwise difference operator
-%
-\begin{align}
-    \label{eq:pairdiff}
-    \Delta \BS{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
-    \left( v_{2i + 1} - v_{2i} \right)
-\end{align}
-%
-which sums the difference of successive pairs of values in
-an array $\BS{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
-
-Define the quantity
-%
-\begin{align}
-    \label{eq:q}
-    \BS{q}(k^2, \bkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
-    \quad.
-\end{align}
 
 \subsection{$\mathcal{H}_{u,v}$}
 %
@@ -1911,43 +2078,7 @@ This integral has an analytic solution for all $v$:
 \end{proof}
 %
 
-\subsection{$\mathcal{I}_v$}
-%
-The function $\mathcal{I}_v$ is given by
-%
-\begin{align}
-    \label{eq:I}
-    \mathcal{I}_v(\bkappa) & =
-    \kapint{\sinhalfkap[2v]}
-    \quad.
-\end{align}
-%
-The integral in this expression is the same as that in Equation (D38)
-of \citet{Luger2019}, except for a change in the limits of integration.
-As in \citet{Luger2019}, we can compute this integral recursively given
-a trivial lower boundary condition:
-%
-\begin{proof}{I}
-    \label{eq:Irec}
-    \mathcal{I}_0(\bkappa) &=
-    \frac{\Delta \bkappa}{2}
-    %
-    \nonumber \\
-    %
-    \mathcal{I}_v(\bkappa) &=
-    \frac{1}{2v}
-    \bigg(
-    (2v - 1) \mathcal{I}_{v-1}(\bkappa) -
-    \Delta \left(\sinhalfkap[2v - 1]\coshalfkap\right)
-    \bigg)
-\end{proof}
-%
-where the last expression is valid for all $v > 0$. We find that this algorithm
-is generally stable, except when $\sin\left(\frac{\bkappa}{2}\right)$ is small.
-In that limit, we evaluate $\mathcal{I}_N(\bkappa)$ by numerical integration of
-Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
-points. We then recurse downward by substituting $v \rightarrow v + 1$ in
-Equation~(\ref{eq:Irec}) and solving for $\mathcal{I}_v(\bkappa)$.
+
 
 \subsection{$\mathcal{J}_v$}
 %
@@ -2136,6 +2267,7 @@ where ${_2F_1}(a, b; c; z)$ is the Gauss hypergeometric function.
 
 % Bibliography
 \bibliography{bib}
+
 
 
 \end{document}
