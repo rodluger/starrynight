@@ -4,78 +4,10 @@
 % Load the corTeX style definitions
 \input{cortex}
 
+% Load custom style
+\input{style}
 
-\usepackage{amsmath}
-\usepackage{fontspec}
-\usepackage{unicode-math}
-
-
-% Shorthand for this paper
-\usepackage{xifthen}
-\newcommand{\BF}[1]{\ensuremath{\mathbf{#1}}}
-\newcommand{\BS}[1]{\ensuremath{\pmb{#1}}}
-\newcommand{\dd}{\ensuremath{\text{d}}}
-\newcommand{\STARRYQUADPOINTS}{100\xspace}
-\newcommand{\bkappa}{\BS{\kappa}}
-\newcommand{\blambda}{\BS{\lambda}}
-\newcommand{\bxi}{\BS{\xi}}
-\newcommand{\vmax}{{v_\text{max}}}
-\newcommand{\coshalfkap}[1][]{%
-\ifthenelse{%
-    \equal{#1}{}
-}{
-    \cos\left(\frac{\bkappa}{2}\right)
-}{
-    \cos^{#1}\left(\frac{\bkappa}{2}\right)
-}}
-\newcommand{\sinhalfkap}[1][]{%
-\ifthenelse{%
-    \equal{#1}{}
-}{
-    \sin\left(\frac{\bkappa}{2}\right)
-}{
-    \sin^{#1}\left(\frac{\bkappa}{2}\right)
-}}
-\newcommand{\DE}{\Delta \BS{E}(k^2, \bkappa)}
-\newcommand{\DF}{\Delta \BS{F}(k^2, \bkappa)}
-\newcommand{\sgn}{{\text{sgn}}}
-\newcommand{\xhat}{\ensuremath{\pmb{\hat{x}}}\xspace}
-\newcommand{\yhat}{\ensuremath{\pmb{\hat{y}}}\xspace}
-\newcommand{\zhat}{\ensuremath{\pmb{\hat{z}}}\xspace}
-\newcommand{\sT}{\ensuremath{\mathbbb{s}^\top}}
-\newcommand{\rT}{\ensuremath{\mathbbb{r}^\top}}
-\newcommand{\pT}{\ensuremath{\mathbbb{p}^\top}}
-\newcommand{\tT}{\ensuremath{\mathbbb{t}^\top}}
-\newcommand{\qT}{\ensuremath{\mathbbb{q}^\top}}
-\newcommand{\sTe}{\ensuremath{\BF{s}^\top}}
-\newcommand{\rTe}{\ensuremath{\BF{r}^\top}}
-\newcommand{\bg}{\ensuremath{\tilde{\BF{g}}}}
-\newcommand{\bp}{\ensuremath{\tilde{\BF{p}}}}
-\newcommand{\by}{\ensuremath{\tilde{\BF{y}}}}
-\newcommand{\iI}{\ensuremath{\mathbbb{i}}}
-\newcommand{\iJ}{\ensuremath{\mathbbb{j}}}
-\newcommand{\iU}{\ensuremath{\mathbbb{u}}}
-\newcommand{\iW}{\ensuremath{\mathbbb{w}}}
-\newcommand{\vint}[2]{%
-\int\limits_{#1}
-#2
-\dd\varphi
-}
-
-% REMOVE
-\newcommand{\kapint}[1]{%
-\sum_{i = 0}^{\frac{N - 1}{2}}
-\int\limits_{\frac{1}{2}\kappa_{2i}}^{\frac{1}{2}\kappa_{2i+1}}
-#1
-\dd\varphi
-}
-\newcommand{\lamint}[1]{%
-\sum_{i = 0}^{\frac{N - 1}{2}}
-\int\limits_{\frac{1}{2}\lambda_{2i}}^{\frac{1}{2}\lambda_{2i+1}}
-#1
-}
-
-% Bibliography stuff
+% Bibliography
 \bibliographystyle{aasjournal}
 
 % Begin!
@@ -101,30 +33,60 @@
 \label{sec:intro}
 %
 This is an extension of \citet{Luger2019}.
+\xxx{
+    \textbf{To do list:}
+    \begin{itemize}
+        \item Make our frame convention explicit.
+              Unprimed = sky. Prime = greens. Double prime = term.
+        \item Emphasize why we can't just analytically weight the nightside by
+              zero and integrate as before.
+        \item Add a table clarifying the notation.
+    \end{itemize}
+}
 
 %
 \section{The Problem}
 \label{sec:the-problem}
 %
-\textbf{Note:}
-This section closely follows the
+This paper closely follows the
 notation and formalism introduced in \citet{Luger2019}. While we
-include all of the relevant equations and definitions in
-Appendix~\ref{app:starry}, the reader is encouraged to
-review \S2--3 of \citet{Luger2019} before proceeding.
-
-\xxx{Unprimed = sky. Prime = greens. Double prime = term.}
-\xxx{Emphasize why we can't just analytically weight the nightside by
-    zero and integrate as before.}
+include all of the relevant equations and definitions below,
+the reader is encouraged to
+review \citet{Luger2019} before proceeding.
 
 \subsection{Review of the \starry algorithm in emitted light}
 \label{sec:starry-review}
 %
+\xxx{Add equations for the rotation and change of basis matrices below.}
 Without loss of generality, assume the body whose flux we wish to compute
 has radius unity and sits at the origin of a right-handed Cartesian coordinate
 system in some frame $\mathcal{F}_0$. In this frame,
-the surface (emitted) intensity field of the body is described by the
-spherical harmonic coefficient vector $\mathbf{y}$.
+the surface (emitted) intensity field of the body is described by a
+vector $\mathbf{y}$ of coefficients in the spherical harmonic
+basis $\by$:
+%
+\begin{align}
+    \label{eq:by}
+    \by & =
+    \begin{pmatrix}
+        Y_{0, 0}  &
+        Y_{1, -1} & Y_{1, 0}  & Y_{1, 1} &
+        Y_{2, -2} & Y_{2, -1} & Y_{2, 0} & Y_{2, 1} & Y_{2, 2} &
+        \cdot\cdot\cdot
+    \end{pmatrix}^\top
+    \quad,
+\end{align}
+%
+where the component at index $n$ is $Y_{l,m}$ with
+%
+\begin{align}
+    \label{eq:l-m}
+    l & = \floor*{\sqrt{n}}
+    \nonumber               \\
+    m & = n - l^2 - l
+    \quad.
+\end{align}
+%
 An observer views the body from a large distance in the sky frame
 $\mathcal{F}$, in which the $x$-axis points to the right,
 the $y$-axis points up, and the $z$-axis points out of the sky
@@ -134,58 +96,126 @@ we compute the visible flux $f$ from
 %
 \begin{align}
     \label{eq:sTARRy}
-    f = \sTe \BF{A} \BF{R}' \BF{R} \BF{y}
+    f = \sTe \mathbf{A} \mathbf{R}' \mathbf{R} \mathbf{y}
     \quad,
 \end{align}
 %
-where, from right to left, $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
+where, from right to left, $\mathbf{R} = \mathbf{R}(i, \lambda, \vartheta)$
 is a Wigner rotation matrix that rotates $\bvec{y}$ from $\mathcal{F}_0$
 to the sky frame $\mathcal{F}$
 given the body's inclination $i$, obliquity
 $\lambda$, and rotational phase $\vartheta$ (Equation~\ref{eq:R}),
 %
-$\BF{R}' = \BF{R}'(x_o, y_o)$ rotates the body on the plane
+$\mathbf{R}' = \mathbf{R}'(x_o, y_o)$ rotates the body on the plane
 of the sky into the integration frame $\mathcal{F}'$, in which the
 occultor lies along the $+y'$-axis (Equation~\ref{eq:R'}),
 %
-$\BF{A}$ is the change-of-basis matrix from $\by$
-to the \emph{Green's basis} $\bg$ in which the integrals are computed
-(Equations~\ref{eq:by}, \ref{eq:bg}, and \ref{eq:A}),
+$\mathbf{A}$ is the change-of-basis matrix from $\by$
+to the \emph{Green's basis} $\bg$ in which the integrals are computed,
+whose component at index $n$ is
+%
+\begin{align}
+    \label{eq:bg}
+    \tilde{g}_{n}(x, y) & =
+    \begin{dcases}
+        %
+        \frac{\mu+2}{2}x^\frac{\mu}{2} y^\frac{\nu}{2}
+         & \qquad \mu, \nu \, \text{even}
+        \\[1em]
+        %
+        z(x, y)
+         & \qquad \mu = \nu = 1
+        \\[1em]
+        %
+        3x^{l-2}yz(x, y)
+         & \qquad \nu \, \text{odd}, \,
+        \mu = 1, \,
+        \frac{\mu + \nu}{2} \, \text{even}
+        \\[1em]
+        %
+        z(x, y)
+        \bigg(
+        -x^{l-3} + x^{l-1} + 4x^{l-3}y^2
+        \bigg)
+         & \qquad \nu \, \text{odd}, \,
+        \mu = 1, \,
+        \, \text{odd}
+        \\[1em]
+        %
+        z(x, y)
+        \bigg(
+        \frac{\mu-3}{2} x^\frac{\mu-5}{2} y^\frac{\nu-1}{2}
+        \ - \
+        \frac{\mu-3}{2} x^\frac{\mu-5}{2} y^\frac{\nu+3}{2}
+        \\
+        \qquad\qquad \ - \
+        \frac{\mu+3}{2} x^\frac{\mu-1}{2} y^\frac{\nu-1}{2}
+        \bigg)
+         & \qquad \text{otherwise}
+        \quad,
+    \end{dcases}
+\end{align}
+%
+with
+%
+\begin{align}
+    \label{eq:mu-nu}
+    \mu & \equiv l - m
+    \nonumber          \\
+    \nu & \equiv l + m
+\end{align}
+%
+and
+%
+\begin{align}
+    z(x, y) \equiv \sqrt{1 - x^2 - y^2}
+    \quad,
+\end{align}
 %
 and $\sTe = \sTe(b_o, r_o)$ is the vector of solutions to the integral over
 the projected visible disk of the body for each term in $\bg$
-(Equation~\ref{eq:sTe}), with $b_o = \sqrt{x_o^2 + y_o^2}$.
-%
+\citep[Equation~26 in][]{Luger2019}, with $b_o = \sqrt{x_o^2 + y_o^2}$.
+
 If instead no occultor is present, we compute the total
 visible flux $f_0$ from this body as
 %
 \begin{align}
     \label{eq:rTA1Ry}
-    f_0 = \rTe \BF{A_1} \BF{R}'' \BF{R} \BF{y}
+    f_0 = \rTe \mathbf{A_1} \mathbf{R}'' \mathbf{R} \mathbf{y}
     \quad,
 \end{align}
 %
-where, as before, $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
+where, as before, $\mathbf{R} = \mathbf{R}(i, \lambda, \vartheta)$
 rotates the body from $\mathcal{F}_0$
 to the sky frame $\mathcal{F}$,
 %
-$\BF{R}''$ rotates the body on the plane
+$\mathbf{R}''$ rotates the body on the plane
 of the sky into the integration frame
 $\mathcal{F}''$ (Equation~\ref{eq:R''})%
 \footnote{%
     In \citet{Luger2019}, $\mathcal{F}'' = \mathcal{F}'$, so
-    this rotation is trivial: $\BF{R}''$ is just the identity matrix.
+    this rotation is trivial: $\mathbf{R}''$ is just the identity matrix.
 },
 %
-$\BF{A_1}$ is the change-of-basis matrix from the spherical harmonic
+$\mathbf{A_1}$ is the change-of-basis matrix from the spherical harmonic
 basis $\by$ to the \emph{polynomial basis} $\bp$ in which the integrals
-are computed (Equations~\ref{eq:bp} and \ref{eq:A1}),
+are computed, whose component at index $n$ is
+%
+\begin{align}
+    \tilde{p}_n(x, y) & =
+    \begin{dcases}
+        x^\frac{\mu}{2} y^\frac{\nu}{2}
+         & \qquad \mu, \nu \, \text{even}
+        \\[1em]
+        x^\frac{\mu-1}{2} y^\frac{\nu-1}{2} z(x, y)
+         & \qquad \text{otherwise}
+        \quad,
+    \end{dcases}
+\end{align}
 %
 and $\rTe$ is the vector of solutions to the integral over
 the projected visible disk of the body for each term in $\bp$
-(Equation~\ref{eq:rTe}).
-%
-For more details, see Appendix~\ref{app:starry} and \citet{Luger2019}.
+\citep[Equation~19 in][]{Luger2019}.
 
 \subsection{Adapting the algorithm to the reflected light case}
 \label{sec:starry-review}
@@ -248,12 +278,12 @@ where
 with $b_c = \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 %
 Since $I$ is just a polynomial in $x$, $y$, and $z(x, y)$, we
-can express it as a vector $\BF{i}(b, \theta)$ in the polynomial basis $\bp$.
+can express it as a vector $\mathbf{i}(b, \theta)$ in the polynomial basis $\bp$.
 Recalling the structure of the basis (Equation~\ref{eq:bp}),
 we may write
 %
 \begin{proof}{}
-    \BF{i}(b, \theta, r_s) & =
+    \mathbf{i}(b, \theta, r_s) & =
     \frac{1}{4\pi r_s^2}
     \begin{pmatrix}
         0              \\
@@ -264,9 +294,9 @@ we may write
     \quad.
 \end{proof}
 %
-This fact allows us to construct a linear operator $\BF{I}$ to weight a map
+This fact allows us to construct a linear operator $\mathbf{I}$ to weight a map
 vector in the polynomial basis by the illumination profile.
-If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
+If we think about how each of the terms in $\bp$ transforms under $\mathbf{I}$,
 %
 \\[1em]
 %
@@ -278,7 +308,7 @@ If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
             0 \\
             0
         \end{pmatrix}
-         & \BS{\rightarrow}
+         & \pmb{\rightarrow}
         \begin{pmatrix}
             \bvec{i}_0 \\ %1
             \bvec{i}_1 \\ %x
@@ -302,7 +332,7 @@ If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
             0 \\
             0
         \end{pmatrix}
-         & \BS{\rightarrow}
+         & \pmb{\rightarrow}
         \begin{pmatrix}
             0          \\ %1
             \bvec{i}_0 \\ %x
@@ -326,7 +356,7 @@ If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
             1 \\
             0
         \end{pmatrix}
-         & \BS{\rightarrow}
+         & \pmb{\rightarrow}
         \begin{pmatrix}
             \bvec{i}_2  \\ %1
             0           \\ %x
@@ -350,7 +380,7 @@ If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
             0 \\
             1
         \end{pmatrix}
-         & \BS{\rightarrow}
+         & \pmb{\rightarrow}
         \begin{pmatrix}
             0          \\ %1
             0          \\ %x
@@ -372,10 +402,10 @@ If we think about how each of the terms in $\bp$ transforms under $\BF{I}$,
 %
 \\[1em]
 %
-we can compose $\BF{I}$ out of these column vectors:
+we can compose $\mathbf{I}$ out of these column vectors:
 %
 \begin{proof}{}
-    \BF{I}(b, \theta, r_s) & =
+    \mathbf{I}(b, \theta, r_s) & =
     \frac{1}{4\pi r_s^2}
     \begin{pmatrix}
         0              & 0              & -b             & 0              & \cdots \\
@@ -396,7 +426,7 @@ $l$ is the spherical harmonic degree of the map (this operator raises the
 degree of the map by one).
 %
 Note, importantly, that this weighting is valid only on the dayside
-hemisphere (see Equation~\ref{eq:illum}), as the operator $\BF{I}$ weights
+hemisphere (see Equation~\ref{eq:illum}), as the operator $\mathbf{I}$ weights
 points on the nightside by a \emph{negative} amount, which is clearly
 unphysical. As we will see momentarily, we account for this by excluding the
 nightside from the integration region in our flux integrals.
@@ -429,12 +459,12 @@ is now given by
     \label{eq:sTA2IA1RRy}
     f & =
     \sT(b, \theta', b_o, r_o)
-    \BF{A_2}
-    \BF{I}(b, \theta', r_s)
-    \BF{A_1}
-    \BF{R}'(x_o, y_o)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
+    \mathbf{A_2}
+    \mathbf{I}(b, \theta', r_s)
+    \mathbf{A_1}
+    \mathbf{R}'(x_o, y_o)
+    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{y}
     \quad,
 \end{align}
 %
@@ -442,15 +472,15 @@ where
 %
 \begin{align}
     \label{eq:theta'}
-    \theta' = \text{arctan2}(x_o, y_o) - \text{arctan2}(x_s, y_s)
+    \theta' = \atantwo(x_o, y_o) - \atantwo(x_s, y_s)
 \end{align}
 %
 is the angle of the terminator in the frame $\mathcal{F}'$.
 Note that we made use of the fact that
-$\BF{A} = \BF{A_2} \BF{A_1}$
-(Equation~\ref{eq:A}), where $\BF{A_1}$ transforms from
+$\mathbf{A} = \mathbf{A_2} \mathbf{A_1}$
+(Equation~\ref{eq:A}), where $\mathbf{A_1}$ transforms from
 the spherical harmonic basis $\by$ to the polynomial basis $\bp$, and
-$\BF{A_2}$ transforms from $\bp$ to the Green's basis $\bg$.
+$\mathbf{A_2}$ transforms from $\bp$ to the Green's basis $\bg$.
 
 Similarly, the flux when there is no occultation is now given by
 %
@@ -458,11 +488,11 @@ Similarly, the flux when there is no occultation is now given by
     \label{eq:rTIA1RRy}
     f_0 & =
     \rT(b)
-    \BF{I}(b, \theta'', r_s)
-    \BF{A_1}
-    \BF{R}''(x_s, y_s)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
+    \mathbf{I}(b, \theta'', r_s)
+    \mathbf{A_1}
+    \mathbf{R}''(x_s, y_s)
+    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{y}
     \quad,
 \end{align}
 %
@@ -475,7 +505,7 @@ where
 %
 is the angle of the terminator in the frame $\mathcal{F}''$, by
 construction. The transformation
-$\BF{R}'' = \BF{R}''(x_s, y_s)$ (Equation~\ref{eq:R''}) rotates
+$\mathbf{R}'' = \mathbf{R}''(x_s, y_s)$ (Equation~\ref{eq:R''}) rotates
 the body so the semi-major axis of the terminator is aligned
 with the $x''$-axis; as will become clear in \S\ref{sec:solution-no-occ} below,
 this greatly simplifies the integration step.
@@ -486,28 +516,28 @@ with the vectors
 $\rT(b)$ and $\sT(b, \theta', b_o, r_o)$,
 respectively.
 As we mentioned above, we must modify the integration limits to exclude the
-nightside, where the weighting by $\BF{I}$ is unphysical.
+nightside, where the weighting by $\mathbf{I}$ is unphysical.
 The vectors $\rT$ and $\sT$ correspond to these
 modified integrals, which we devote the rest of this paper to
 computing.
 
 Figure~\ref{fig:frames} summarizes the transformations involved in the two
-equations above. Starting on the right with a map vector $\BF{y}$ in
+equations above. Starting on the right with a map vector $\mathbf{y}$ in
 the spherical harmonic basis $\by$, defined in some observer-independent frame
-$\mathcal{F}_0$, we first rotate it via $\BF{R}$ to the sky frame
+$\mathcal{F}_0$, we first rotate it via $\mathbf{R}$ to the sky frame
 $\mathcal{F}$, in which the body is viewed by the
 observer. If an occultor is present (upper branch of the figure),
-we rotate the map from $\mathcal{F}$ via $\BF{R}'$ to the frame
+we rotate the map from $\mathcal{F}$ via $\mathbf{R}'$ to the frame
 $\mathcal{F}'$, in which the occultor lies along the
-$+y'$-axis. We then apply $\BF{A_1}$ to change basis to $\bp$ and $\BF{I}$
+$+y'$-axis. We then apply $\mathbf{A_1}$ to change basis to $\bp$ and $\mathbf{I}$
 to weight the map by the illumination. Finally, we change basis
-via $\BF{A_2}$ to the Green's basis, in which we compute and dot the
+via $\mathbf{A_2}$ to the Green's basis, in which we compute and dot the
 integrals $\sT$.
 If, on the other hand, there is no occultation (lower branch of the figure),
-we instead rotate the map via $\BF{R}''$ to the integration frame
+we instead rotate the map via $\mathbf{R}''$ to the integration frame
 $\mathcal{F}''$, in which the terminator is parallel to the
-$x''$-axis. We then apply $\BF{A_1}$ to change basis to $\bp$, apply the
-illumination transform $\BF{I}$, and finally dot in the solutions to the
+$x''$-axis. We then apply $\mathbf{A_1}$ to change basis to $\bp$, apply the
+illumination transform $\mathbf{I}$, and finally dot in the solutions to the
 surface integrals $\rT$.
 
 %
@@ -548,10 +578,10 @@ intensity-weighted basis directly,
 %
 \begin{align}
     \label{eq:rTI}
-    \BS{\rho}^\top(b, r_s) & \equiv
+    \pmb{\rho}^\top(b, r_s) & \equiv
     \rT(b) \mathbf{I}(b, 0, r_s)
-    \nonumber                       \\
-                           & =
+    \nonumber                        \\
+                            & =
     \int_{-1}^{1}
     \int_{b\sqrt{1 - x''^2}}^{\sqrt{1 - x''^2}}
     \bp(x'', y'')
@@ -564,7 +594,7 @@ recalling that in frame $\mathcal{F}''$, $\theta'' = 0$ by
 definition.
 %
 Equation~(\ref{eq:rTI}) may be solved analytically in terms of purely
-trigonometric and algebraic functions of $b$. The component of $\BS{\rho}^\top$
+trigonometric and algebraic functions of $b$. The component of $\pmb{\rho}^\top$
 at index $n$ is given by
 %
 \begin{proof}{}
@@ -712,17 +742,17 @@ we may compute all higher order terms from the recurrence relations
     \quad.
 \end{proof}
 %
-Once $\BS{\rho}^\top$ is known, the observed flux is computed from
+Once $\pmb{\rho}^\top$ is known, the observed flux is computed from
 (c.f. Equation~\ref{eq:rTIA1RRy})
 %
 \begin{proof}{}
     \label{eq:f0}
     f_0 & =
-    \BS{\rho}^\top(b, r_s)
-    \BF{A_1}
-    \BF{R}''(x_s, y_s)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
+    \pmb{\rho}^\top(b, r_s)
+    \mathbf{A_1}
+    \mathbf{R}''(x_s, y_s)
+    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{y}
     \quad.
 \end{proof}
 %
@@ -732,11 +762,11 @@ Finally, for future reference, we can also compute what we will call the
 \begin{proof}{}
     \label{eq:f0hat}
     \hat{f}_0 & =
-    -\BS{\rho}^\top(-b, r_s)
-    \BF{A_1}
-    \BF{R}''(-x_s, -y_s)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
+    -\pmb{\rho}^\top(-b, r_s)
+    \mathbf{A_1}
+    \mathbf{R}''(-x_s, -y_s)
+    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{y}
     \quad,
 \end{proof}
 %
@@ -756,18 +786,34 @@ terminator and the half-circle defining the upper limb of the body
 (Equation~\ref{eq:rT}). When an occultor is present, however, the
 integration boundaries are far less trivial, since they may or may not
 include sections of the terminator, sections of the limb of the body,
-and sections of the limb of the occultor. There are in total 14 families of
-configurations, each defined by a distinct combination of integration
+and sections of the limb of the occultor. The integration regions may also
+be disjoint; for instance, in case 7 of Figure~\ref{fig:cases}, the
+portion of the dayside that is unocculted consists of two separate
+regions.
+
+Whereas in \citet{Luger2019} we compute the observed flux by always
+integrating over the unocculted portion of the disk, here we find that
+it is often easier and more computationally efficient to compute the
+integral of the intensity over the
+\emph{simplest} region -- meaning the one with the fewest boundaries --
+and combine it with the formalism from \S\ref{sec:solution-no-occ} to
+compute the visible flux. These integrals may be over the unocculted dayside,
+the occulted dayside, the unocculted nightside, or the occulted nightside;
+in the case of the latter three, a bit of algebra
+(\S\ref{sec:cases-pathological}--\S\ref{sec:cases-pathological}) is needed
+to relate these to the observed flux. Additionally, in some cases we can
+avoid computing new integrals entirely, as the solution can be obtained from
+a combination of the classical \starry solution vector $\sT$ and the
+formalism from the unocculted case (\S\ref{sec:solution-no-occ}).
+
+After exhaustive experimentation, we identified in total 14 families of
+geometrical configurations for the occultation problem,
+each defined by a distinct combination of integration
 boundaries; these are shown in Figures~\ref{fig:cases} and
 \ref{fig:pathological}.
 Together, these cases encompass all possible
 occultation configurations, for any illumination angle, occultor size, and
 occultor position.
-
-\xxx{In general, we do not just integrate over the dayside. We integrate over
-    the simplest region -- usually the one with the fewest boundaries --
-    and combine it with the formalism from \S\ref{sec:solution-no-occ} to
-    compute the visible flux.}
 
 Before we discuss how to compute the occultation integrals, we must first
 develop a procedure to identify the relevant case given the occultor
@@ -802,7 +848,7 @@ the terminator. We do so in the following sections.
             with the terminator at any point, so the visible flux may be
             computed in terms of classical \starry integrals. The remaining
             cases require integration along the orange boundary (the curves
-            $P$, $T$, and $Q$ of
+            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ of
             \S\ref{sec:cases-hard}), which
             include the terminator. These involve the evaluation of incomplete
             elliptic integrals and are derived below.
@@ -837,8 +883,8 @@ where
 %
 are the coordinates of the occultor in $\mathcal{F}''$.
 %
-We wish to find the set of $N$ points
-$\BS{x''} = \{x_n''~\big|~0~\le~n~<~N\}$
+We wish to find the vector of $N$ points
+$\mathbf{x''} = \left(x_0, x_1, {\cdot\cdot\cdot}, x_{N-1}\right)^\top$
 for which
 $y''_1(x_n'') - y''_2(x_n'') = 0$. Following \citet{Luger2017}, we may
 express this condition as the quartic equation
@@ -914,19 +960,19 @@ polynomial illumination function:
     \label{eq:fI}
     f_I &=
     \sTe(b_o, r_o)
-    \BF{A_2}
-    \BF{I}(b, \theta', r_s)
-    \BF{A_1}
-    \BF{R}'(x_o, y_o)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
+    \mathbf{A_2}
+    \mathbf{I}(b, \theta', r_s)
+    \mathbf{A_1}
+    \mathbf{R}'(x_o, y_o)
+    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{y}
     \quad,
 \end{proof}
 %
 where $\sTe(b_o, r_o)$ is the emitted light solution vector
 \citep[Equation~26 in][]{Luger2019}. The flux $f_I$ is the flux one would
 measure from a body whose surface map is weighted by the illumination function
-$\BF{I}(b, \theta', r_s)$ during an occultation. Note that this is not
+$\mathbf{I}(b, \theta', r_s)$ during an occultation. Note that this is not
 necessarily the \emph{observed} flux, since this may include the unphysical
 negative contribution from the nightside. We must compute the actual
 observed flux on a case-by-case basis.
@@ -1001,7 +1047,7 @@ using Equation~(\ref{eq:f0hat}):
             the occulted portion of the dayside (bluish-grey region)
             is computed from the line integrals of the antiderivatives of the
             surface intensity map along the boundary curves
-            $P$, $T$, and $Q$. See text for details.
+            $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$. See text for details.
             \label{fig:geometry}
         }
     \end{centering}
@@ -1014,14 +1060,14 @@ cannot simply re-weight the emitted light solution, as the integration
 boundaries are now different. In general, we may compute the flux by
 integrating the components of the Green's basis $\bg$
 over the region $S$ bounded by three curves, which we denote
-$P$, $T$, and $Q$. These are shown in orange
+$\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$. These are shown in orange
 in Figure~\ref{fig:cases} and presented in more detail in
 Figure~\ref{fig:geometry}.
-Curve $P$ is a segment of the limb of
+Curve $\mathcal{P}$ is a segment of the limb of
 the occultor, parametrized by the angle $\phi \in [\phi_0, \phi_1]$;
-curve $T$ is a segment of the terminator,
+curve $\mathcal{T}$ is a segment of the terminator,
 parametrized by the angle $\xi \in [\xi_0, \xi_1]$;
-and curve $Q$ is a segment of the limb of the occulted body,
+and curve $\mathcal{Q}$ is a segment of the limb of the occulted body,
 parametrized by the angle $\lambda \in [\lambda_0, \lambda_1]$.
 The endpoints $\phi_0, \phi_1, \xi_0, \xi_1, \lambda_0,$ and
 $\lambda_1$ are functions of the solutions to the quartic from
@@ -1046,12 +1092,12 @@ region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
     \label{eq:fS}
     f_S & =
     \sT(b, \theta', b_o, r_o)
-    \BF{A_2}
-    \BF{I}(b, \theta', r_s)
-    \BF{A_1}
-    \BF{R}'(x_o, y_o)
-    \BF{R}(i, \lambda, \vartheta)
-    \BF{y}
+    \mathbf{A_2}
+    \mathbf{I}(b, \theta', r_s)
+    \mathbf{A_1}
+    \mathbf{R}'(x_o, y_o)
+    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{y}
     \quad.
 \end{align}
 %
@@ -1061,7 +1107,7 @@ compute on a case-by-case basis below.
 Case 6 corresponds to configurations in which the limb of the occultor
 intersects the terminator at a single point. The integration region
 (see Figures~\ref{fig:cases} and \ref{fig:geometry}) is the occulted
-portion of the dayside, which is bounded by all three curves $P$, $Q$, and $T$.
+portion of the dayside, which is bounded by all three curves $\mathcal{P}$, $\mathcal{Q}$, and $\mathcal{T}$.
 The total flux may
 be computed by subtracting the occulted flux $f_S$ from the total dayside
 flux $f_0$:
@@ -1214,7 +1260,7 @@ projected disk of the occultor (Equation~\ref{eq:sTint}).
 %
 As in \citet{Luger2019}, the approach to computing $\sT$
 is to use Green's theorem to transform the surface integrals into line
-integrals along the curves $P$, $T$, and $Q$
+integrals along the curves $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$
 (see Figure~\ref{fig:geometry}). Specifically, we write%
 \footnote{%
     In this section, we deliberately drop the dependence of $\sT$ and
@@ -1238,7 +1284,7 @@ integrals along the curves $P$, $T$, and $Q$
 \end{align}
 %
 where $\bvec{G} (x', y')$
-is an array of two-dimensional Cartesian vectors chosen such that its
+is a vector of two-dimensional Cartesian vectors chosen such that its
 exterior derivative is $\bg$,
 %
 \begin{align}
@@ -1251,7 +1297,7 @@ exterior derivative is $\bg$,
 and
 %
 \begin{align}
-    \dd \BF{r} (x', y') & =
+    \dd \mathbf{r} (x', y') & =
     \left(\frac{\dd x'}{\dd \varphi}\right) \dd \varphi \, \xhat' +
     \left(\frac{\dd y'}{\dd \varphi}\right) \dd \varphi \, \yhat'
     \quad,
@@ -1267,7 +1313,7 @@ component is given by
 %
 \begin{align}
     \label{eq:G}
-    \BF{G}_n (x, y) & =
+    \mathbf{G}_n (x, y) & =
     \begin{dcases}
         %
         x'^{\frac{\mu + 2}{2}}
@@ -1308,7 +1354,7 @@ component is given by
 where the indices $l, m, \mu, \nu$ are given by Equation~(\ref{eq:l-m-mu-nu}).
 
 We showed in the previous sections that there are at most three curves
-$P$, $T$, and $Q$ bounding a given closed surface of integration
+$\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ bounding a given closed surface of integration
 (see Figure~\ref{fig:geometry}). We may therefore express
 Equation~(\ref{eq:greens}) as
 %
@@ -1333,7 +1379,7 @@ where we define the primitive integrals%
     \label{eq:pT}
     \pT
     & =
-    \int\limits_{\BS{\phi}}
+    \int\limits_{\pmb{\phi}}
     \mathbf{G}^\top(x'_p, y'_p)
     \cdot \dd \mathbf{r}(x'_p, y'_p)
     %
@@ -1342,7 +1388,7 @@ where we define the primitive integrals%
     \label{eq:tT}
     \tT
     & =
-    \int\limits_{\BS{\xi}}
+    \int\limits_{\pmb{\xi}}
     \mathbf{G}^\top(x'_t, y'_t)
     \cdot \dd \mathbf{r}(x'_t, y'_t)
     %
@@ -1351,13 +1397,13 @@ where we define the primitive integrals%
     \label{eq:qT}
     \qT
     & =
-    \int\limits_{\BS{\lambda}}
+    \int\limits_{\pmb{\lambda}}
     \mathbf{G}^\top(x'_q, y'_q)
     \cdot \dd \mathbf{r}(x'_q, y'_q)
 \end{proof}
 %
 to be the line integrals of $\mathbf{G}$ along each of the curves
-$P$, $T$, and $Q$, respectively, where the coordinates along each
+$\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$, respectively, where the coordinates along each
 curve are parametrized
 in terms of $\varphi$ as follows:
 %
@@ -1396,7 +1442,8 @@ in terms of $\varphi$ as follows:
 and we define
 %
 \begin{align}
-    \int\limits_{\BS{\varphi}} & \equiv
+    \label{eq:vint}
+    \int\limits_{\pmb{\varphi}} & \equiv
     %
     \int\limits_{\varphi_{0}}^{\varphi_{1}}
     +
@@ -1406,37 +1453,83 @@ and we define
     +
     \int\limits_{\varphi_{N - 2}}^{\varphi_{N - 1}}
     %
-    \nonumber                           \\
-                               & \equiv
+    \nonumber                            \\
+                                & \equiv
     \sum_{i = 0}^{\frac{N - 1}{2}}
     \int\limits_{\varphi_{2i}}^{\varphi_{2i+1}}
 \end{align}
 %
 to be the sum of definite integrals between pairs of limits $\varphi_i$
-arranged in an array $\BS{\varphi}$ of length $N$.
-For cases involving integration over a single closed region, this
-corresponds to a single integral. For cases 11--14, this corresponds to
-the sum of two integrals, one for each of the two disjoint regions.
-In the next three sections, we derive the solutions to each of these
-primitive integrals.
-
-\xxx{It is useful to} define the pairwise difference operator
+arranged in a vector $\pmb{\varphi}$ of length $N$.
+%
+For future reference, it will also be useful to define the operator
 %
 \begin{align}
     \label{eq:pairdiff}
-    \Delta \BS{v} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
-    \left( v_{2i + 1} - v_{2i} \right)
+    \Delta \mathbf{x} \equiv \sum_{i=0}^{\frac{N - 1}{2}}
+    \left( x_{2i + 1} - x_{2i} \right)
+    \quad,
 \end{align}
 %
 which sums the difference of successive pairs of values in
-an array $\BS{v} = \{ v_0, v_1, v_2, v_3, {\cdot\cdot\cdot}, v_N\}$.
+a vector
+$\mathbf{x} = \left( x_0, x_1, x_2, x_3, {\cdot\cdot\cdot}, x_{N - 1} \right)^\top$.
+This will come in handy when computing definite integrals. Specifically,
+if $F$ is the antiderivative of some function $f$, we may use the
+fundamental theorem of calculus to compute the integral of
+$f$ over the interval(s) given
+by the vector of limit pairs $\pmb{\varphi}$:
+%
+\begin{align}
+    \vint{\pmb{\varphi}}{f(\varphi)}
+     & = \int\limits_{\varphi_{0}}^{\varphi_{1}} f(\varphi) \dd\varphi
+    +
+    \int\limits_{\varphi_{2}}^{\varphi_{3}} f(\varphi) \dd\varphi
+    +
+    {\cdot\cdot\cdot}
+    +
+    \int\limits_{\varphi_{N - 2}}^{\varphi_{N - 1}} f(\varphi) \dd\varphi
+    \nonumber                                                          \\
+     & = \Delta \mathbf{F}(\pmb{\varphi})
+\end{align}
+%
+where $\mathbf{F}$ is the vector given by
+%
+\begin{align}
+    \mathbf{F}(\pmb{\varphi}) =
+    \bigg( F(\varphi_0), F(\varphi_1), F(\varphi_2), F(\varphi_3),
+    {\cdot\cdot\cdot}, F(\varphi_{N - 2}), F(\varphi_{N - 1}) \bigg)^\top
+    \quad.
+\end{align}
+%
+Note that most of the cases (1--10) involve integration over a single closed
+region, so Equations~(\ref{eq:vint}) and (\ref{eq:pairdiff}) reduce to
+%
+\begin{align}
+    \int\limits_{\pmb{\varphi}} & \equiv
+    %
+    \int\limits_{\varphi_{0}}^{\varphi_{1}}
+\end{align}
+%
+and
+%
+\begin{align}
+    \Delta \mathbf{x} \equiv x_1 - x_0
+    \quad.
+\end{align}
+%
+For cases 11--14, we must integrate over two disjoint regions, so we
+sum over two pairs of limits.
+%
+In the next three sections, we derive the solutions to each of the
+primitive integrals $\pT$, $\tT$, and $\qT$.
 
 \subsection{The integral along the occultor limb, $\pT$}
 \label{sec:pT}
 %
 In this section we present a solution to Equation~(\ref{eq:pT}). The first
 order of business is to derive expressions for the integration limits
-$\BS{\phi}$. Depending on the integration case, these limits will correspond
+$\pmb{\phi}$. Depending on the integration case, these limits will correspond
 to the point of intersection between the limb of the occultor and the
 limb of the occulted body and/or the point of intersection between the limb
 of the occultor and the terminator of the occulted body.
@@ -1468,13 +1561,15 @@ and the latter (of which there may be multiple) is given by
 %
 %
 \begin{align}
-    \BS{\phi_t} & =
-    \theta' + \text{arctan2}\left(b\sqrt{1 - \BS{x''}^2 - y''_o}, \BS{x''} - x''_o\right)
+    \pmb{\phi_t} & =
+    \theta' +
+    \atantwo
+    \left(b\sqrt{1 - {\mathbf{x''}}^2 - y''_o}, \mathbf{x''} - x''_o\right)
     \quad
 \end{align}
 %
-where $\BS{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
-These angles are then sorted and placed in the array $\BS{\phi}$ such that
+where $\mathbf{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
+These angles are then sorted and placed in the vector $\pmb{\phi}$ such that
 the integration is always performed in a counter-clockwise sense about
 the center of the integration region.
 %
@@ -1498,12 +1593,12 @@ of $\pT$ is
         %
         %
         2(2r_o)^{l+2}
-        \mathbb{V}
+        V
         \left(
         \frac{\mu+4}{4},
         \frac{\nu}{2},
         0;
-        \iI
+        \viI
         \right)
         %
          & \qquad \frac{\mu}{2} \, \text{even}
@@ -1518,20 +1613,20 @@ of $\pT$ is
         %
         (2r_o)^{l-1} \beta
         \left\{
-        \mathbb{V}
+        V
         \left(
         \frac{l-2}{2},
         0,
         0;
-        \iJ
+        \viJ
         \right) -
         2
-        \mathbb{V}
+        V
         \left(
         \frac{l-2}{2},
         0,
         1;
-        \iJ
+        \viJ
         \right)
         \right\}
         %
@@ -1542,19 +1637,19 @@ of $\pT$ is
         %
         (2r_o)^{l-1} \beta
         \left\{
-        \mathbb{V}
+        V
         \left(
         \frac{l-3}{2},
         1,
         0;
-        \iJ
+        \viJ
         \right) -
-        \mathbb{V}
+        V
         \left(
         \frac{l-3}{2},
         1,
         1;
-        \iJ
+        \viJ
         \right)
         \right\}
         %
@@ -1564,12 +1659,12 @@ of $\pT$ is
         %
         %
         2(2r_o)^{l-1} \beta\,
-        \mathbb{V}
+        V
         \left(
         \frac{\mu-1}{4},
         \frac{\nu-1}{2},
         0;
-        \iJ
+        \viJ
         \right)
         %
          & \qquad \frac{\mu-1}{2} \, \text{even}, \, l \ne 1
@@ -1577,12 +1672,12 @@ of $\pT$ is
         %
         %
         2(2r_o)^{l+2}
-        \mathbb{V}
+        V
         \left(
         \Big\lfloor\frac{\mu + 4}{4}\Big\rfloor,
         \frac{\nu}{2},
         0;
-        \iU
+        \viU
         \right)
         %
          & \qquad \mu, \nu \, \text{even}
@@ -1590,12 +1685,12 @@ of $\pT$ is
         %
         %
         (2r_o)^{l-1} \beta\,
-        \mathbb{V}
+        V
         \left(
         \frac{\mu-1}{4},
         \frac{\nu-1}{2},
         0;
-        \iW
+        \viW
         \right)
          & \qquad \mu, \nu \, \text{odd}
         \quad,
@@ -1609,14 +1704,14 @@ where $\beta = \left(1 - (b_o - r_o)^2\right)^\frac{3}{2}$
 and we define the Vieta operator
 %
 \begin{align}
-    \mathbb{V}\left(u, v, w; \mathbbb{x}\right) \equiv
+    V\left(u, v, w; \mathbf{x}\right) \equiv
     \sum_{i=0}^{u + v}
     \mathcal{A}_{u, v, i}
-    \mathbb{x}_{u + w + i}
+    \mathbf{x}_{u + w + i}
 \end{align}
 %
-as the dot product of a vector $\mathbbb{x}$ and
-the vector of Vieta's theorem coefficients $\BS{\mathcal{A}}_{u, v}$, where
+as the dot product of a vector $\mathbf{x}$ and
+the vector of Vieta's theorem coefficients, where
 \citep[c.f. Equation~D34 in][]{Luger2019}
 %
 \begin{align}
@@ -1629,23 +1724,23 @@ the vector of Vieta's theorem coefficients $\BS{\mathcal{A}}_{u, v}$, where
     \quad.
 \end{align}
 %
-The vectors $\iI$, $\iJ$,
-$\iU$, and $\iW$ are solutions
+The vectors $\viI$, $\viJ$,
+$\viU$, and $\viW$ are solutions
 to specific integrals, which we compute recursively below. As in
-\citet{Luger2019} the $n = 2$ term of $\mathbb{p}$ (second case in the
+\citet{Luger2019} the $n = 2$ term of $\pT$ (second case in the
 equation above) is handled separately; we also compute this below.
 
 %
 
-\subsubsection{The vector $\iI$}
-\label{sec:i}
+\subsubsection{The vector $\viI$}
+\label{sec:I}
 %
-The components of the vector $\iI$ are given by the integral
+The components of the vector $\viI$ are given by the integral
 %
 \begin{align}
     \label{eq:I}
-    \mathbb{i}_v(\bkappa) & =
-    \vint{\bkappa}{\sinhalfkap[2v]}
+    \iI_v(\vkappa) & =
+    \vint{\vkappa}{\sinhalfkap[2v]}
     \quad,
 \end{align}
 %
@@ -1653,51 +1748,267 @@ for $v \in [0, \vmax]$,
 where we define the helper angle
 %
 \begin{align}
-    \BS{\kappa} = \BS{\phi} + \frac{\pi}{2}
+    \pmb{\kappa} = \pmb{\phi} + \frac{\pi}{2}
     \quad.
 \end{align}
 %
 The integral in the expression above is the same as that in Equation (D38)
 of \citet{Luger2019}, except for a change in the limits of integration.
-As in \citet{Luger2019}, we can compute the vector $\iI$ recursively given
+As in \citet{Luger2019}, we can compute the vector $\viI$ recursively given
 a trivial lower boundary condition:
 %
 \begin{proof}{I}
     \label{eq:Irec}
-    \mathbb{i}_0(\bkappa) &=
-    \frac{\Delta \bkappa}{2}
+    \iI_0(\vkappa) &=
+    \frac{\Delta \vkappa}{2}
     %
     \nonumber \\
     %
-    \mathbb{i}_v(\bkappa) &=
+    \iI_v(\vkappa) &=
     \frac{1}{2v}
     \bigg(
-    (2v - 1) \mathbb{i}_{v-1}(\bkappa) -
+    (2v - 1) \iI_{v-1}(\vkappa) -
     \Delta \left(\sinhalfkap[2v - 1]\coshalfkap\right)
     \bigg)
 \end{proof}
 %
 where the last expression is valid for all $v > 0$. We find that this algorithm
 is generally stable, except when
-$\sin\left(\nicefrac{\bkappa}{2}\right)$ is small.
-In that limit, we evaluate $\mathbb{i}_\vmax(\bkappa)$
+$\sin\left(\nicefrac{\vkappa}{2}\right)$ is small.
+In that limit, we evaluate $\iI_\vmax(\vkappa)$
 by numerical integration of
 Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
 points. We then recurse downward by substituting $v \rightarrow v + 1$ in
-Equation~(\ref{eq:Irec}) and solving for $\mathbb{i}_v(\bkappa)$.
+Equation~(\ref{eq:Irec}) and solving for $\iI_v(\vkappa)$.
 
-\xxx{Work in progress below here.}
-
-\subsubsection{The vector $\mathbbb{j}$}
-\label{sec:j}
 %
-Define the quantity
+
+\subsubsection{The vector $\viJ$}
+\label{sec:J}
+%
+The components of the vector $\viJ$ are given by the integral
+%
+\begin{align}
+    \label{eq:J}
+    \iJ_v(k^2, \vkappa) =
+    \vint{\vkappa}{
+        \sin^{2v}\varphi
+        \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
+    }
+    \quad.
+\end{align}
+%
+The integral in this expression is again the same as that in Equation (D39)
+of \citet{Luger2019}, except for a change in the limits of integration.
+In that paper, we computed all terms
+$\{ \iJ_0, {\cdot\cdot\cdot}, \iJ_\vmax \}$ from a three-term
+recurrence relation and two boundary conditions. In the case of upward
+recursion, the boundary conditions $\iJ_0$ and $\iJ_1$ were
+computed analytically from the complete elliptic integrals $K(k^2)$
+and $E(k^2)$. In cases where upward recursion was not numerically stable, we
+evaluated $\iJ_\vmax$ and $\iJ_{\vmax-1}$
+via a quickly convergent series expansion and recursed downward.
+
+In order to solve Equation~(\ref{eq:J}), it is possible to
+replace the complete elliptic integrals $K(k^2)$ and $E(k^2)$ in the lower
+boundary conditions \citep[Equation D46 in ][]{Luger2019} with the
+incomplete elliptic integrals $\mathbf{F}(k^2, \vkappa)$ and
+$\mathbf{E}(k^2, \vkappa)$,
+then use the same upward
+recursion relation to obtain analytic solutions for all $\iJ_v$:
+%
+\begin{proof}{J}
+    \label{eq:Jrec}
+    \iJ_0(k^2, \vkappa) &=
+    \frac{1}{3} \bigg(
+    2 \left(2 - \frac{1}{k^2}\right) \DE +
+    \left(\frac{1}{k^2} - 1\right) \DF +
+    \Delta \mathbf{z}_0(k^2, \vkappa)
+    \bigg)
+    %
+    \nonumber \\
+    %
+    \iJ_1(k^2, \vkappa) &=
+    \frac{1}{15} \bigg(
+    \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE +
+    \nonumber \\
+    &\qquad\quad\quad\quad\quad\quad\quad\quad\quad
+    \left(3 k^2 - 7 + \frac{4}{k^2}\right) \DF +
+    \Delta \mathbf{z}_1(k^2, \vkappa)
+    \bigg)
+    %
+    \nonumber \\
+    %
+    \iJ_v(k^2, \vkappa) &=
+    \frac{1}{2v + 3}
+    \bigg(
+    2 \left( v + 1 + (v - 1) k^2 \right) \iJ_{v - 1} -
+    (2v - 3) k^2 \iJ_{v - 2}
+    + \Delta \mathbf{z}_v(k^2, \vkappa)
+    \bigg)
+\end{proof}
+%
+%
+where the last expression is valid for all $v > 1$ and
+%
+\begin{proof}{J}
+    \label{eq:Jrec_z}
+    \mathbf{z}_0(k^2, \pmb{\kappa}) & =
+    \frac{
+        \sinhalfkap
+        \coshalfkap
+        \mathbf{q}(k^2, \vkappa)
+    }{
+        k^2
+    }
+    %
+    \nonumber\\
+    %
+    \mathbf{z}_1(k^2, \pmb{\kappa}) & =
+    \left(\left(3 \sinhalfkap[2] + 4\right) - 6k^2\right)
+    \mathbf{z}_0(k^2, \pmb{\kappa})
+    %
+    \nonumber\\
+    %
+    \mathbf{z}_v(k^2, \pmb{\kappa}) & =
+    k^2
+    \sinhalfkap[2v - 3]
+    \coshalfkap
+    \mathbf{q}(k^2, \pmb{\kappa})^5
+    \quad,
+\end{proof}
+%
+with
 %
 \begin{align}
     \label{eq:q}
-    \BS{q}(k^2, \bkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
+    \mathbf{q}(k^2, \vkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
     \quad.
 \end{align}
+%
+However, in practice we find that this procedure is even more numerically
+unstable than it was in \citet{Luger2019}.
+To address this, we express the recurrence structure of the problem as
+a tridiagonal system with one lower boundary condition $\iJ_0$
+and one upper boundary condition $\iJ_\vmax$:
+%
+\begin{proof}{J}
+    \label{eq:Jtri}
+    \begin{pmatrix}
+        a_0 & 1   &     &        &         &         \\
+        b_1 & a_1 & 1   &        &         &         \\
+            & b_2 & a_2 & 1      &         &         \\
+            &     & b_0 & a_3    & 1       &         \\
+            &     &     & \ddots & \ddots  & \ddots  \\
+            &     &     &        & b_\vmax & a_\vmax
+    \end{pmatrix}
+    \begin{pmatrix}
+        \iJ_1           \\
+        \iJ_2           \\
+        \iJ_3           \\
+        \iJ_4           \\
+        \cdot\cdot\cdot \\
+        \iJ_{\vmax-1}
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        c_0 - b_0 \iJ_0 \\
+        c_1             \\
+        c_2             \\
+        c_3             \\
+        \cdot\cdot\cdot \\
+        c_\vmax - \iJ_\vmax
+    \end{pmatrix}
+\end{proof}
+%
+where the recursion coefficients are given by
+%
+\begin{proof}{J}
+    \label{eq:Jtri_coeffs}
+    a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
+    b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
+    c_v(k^2, \vkappa) &= \Delta
+    \bigg(
+    \frac{
+            \mathbf{z}_v(k^2, \pmb{\kappa})
+        }{
+            2v + 3
+        }
+    \bigg)
+    \quad.
+\end{proof}
+%
+Solving this matrix system yields values for all
+intermediate $\{ \iJ_1, {\cdot\cdot\cdot}, \iJ_{\vmax - 1} \}$.
+While efficient algorithms exist for solving tridiagonal problems, we obtain
+far better numerical stability by instead performing traditional LU
+decomposition. We find that this algorithm is stable in all the regimes that we
+tested.
+
+We evaluate the upper boundary condition $\iJ_{\vmax}$ by numerical
+integration of Equation~(\ref{eq:J}) via Gauss-Legendre quadrature with
+\STARRYQUADPOINTS points. While the lower boundary condition may be computed
+analytically from Equation~(\ref{eq:Jrec}),
+in practice we achieve better precision via numerical
+integration (as above), with negligible effects on computational performance.
+
+%
+
+\subsubsection{The vector $\viU$}
+\label{sec:U}
+%
+The components of the vector $\viU$ are given by the integral
+%
+\begin{align}
+    \label{eq:U}
+    \iU_v(\vkappa) =
+    \vint{\vkappa}{\cos\varphi\sin^{2v}\varphi}
+    \quad.
+\end{align}
+%
+This integral has an analytic solution for all $v$:
+%
+\begin{proof}{U}
+    \label{eq:Usol}
+    \iU_v(\vkappa) &= \frac{\Delta \sinhalfkap[v+1]}{v + 1}
+    \quad.
+\end{proof}
+
+%
+
+\subsubsection{The vector $\viW$}
+\label{sec:W}
+%
+The components of the vector $\viW$ are given by the integral
+%
+\begin{align}
+    \label{eq:W}
+    \iW_v(\vkappa) = ???
+    \quad.
+\end{align}
+%
+This integral also has a closed-form solution:
+%
+\begin{proof}{}
+    \label{eq:Wsol}
+    \iW_n =
+    \frac{\sin^{2n + 2}\left(\frac{\vkappa}{2}\right)}{2n + 5}
+    \left(
+    \frac{3}{n+1}
+        {_2F_1}\left(-\frac{1}{2}, n + 1; n + 2; 1 - q^2\right) + 2 q^3
+    \right)
+    \quad,
+\end{proof}
+%
+where ${_2F_1}(a, b; c; z)$ is the Gauss hypergeometric function.
+%
+\xxx{Figure out the integral form, and write up the recursion relations.}
+
+%
+% DEBUG
+\vfill
+\pagebreak
+%
 
 \section{Performance}
 \label{sec:performance}
@@ -1716,233 +2027,15 @@ Define the quantity
 
 \appendix
 
-\xxx{Work in progress below here.}
+\xxx{Migrate this up.}
 
-\section{The \starry formalism}
-\label{app:starry}
-%
-Equations:
-%
-\begin{align}
-    \label{eq:R}
-    \BF{R} = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:by}
-    \by = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:bp}
-    \bp & =
-    \begin{pmatrix}
-        1   &
-        x   & z  & y  &
-        x^2 & xz & xy & yz & y^2 &
-        \cdot\cdot\cdot
-    \end{pmatrix}^\top
-    \quad,
-\end{align}
-%
-\begin{align}
-    \label{eq:A1}
-    \BF{A_1} = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:rTe}
-    \rTe = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:R'}
-    \BF{R}' = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:R''}
-    \BF{R}'' = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:A}
-    \BF{A} = ?
-\end{align}
-%
-\begin{align}
-    \label{eq:sTe}
-    \sTe = ?
-\end{align}
-%
-The basis $\bg$ is called the \emph{Green's basis}; its name
-stems from the fact that its components have a structure that makes integration
-by Green's theorem convenient. Its components were defined in
-Equation~11 of \citet{Luger2019b}:
-%
-\begin{proof}{bg}
-    \tilde{g}_{l,m} &=
-    \begin{dcases}
-        %
-        \frac{\mu+2}{2}x^\frac{\mu}{2} y^\frac{\nu}{2}
-         & \qquad \mu, \nu \, \text{even}
-        \\[1em]
-        %
-        z(x, y)
-         & \qquad \mu = \nu = 1
-        \\[1em]
-        %
-        3x^{l-2}yz(x, y)
-         & \qquad \nu \, \text{odd}, \,
-        \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \text{even}
-        \\[1em]
-        %
-        z(x, y)
-        \bigg(
-        -x^{l-3} + x^{l-1} + 4x^{l-3}y^2
-        \bigg)
-         & \qquad \nu \, \text{odd}, \,
-        \mu = 1, \,
-        \, \text{odd}
-        \\[1em]
-        %
-        z(x, y)
-        \bigg(
-        \frac{\mu-3}{2} x^\frac{\mu-5}{2} y^\frac{\nu-1}{2}
-        \ - \
-        \frac{\mu-3}{2} x^\frac{\mu-5}{2} y^\frac{\nu+3}{2}
-        \\
-        \qquad\qquad \ - \
-        \frac{\mu+3}{2} x^\frac{\mu-1}{2} y^\frac{\nu-1}{2}
-        \bigg)
-         & \qquad \text{otherwise}
-        \quad,
-    \end{dcases}
-    \label{eq:bg}
-\end{proof}
-%
-where $x$ and $y$ are the Cartesian coordinates on the surface
-of the projected
-disk of the body, with $z(x, y) = \sqrt{1 - x^2 - y^2}$, and
-%
-\begin{align}
-    \label{eq:munu}
-    \mu & = l - m
-    \nonumber     \\
-    \nu & = l + m
-    \quad.
-\end{align}
-%
-The vector $\bg$ is ordered such that
-the component at index $n$ is $\tilde{g}_{l,m}$, with
-%
-\begin{align}
-    \label{eq:lm}
-    l & = \floor*{\sqrt{n}} \nonumber \\
-    m & = n - l^2 - l
-    \quad.
-\end{align}
-%
-Finally, the rotation matrix $\BF{R} = \BF{R}(i, \lambda, \vartheta)$
-rotates the body to the correct orientation on the sky given its
-inclination $i$, obliquity $\lambda$, and rotational phase $\vartheta$,
-while $\BF{R}'$ rotates the body on the plane
-of the sky into the frame $\mathcal{F}'$ in which the integration is
-actually performed, with the occultor along the $+y'$-axis.
-For more information on all of these terms, the reader is referred to
-\citet{Luger2019}.
-
-The \emph{polynomial basis} $\bp$
-\citep[Equation 7 in][]{Luger2019}:
-%
-\begin{align}
-    \tilde{p}_{l,m}(x, y) & =
-    \begin{dcases}
-        x^\frac{\mu}{2} y^\frac{\nu}{2}
-         & \qquad \mu, \nu \, \text{even}
-        \\[1em]
-        x^\frac{\mu-1}{2} y^\frac{\nu-1}{2} z(x, y)
-         & \qquad \text{otherwise} \quad,
-    \end{dcases}
-\end{align}
-%
-where $\bp$ is again ordered such that the component at
-index $n$ is $\tilde{p}_{l,m}$, with $l$ and $m$ given by
-Equation~(\ref{eq:lm}).
-
-As in \citet{Luger2019}, the elements of the solution vector $\mathbf{s}^\top$
-are given by the line integral
-%
-\begin{align}
-    \label{eq:s}
-    s_{n(\mu,\nu)} = \oint \mathbf{G}_{\mu,\nu} \cdot \dd\mathbf{r}
-\end{align}
-%
-where
-%
-\begin{align}
-    \label{eq:G}
-    \BF{G}_{\mu,\nu} (x, y) & =
-    \begin{dcases}
-        %
-        x^{\frac{\mu + 2}{2}}
-        y^{\frac{\nu}{2}}
-        \,\yhat
-         & \qquad \mu, \nu \, \text{even}
-        \\[1em]
-        %
-        \frac{1-z(x, y)^3}{3(1-z(x, y)^2)}\bigg(-y \, \xhat + x \, \yhat\bigg)
-         & \qquad \mu = \nu = 1
-        \\[1em]
-        %
-        x^{l-2}
-        z(x, y)^3
-        \,\xhat
-         & \qquad \nu \, \text{odd}, \,
-        \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \text{even}
-        \\[1em]
-        %
-        x^{l-3}
-        y
-        z(x, y)^3
-        \,\xhat
-         & \qquad \nu \, \text{odd}, \,
-        \mu = 1, \,
-        \frac{\mu + \nu}{2} \, \text{odd}
-        \\[1em]
-        %
-        x^{\frac{\mu-3}{2}}
-        y^{\frac{\nu-1}{2}}
-        z(x, y)^3
-        \,\yhat
-         & \qquad \text{otherwise,}
-    \end{dcases}
-\end{align}
-%
-and
-%
-\begin{align}
-    \dd \BF{r} & = -r \sin\varphi \, \dd \varphi \, \xhat +
-    r \cos\varphi \, \dd \varphi \, \yhat
-    \quad,
-\end{align}
-%
-where $\varphi = \varphi(x, y)$ is the parametrized angle along the
-arc of integration. Generally, there are at most three arcs bounding a given
-closed surface of integration, which we will denote $\mathcal{P}$,
-$\mathcal{Q}$, and $\mathcal{T}$. These are shown for a typical
-occultor-occulted configuration in Figure~\ref{fig:geometry}.
-
-\subsection{$\mathcal{H}_{u,v}$}
 %
 The function $\mathcal{H}_{u,v}$ is given by
 %
 \begin{align}
     \label{eq:H}
-    \mathcal{H}_{u,v}(\blambda) & =
-    \lamint{
+    \mathcal{H}_{u,v}(\vlambda) & =
+    \vint{\vlambda}{
         \cos^u\varphi
         \sin^v\varphi
     }
@@ -1955,19 +2048,19 @@ We can compute this integral recursively given four lower boundary conditions:
 %
 \begin{proof}{H}
     \label{eq:Hlower}
-    \mathcal{H}_{0,0}(\blambda) &= \Delta \blambda
+    \mathcal{H}_{0,0}(\vlambda) &= \Delta \vlambda
     %
     \nonumber \\
     %
-    \mathcal{H}_{1,0}(\blambda) &= \Delta \sin\blambda
+    \mathcal{H}_{1,0}(\vlambda) &= \Delta \sin\vlambda
     %
     \nonumber \\
     %
-    \mathcal{H}_{0,1}(\blambda) &= -\Delta \cos\blambda
+    \mathcal{H}_{0,1}(\vlambda) &= -\Delta \cos\vlambda
     %
     \nonumber \\
     %
-    \mathcal{H}_{1,1}(\blambda) &= -\frac{\Delta\cos^2\blambda}{2}
+    \mathcal{H}_{1,1}(\vlambda) &= -\frac{\Delta\cos^2\vlambda}{2}
     %
     \quad.
 \end{proof}
@@ -1977,13 +2070,13 @@ relations
 %
 \begin{proof}{H}
     \label{eq:Hrec1}
-    \mathcal{H}_{u,v}(\blambda) &=
+    \mathcal{H}_{u,v}(\vlambda) &=
     \frac{
         -\Delta \left(
-        \cos^{u + 1} \blambda
-        \sin^{v - 1} \blambda
+        \cos^{u + 1} \vlambda
+        \sin^{v - 1} \vlambda
         \right)
-        +(v - 1)\mathcal{H}_{u,v - 2}(\blambda)
+        +(v - 1)\mathcal{H}_{u,v - 2}(\vlambda)
     }{u + v}
 \end{proof}
 %
@@ -1991,30 +2084,30 @@ for $u < 2, v \ge 2$ and
 %
 \begin{proof}{H}
     \label{eq:Hrec2}
-    \mathcal{H}_{u,v}(\blambda) &=
+    \mathcal{H}_{u,v}(\vlambda) &=
     \frac{
         \Delta \left(
-        \cos^{u - 1} \blambda
-        \sin^{v + 1} \blambda
+        \cos^{u - 1} \vlambda
+        \sin^{v + 1} \vlambda
         \right)
-        + (u - 1)\mathcal{H}_{u - 2,v}(\blambda)
+        + (u - 1)\mathcal{H}_{u - 2,v}(\vlambda)
     }{u + v}
 \end{proof}
 %
 for all remaining terms.
 
-\subsection{$\mathcal{T}_{2}$}
+\subsection{$\mathcal{\mathcal{T}}_{2}$}
 %
-The function $\mathcal{T}_{2}$ is given by
+The function $\mathcal{\mathcal{T}}_{2}$ is given by
 %
 \begin{align}
     \label{eq:T2}
-    \mathcal{T}_{2}(b, \bxi) & = ?
+    \mathcal{\mathcal{T}}_{2}(b, \vxi) & = ?
     \quad.
 \end{align}
 
 \begin{proof}{}
-    \mathcal{T}_{2}(b, \bxi) &= -\sgn(b) \Delta \BS{f}(b, \bxi)
+    \mathcal{\mathcal{T}}_{2}(b, \vxi) &= -\sgn(b) \Delta \mathbf{F}(b, \vxi)
 \end{proof}
 %
 where
@@ -2057,213 +2150,6 @@ and
         \quad.
     \end{cases}
 \end{proof}
-
-\subsection{$\mathcal{U}_v$}
-%
-The function $\mathcal{U}_v$ is given by
-%
-\begin{align}
-    \label{eq:U}
-    \mathcal{U}_v(\bkappa) =
-    \kapint{\cos\varphi\sin^{2v}\varphi}
-    \quad.
-\end{align}
-%
-This integral has an analytic solution for all $v$:
-%
-\begin{proof}{U}
-    \label{eq:Usol}
-    \mathcal{U}_v(\bkappa) &= \frac{\Delta \sinhalfkap[v+1]}{v + 1}
-    \quad.
-\end{proof}
-%
-
-
-
-\subsection{$\mathcal{J}_v$}
-%
-The function $\mathcal{J}_v$ is given by
-%
-\begin{align}
-    \label{eq:J}
-    \mathcal{J}_v(k^2, \bkappa) =
-    \kapint{
-        \sin^{2v}\varphi
-        \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
-    }
-    \quad.
-\end{align}
-%
-The integral in this expression is again the same as that in Equation (D39)
-of \citet{Luger2019}, except for a change in the limits of integration.
-In that paper, we computed all terms
-$\{ \mathcal{J}_0, {\cdot\cdot\cdot}, \mathcal{J}_\vmax \}$ from a three-term
-recurrence relation and two boundary conditions. In the case of upward
-recursion, the boundary conditions $\mathcal{J}_0$ and $\mathcal{J}_1$ were
-computed analytically from the complete elliptic integrals $K(k^2)$
-and $E(k^2)$. In cases where upward recursion was not numerically stable, we
-evaluated $\mathcal{J}_\vmax$ and $\mathcal{J}_{\vmax-1}$
-via a quickly convergent series expansion and recursed downward.
-
-In order to solve Equation~(\ref{eq:J}), it is possible to
-replace the complete elliptic integrals $K(k^2)$ and $E(k^2)$ in the lower
-boundary conditions \citep[Equation D46 in ][]{Luger2019} with the
-incomplete elliptic integrals $F(k^2, \kappa)$ and $E(k^2, \kappa)$,
-then use the same upward
-recursion relation to obtain analytic solutions for all $\mathcal{J}_v$:
-%
-\begin{proof}{J}
-    \label{eq:Jrec}
-    \mathcal{J}_0(k^2, \bkappa) &=
-    \frac{1}{3} \bigg(
-    2 \left(2 - \frac{1}{k^2}\right) \DE +
-    \left(\frac{1}{k^2} - 1\right) \DF +
-    \Delta \BS{z}_0(k^2, \bkappa)
-    \bigg)
-    %
-    \nonumber \\
-    %
-    \mathcal{J}_1(k^2, \bkappa) &=
-    \frac{1}{15} \bigg(
-    \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE +
-    \left(3 k^2 - 7 + \frac{4}{k^2}\right) \DF +
-    \Delta \BS{z}_1(k^2, \bkappa)
-    \bigg)
-    %
-    \nonumber \\
-    %
-    \mathcal{J}_v(k^2, \bkappa) &=
-    \frac{1}{2v + 3}
-    \bigg(
-    2 \left( v + 1 + (v - 1) k^2 \right) \mathcal{J}_{v - 1} -
-    (2v - 3) k^2 \mathcal{J}_{v - 2}
-    + \Delta \BS{z}_v(k^2, \bkappa)
-    \bigg)
-\end{proof}
-%
-%
-where the last expression is valid for all $v > 1$ and
-%
-\begin{proof}{J}
-    \label{eq:Jrec_z}
-    \BS{z}_0(k^2, \BS{\kappa}) & =
-    \frac{
-        \sinhalfkap
-        \coshalfkap
-        \BS{q}(k^2, \bkappa)
-    }{
-        k^2
-    }
-    %
-    \nonumber\\
-    %
-    \BS{z}_1(k^2, \BS{\kappa}) & =
-    \left(\left(3 \sinhalfkap[2] + 4\right) - 6k^2\right)
-    \BS{z}_0(k^2, \BS{\kappa})
-    %
-    \nonumber\\
-    %
-    \BS{z}_v(k^2, \BS{\kappa}) & =
-    k^2
-    \sinhalfkap[2v - 3]
-    \coshalfkap
-    \BS{q}(k^2, \BS{\kappa})^5
-    \quad.
-\end{proof}
-%
-However, in practice we find that this procedure is even more numerically
-unstable than it was in \citet{Luger2019}.
-To address this, we express the recurrence structure of the problem as
-a tridiagonal system with one lower boundary condition $\mathcal{J}_0$
-and one upper boundary condition $\mathcal{J}_\vmax$:
-%
-\begin{proof}{J}
-    \label{eq:Jtri}
-    \begin{pmatrix}
-        a_0 & 1   &     &        &         &         \\
-        b_1 & a_1 & 1   &        &         &         \\
-            & b_2 & a_2 & 1      &         &         \\
-            &     & b_0 & a_3    & 1       &         \\
-            &     &     & \ddots & \ddots  & \ddots  \\
-            &     &     &        & b_\vmax & a_\vmax
-    \end{pmatrix}
-    \begin{pmatrix}
-        \mathcal{J}_1   \\
-        \mathcal{J}_2   \\
-        \mathcal{J}_3   \\
-        \mathcal{J}_4   \\
-        \cdot\cdot\cdot \\
-        \mathcal{J}_{\vmax-1}
-    \end{pmatrix}
-    =
-    \begin{pmatrix}
-        c_0 - b_0 \mathcal{J}_0 \\
-        c_1                     \\
-        c_2                     \\
-        c_3                     \\
-        \cdot\cdot\cdot         \\
-        c_\vmax - \mathcal{J}_\vmax
-    \end{pmatrix}
-\end{proof}
-%
-where the recursion coefficients are given by
-%
-\begin{proof}{J}
-    \label{eq:Jtri_coeffs}
-    a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
-    b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
-    c_v(k^2, \bkappa) &= \Delta
-    \bigg(
-    \frac{
-            \BS{z}_v(k^2, \BS{\kappa})
-        }{
-            2v + 3
-        }
-    \bigg)
-    \quad.
-\end{proof}
-%
-Solving this matrix system yields values for all
-intermediate $\{ \mathcal{J}_1, {\cdot\cdot\cdot}, \mathcal{J}_{\vmax - 1} \}$.
-While efficient algorithms exist for solving tridiagonal problems, we obtain
-far better numerical stability by instead performing traditional LU
-decomposition. We find that this algorithm is stable in all the regimes that we
-tested.
-
-We evaluate the upper boundary condition $\mathcal{J}_{\vmax}$ by numerical
-integration of Equation~(\ref{eq:J}) via Gauss-Legendre quadrature with
-\STARRYQUADPOINTS points. While the lower boundary condition may be computed
-analytically from Equation~(\ref{eq:Jrec}),
-in practice we achieve better precision via numerical
-integration (as above), with negligible effects on computational performance.
-
-\subsection{$\mathcal{W}_n$}
-%
-The function $\mathcal{W}_n$ is given by
-%
-\begin{align}
-    \label{eq:W}
-    % TODO
-    \mathcal{W}_n = \int
-\end{align}
-%
-This integral has a closed-form solution:
-%
-\begin{proof}{}
-    \label{eq:Wsol}
-    \mathcal{W}_n =
-    \frac{\sin^{2n + 2}\left(\frac{\bkappa}{2}\right)}{2n + 5}
-    \left(
-    \frac{3}{n+1}
-        {_2F_1}\left(-\frac{1}{2}, n + 1; n + 2; 1 - q^2\right) + 2 q^3
-    \right)
-\end{proof}
-%
-where ${_2F_1}(a, b; c; z)$ is the Gauss hypergeometric function.
-
-
-% by either upward recursion (stable for |1 - q^2| > 1/2) or downward
-% recursion (always stable).
 
 % Bibliography
 \bibliography{bib}
