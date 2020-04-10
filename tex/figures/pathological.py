@@ -105,4 +105,7 @@ for i, axis in enumerate([ax[0], ax[2], ax[4], ax[6]]):
     )
     axis.set_rasterization_zorder(0)
 
+for axis in [axins0, axins1, axins2, axins3]:
+    axis.set_rasterization_zorder(0)
+
 fig.savefig("pathological.pdf", bbox_inches="tight", dpi=300)

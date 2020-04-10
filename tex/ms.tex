@@ -57,7 +57,6 @@ review \citet{Luger2019} before proceeding.
 \subsection{Review of the \starry algorithm in emitted light}
 \label{sec:starry-review}
 %
-\xxx{Add equations for the rotation and change of basis matrices below.}
 Without loss of generality, assume the body whose flux we wish to compute
 has radius unity and sits at the origin of a right-handed Cartesian coordinate
 system in some frame $\mathcal{F}_0$. In this frame,
@@ -104,13 +103,16 @@ where, from right to left, $\mathbf{R} = \mathbf{R}(i, \lambda, \vartheta)$
 is a Wigner rotation matrix that rotates $\bvec{y}$ from $\mathcal{F}_0$
 to the sky frame $\mathcal{F}$
 given the body's inclination $i$, obliquity
-$\lambda$, and rotational phase $\vartheta$ (Equation~\ref{eq:R}),
+$\lambda$, and rotational phase $\vartheta$
+\citep[Appendix C in][]{Luger2019},
 %
 $\mathbf{R}' = \mathbf{R}'(x_o, y_o)$ rotates the body on the plane
 of the sky into the integration frame $\mathcal{F}'$, in which the
-occultor lies along the $+y'$-axis (Equation~\ref{eq:R'}),
+occultor lies along the $+y'$-axis,
 %
-$\mathbf{A}$ is the change-of-basis matrix from $\by$
+$\mathbf{A}$
+\citep[Equation~B13 in][]{Luger2019}
+is the change-of-basis matrix from $\by$
 to the \emph{Green's basis} $\bg$ in which the integrals are computed,
 whose component at index $n$ is
 %
@@ -191,17 +193,20 @@ to the sky frame $\mathcal{F}$,
 %
 $\mathbf{R}''$ rotates the body on the plane
 of the sky into the integration frame
-$\mathcal{F}''$ (Equation~\ref{eq:R''})%
+$\mathcal{F}''$%
 \footnote{%
     In \citet{Luger2019}, $\mathcal{F}'' = \mathcal{F}'$, so
     this rotation is trivial: $\mathbf{R}''$ is just the identity matrix.
 },
 %
-$\mathbf{A_1}$ is the change-of-basis matrix from the spherical harmonic
+$\mathbf{A_1}$
+\citep[Equation~B11 in][]{Luger2019}
+is the change-of-basis matrix from the spherical harmonic
 basis $\by$ to the \emph{polynomial basis} $\bp$ in which the integrals
 are computed, whose component at index $n$ is
 %
 \begin{align}
+    \label{eq:bp}
     \tilde{p}_n(x, y) & =
     \begin{dcases}
         x^\frac{\mu}{2} y^\frac{\nu}{2}
@@ -252,7 +257,7 @@ axis,
 where $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$ is the distance to the source,
 %
 and the angle $\theta$ by which its semi-major axis is rotated away from the
-$+x$-axis (defined \xxx{below}).
+$+x$-axis (a frame-dependent quantity, defined below).
 Given this formulation, and assuming that
 $r_s \gg 1$,
 it is straightforward to show that the illumination
@@ -478,7 +483,7 @@ where
 is the angle of the terminator in the frame $\mathcal{F}'$.
 Note that we made use of the fact that
 $\mathbf{A} = \mathbf{A_2} \mathbf{A_1}$
-(Equation~\ref{eq:A}), where $\mathbf{A_1}$ transforms from
+\citep[Equation~14 in][]{Luger2019}, where $\mathbf{A_1}$ transforms from
 the spherical harmonic basis $\by$ to the polynomial basis $\bp$, and
 $\mathbf{A_2}$ transforms from $\bp$ to the Green's basis $\bg$.
 
@@ -505,8 +510,10 @@ where
 %
 is the angle of the terminator in the frame $\mathcal{F}''$, by
 construction. The transformation
-$\mathbf{R}'' = \mathbf{R}''(x_s, y_s)$ (Equation~\ref{eq:R''}) rotates
-the body so the semi-major axis of the terminator is aligned
+$\mathbf{R}'' = \mathbf{R}''(x_s, y_s)$ rotates
+the body
+through an angle $\atantwo(x_s, y_s)$
+so the semi-major axis of the terminator is aligned
 with the $x''$-axis; as will become clear in \S\ref{sec:solution-no-occ} below,
 this greatly simplifies the integration step.
 
@@ -1588,116 +1595,145 @@ of $\pT$ is
 %
 \begin{proof}{}
     \label{eq:pTsoln}
-    \mathbb{p}_n &=
-    \begin{dcases}
-        %
-        %
-        2(2r_o)^{l+2}
-        V
-        \left(
-        \frac{\mu+4}{4},
-        \frac{\nu}{2},
-        0;
-        \viI
-        \right)
-        %
-         & \qquad \frac{\mu}{2} \, \text{even}
-        \\[1em]
-        %
-        %
-        \mathbb{p}_2
-        %
-         & \qquad \mu = \nu = 1
-        \\[1em]
-        %
-        %
-        (2r_o)^{l-1} \beta
-        \left\{
-        V
-        \left(
-        \frac{l-2}{2},
-        0,
-        0;
-        \viJ
-        \right) -
-        2
-        V
-        \left(
-        \frac{l-2}{2},
-        0,
-        1;
-        \viJ
-        \right)
-        \right\}
-        %
-         & \qquad \mu = 1, \,
-        l \, \text{even}
-        \\[1em]
-        %
-        %
-        (2r_o)^{l-1} \beta
-        \left\{
-        V
-        \left(
-        \frac{l-3}{2},
-        1,
-        0;
-        \viJ
-        \right) -
-        V
-        \left(
-        \frac{l-3}{2},
-        1,
-        1;
-        \viJ
-        \right)
-        \right\}
-        %
-         & \qquad \mu = 1, \, l \ne 1, \,
-        l \, \text{odd}
-        \\[1em]
-        %
-        %
-        2(2r_o)^{l-1} \beta\,
-        V
-        \left(
-        \frac{\mu-1}{4},
-        \frac{\nu-1}{2},
-        0;
-        \viJ
-        \right)
-        %
-         & \qquad \frac{\mu-1}{2} \, \text{even}, \, l \ne 1
-        \\[1em]
-        %
-        %
-        2(2r_o)^{l+2}
-        V
-        \left(
-        \Big\lfloor\frac{\mu + 4}{4}\Big\rfloor,
-        \frac{\nu}{2},
-        0;
-        \viU
-        \right)
-        %
-         & \qquad \mu, \nu \, \text{even}
-        \\[1em]
-        %
-        %
-        (2r_o)^{l-1} \beta\,
-        V
-        \left(
-        \frac{\mu-1}{4},
-        \frac{\nu-1}{2},
-        0;
-        \viW
-        \right)
-         & \qquad \mu, \nu \, \text{odd}
-        \quad,
-        %
-        %
-    \end{dcases}
-    %
+    \mathbb{p}_n & =
+    \resizebox{.8\hsize}{!}{$
+            \begin{cases}
+                %
+                2(2r_o)^{l+2}
+                %
+                \begin{cases}
+                    %
+                    V
+                    \left(
+                    \frac{\mu+4}{4},
+                    \frac{\nu}{2},
+                    0;
+                    \viI
+                    \right)
+                    %
+                     & \qquad \qquad \qquad \qquad \qquad
+                    \qquad \qquad \qquad \quad
+                    \frac{\mu}{2} \, \text{even}
+                    \\[0.5em]
+                    %    
+                    V
+                    \left(
+                    \frac{\mu + 2}{2},
+                    \frac{\nu}{2},
+                    0;
+                    \viU
+                    \right)
+                    %
+                     & \qquad \qquad \qquad \qquad \qquad
+                    \qquad \qquad \qquad \quad
+                    \frac{\mu}{2} \, \text{odd}
+                    %
+                \end{cases}
+                %
+                 & \qquad
+                \mu, \nu \, \text{even}
+                %
+                \\[2em]
+                %
+                \mathbb{p}_2
+                %
+                 & \qquad
+                \mu = \nu = 1
+                %
+                \\[1.5em]
+                %
+                \beta (2r_o)^{l-1}
+                %
+                \begin{cases}
+                    %
+                    \begin{cases}
+                        %
+                        V
+                        \left(
+                        \frac{l-2}{2},
+                        0,
+                        0;
+                        \viJ
+                        \right) -
+                        2
+                        V
+                        \left(
+                        \frac{l-2}{2},
+                        0,
+                        1;
+                        \viJ
+                        \right)
+                        %
+                         & \qquad \quad
+                        l \, \text{even}
+                        %
+                        \\[1em]
+                        %
+                        V
+                        \left(
+                        \frac{l-3}{2},
+                        1,
+                        0;
+                        \viJ
+                        \right) -
+                        2V
+                        \left(
+                        \frac{l-3}{2},
+                        1,
+                        1;
+                        \viJ
+                        \right)
+                        %
+                         & \qquad \quad
+                        l \, \text{odd} \ne 1
+                        %
+                    \end{cases}
+                    %
+                     & \qquad
+                    \mu = 1
+                    %
+                    \\[3em]
+                    %
+                    \begin{cases}
+                        %
+                        2
+                        V
+                        \left(
+                        \frac{\mu-1}{4},
+                        \frac{\nu-1}{2},
+                        0;
+                        \viJ
+                        \right)
+                        %
+                         & \qquad \qquad \qquad \qquad
+                        \frac{\mu - 1}{2} \, \text{even}
+                        %
+                        \\[1em]
+                        %
+                        2
+                        V
+                        \left(
+                        \frac{\mu-1}{4},
+                        \frac{\nu-1}{2},
+                        0;
+                        \viW
+                        \right)
+                        %
+                         & \qquad \qquad \qquad \qquad
+                        \frac{\mu - 1}{2} \, \text{odd}
+                        %
+                    \end{cases}
+                    %
+                     & \qquad
+                    \mu > 1
+                    %
+                \end{cases}
+                %
+                 & \qquad
+                \mu, \nu \, \text{odd}
+                %
+            \end{cases}
+        $}
 \end{proof}
 %
 where $\beta = \left(1 - (b_o - r_o)^2\right)^\frac{3}{2}$
@@ -1727,8 +1763,19 @@ the vector of Vieta's theorem coefficients, where
 The vectors $\viI$, $\viJ$,
 $\viU$, and $\viW$ are solutions
 to specific integrals, which we compute recursively below. As in
-\citet{Luger2019} the $n = 2$ term of $\pT$ (second case in the
-equation above) is handled separately; we also compute this below.
+\citet{Luger2019} the $n = 2$ term of $\pT$, $\mathbb{p}_2$,
+is handled separately; we also compute this below.
+
+Note that several of the cases in Equation~(\ref{eq:pTsoln}) are
+identical to those in Equation~(D35) of \citet{Luger2019}, provided
+we replace their integrals $\mathcal{I}$ and $\mathcal{J}$ with our
+integrals $\viI$ and $\viJ$, respectively. The integrals themselves
+are similar, except for a change in the limits of integration, which
+are no longer symmetric about zero. As we will see, this leads to the
+dependence of these expressions on \emph{incomplete} elliptic integrals.
+Note also that the integrals $\viU$ and $\viW$ are new, as certain
+cancellations in \citet{Luger2019} resulted in the corresponding cases
+contributing zero net flux \citep[last case in Equation~D35 of][]{Luger2019}.
 
 %
 
@@ -1973,7 +2020,6 @@ This integral has an analytic solution for all $v$:
     \iU_v(\vkappa) &= \frac{\Delta \sinhalfkap[v+1]}{v + 1}
     \quad.
 \end{proof}
-
 %
 
 \subsubsection{The vector $\viW$}
@@ -1983,26 +2029,92 @@ The components of the vector $\viW$ are given by the integral
 %
 \begin{align}
     \label{eq:W}
-    \iW_v(\vkappa) = ???
+    \iW_v(k^2, \vkappa) =
+    \vint{\vkappa}{
+        \cos\varphi\sin^{2v + 1}\varphi
+        \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
+    }
     \quad.
 \end{align}
 %
-This integral also has a closed-form solution:
+We may compute it by either upward or downward recursion. In the upward
+case, we start with the lower boundary condition
+%
+\begin{proof}{}
+    \iW_0 &= \Delta
+    \Bigg\{
+    \frac{\sinhalfkap[2]}{5}
+    \left(
+    \frac{1 - \mathbf{q}(k^2, \vkappa)^2}{1 - \mathbf{q}(k^2, \vkappa)^3}
+    +
+    \mathbf{q}(k^2, \vkappa)^3
+    \right)
+    \Bigg\}
+    \quad.
+\end{proof}
+%
+Defining
+%
+\begin{align}
+    \mathbf{c}_0(k^2, \vkappa) & =
+    \sinhalfkap[4]
+    \frac{\mathbf{q}(k^2, \vkappa)^5}{1 - \mathbf{q}(k^2, \vkappa)^2}
+    \quad,
+\end{align}
+%
+we may recurse upward in $\iW$ and $\mathbf{c}$ simultaneously:
+%
+\begin{proof}{}
+    \label{eq:Wv}
+    \iW_v                      & =
+    \frac{\Delta}{2v + 5}
+    \left(
+    \frac{2 v \sinhalfkap[2]}{1 - \mathbf{q}(k^2, \vkappa)^2}
+    \iW_{v - 1}
+    - \mathbf{c}_{v - 1}(k^2, \vkappa)
+    \right)
+    \nonumber
+    \\
+    \mathbf{c}_v(k^2, \vkappa) & =
+    \sinhalfkap[2] \mathbf{c}_{v - 1}(k^2, \vkappa)
+\end{proof}
+%
+for $v > 0$.
+%
+In the case of downward recursion, we start with the upper boundary
+condition for $v = \vmax$,
 %
 \begin{proof}{}
     \label{eq:Wsol}
-    \iW_n =
-    \frac{\sin^{2n + 2}\left(\frac{\vkappa}{2}\right)}{2n + 5}
+    \iW_\vmax &=
+    \frac{\sin^{2\vmax + 2}\left(\frac{\vkappa}{2}\right)}{\vmax + \frac{5}{2}}
     \left(
-    \frac{3}{n+1}
-        {_2F_1}\left(-\frac{1}{2}, n + 1; n + 2; 1 - q^2\right) + 2 q^3
+    \mathbf{f}_\vmax(k^2, \vkappa)
+    + 2 \mathbf{q}(k^2, \vkappa)^3
     \right)
     \quad,
 \end{proof}
 %
-where ${_2F_1}(a, b; c; z)$ is the Gauss hypergeometric function.
+where
 %
-\xxx{Figure out the integral form, and write up the recursion relations.}
+\begin{proof}{}
+    \mathbf{f}_v(k^2, \vkappa)
+    &\equiv
+    \frac{3}{v+1}
+    \,
+    {_2\mathbf{F}_1}\left(
+    -\frac{1}{2},
+    v + 1;
+    v + 2;
+    1 - \mathbf{q}(k^2, \vkappa)^2
+    \right)
+\end{proof}
+%
+and ${_2\mathbf{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
+hypergeometric function.
+We then recurse downward \xxx{...}
+\xxx{TODO: Check these expressions.}
+
 
 %
 % DEBUG
