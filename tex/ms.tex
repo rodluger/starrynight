@@ -1544,7 +1544,7 @@ The former is given by
 \citep[c.f. Equation~24 in][]{Luger2019}
 %
 \begin{align}
-    \phi_l & = \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
+    \phi_0 & = \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
     \quad,
 \end{align}
 %
@@ -1568,7 +1568,7 @@ and the latter (of which there may be multiple) is given by
 %
 %
 \begin{align}
-    \pmb{\phi_t} & =
+    \pmb{\phi_1} & =
     \theta' +
     \atantwo
     \left(b\sqrt{1 - {\mathbf{x''}}^2 - y''_o}, \mathbf{x''} - x''_o\right)
@@ -1859,8 +1859,8 @@ via a quickly convergent series expansion and recursed downward.
 In order to solve Equation~(\ref{eq:J}), it is possible to
 replace the complete elliptic integrals $K(k^2)$ and $E(k^2)$ in the lower
 boundary conditions \citep[Equation D46 in ][]{Luger2019} with the
-incomplete elliptic integrals $\mathbf{F}(k^2, \vkappa)$ and
-$\mathbf{E}(k^2, \vkappa)$,
+incomplete elliptic integrals $\mathbbb{F}(k^2, \vkappa)$ and
+$\mathbbb{E}(k^2, \vkappa)$,
 then use the same upward
 recursion relation to obtain analytic solutions for all $\iJ_v$:
 %
@@ -2105,7 +2105,7 @@ where
     &\equiv
     \frac{3}{v+1}
     \,
-    {_2\mathbf{F}_1}\left(
+    {_2\mathbbb{F}_1}\left(
     -\frac{1}{2},
     v + 1;
     v + 2;
@@ -2113,7 +2113,7 @@ where
     \right)
 \end{proof}
 %
-and ${_2\mathbf{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
+and ${_2\mathbbb{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
 hypergeometric function.
 %
 We recurse downward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
@@ -2131,6 +2131,224 @@ We recurse downward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
     \quad.
 \end{proof}
 
+%
+
+\subsection{The integral along the terminator, $\tT$}
+%
+In this section we present a solution to Equation~(\ref{eq:tT}), the
+line integral along the day/night terminator of the occulted body. As
+before, the first thing we must do is derive expressions for the integration
+limits $\pmb{\xi}$.
+%
+Depending on the integration case, these limits
+will corresponds to the point of intersection between the terminator and
+the limb of the occultor and/or the point of intersection between the
+terminator and the limb of the occulted body. The former is given by
+%
+\begin{proof}{}
+    \pmb{\xi_0} &= \atantwo\left(\sqrt{1 - {\mathbf{x''}}^2}, \mathbf{x''} \right)
+\end{proof}
+%
+where $\mathbf{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
+The latter is given by
+%
+\begin{proof}{}
+    \xi_1 &=
+    \begin{cases}
+        0   & \qquad \qquad (1 - x_o'')^2 + {y_o''}^2 < r_o^2
+        \\
+        \pi & \qquad \qquad \text{otherwise}
+        \quad.
+    \end{cases}
+\end{proof}
+%
+As before, these angles are then sorted and placed in the vector
+$\pmb{\xi}$ such that the integration is performed counter-clockwise
+about the center of the integration region.
+%
+The middle panel of Figure~\ref{fig:geometry} shows a case where
+$\xi_0 = 96.5^\circ$ corresponds to the point of intersection between the occultor
+limb and the terminator and $\xi_1 = 0^\circ$ corresponds to the
+point where the terminator extends onto the backside of the body.
+%
+Note, importantly, that unlike $\pmb{\phi}$, the angle $\pmb{\xi}$ is not
+measured between the $x$-axis and a point on the curve of $\mathcal{T}$.
+Recall that $\pmb{\xi}$ is an angular parameter of the ellipse, so it is
+measured in the same way as the eccentric anomaly in a Keplerian orbit:
+it is the
+angle between the $x$-axis and the perpendicular
+projection of a point on the ellipse onto the unit circle
+(see Figure~\ref{fig:geometry}).
+
+\begin{align}
+    \mathbb{t}_n & =
+    \begin{cases}
+        %
+        %
+        b\cos\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        {_1}Z^{\mu,\nu}_{j,k}(b, \theta')
+        \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, \sin\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        {_1}Z^{\mu,\nu}_{j,k}(b, \theta')
+        \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
+        %
+         & \qquad \mu, \nu, \, \text{even}
+        %
+        %
+        \\[3em]
+        %
+        %
+        \frac{1}{3}
+        \Delta
+        \Bigg(
+        \arctan\left( \frac{|b|\sin\vxi}{\cos\vxi} \right)
+        \\
+        \qquad\quad\quad
+        - \, \sgn\left({\sin\vxi}\right)
+        \left(
+            \arctan
+            \left(
+                \frac{
+                    \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
+                }{2 |b| b_c}
+                \right)
+            + |b| b_c \cos\vxi
+            \right)
+        \\
+        \qquad\quad\quad
+        + \, \pmb{\phi}(b, \vxi)
+        \Bigg)
+        %
+         & \qquad \mu = \nu = 1
+        %
+        %
+        \\[3em]
+        %
+        %
+        -b\sin\theta'
+        \sum\limits_{j=0}^{l-2}
+        {_3}Z^{\mu,\nu}_{j}(b, \theta')
+        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, \cos\theta'
+        \sum\limits_{j=0}^{l-2}
+        {_3}Z^{\mu,\nu}_{j}(b, \theta')
+        \iH_{j, l + 2 - j}(\pmb{\xi})
+        %
+         & \qquad \nu \, \text{odd}, \mu = 1, l \, \text{even}
+        %
+        %
+        \\[3em]
+        %
+        %
+        -b\sin\theta'
+        \sum\limits_{j=0}^{l-3}
+        \bigg(
+        \sin\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \iH_{j + 2, l - j}(\pmb{\xi})
+        \\
+        \qquad\qquad\qquad
+        +
+        b\cos\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+        \bigg)
+        \\
+        \quad\quad\quad\quad
+        - \, \cos\theta'
+        \sum\limits_{j=0}^{l-3}
+        \bigg(
+        \sin\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+        \\
+        \qquad\qquad\qquad
+        +
+        b\cos\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \iH_{j, l + 2 - j}(\pmb{\xi})
+        \bigg)
+        %
+         & \qquad \nu \, \text{odd}, \mu = 1, l \, \text{odd}
+        %
+        %
+        \\[3em]
+        b\cos\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        {_2}Z^{\mu,\nu}_{j,k}(b, \theta')
+        \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, \sin\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        {_2}Z^{\mu,\nu}_{j,k}(b, \theta')
+        \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
+        %
+         & \qquad \text{otherwise}
+        %
+        %
+    \end{cases}
+\end{align}
+%
+where
+%
+\begin{align}
+    {_1}Z^{\mu,\nu}_{j,k}(b, \theta') & =
+    \binom{\frac{\nu}{2}}{j}
+    \binom{\frac{\mu + 2}{2}}{k}
+    (-1)^{\frac{\mu + 2 - 2k}{2}}
+    b^{l + 1 - j - k}
+    \sin^\frac{\mu + 2 + 2j - 2k}{2}\theta'
+    \cos^\frac{\nu - 2j + 2k}{2}\theta'
+    %
+    \nonumber                             \\
+    %
+    {_2}Z^{\mu,\nu}_{j,k}(b, \theta') & =
+    \binom{\frac{\nu - 1}{2}}{j}
+    \binom{\frac{\mu - 3}{2}}{k}
+    (-1)^{\frac{\mu - 3 - 2k}{2}}
+    b^{l - 2 - j - k}
+    b_c^3
+    \sin^\frac{\mu - 3 + 2j - 2k}{2}\theta'
+    \cos^\frac{\nu - 1 - 2j + 2k}{2}\theta'
+    %
+    \nonumber                             \\
+    %
+    {_3}Z^{\mu,\nu}_{j}(b, \theta')   & =
+    \binom{l - 2}{j}
+    (-1)^{l - 2 - j}
+    b^{l - 2 - j}
+    b_c^3
+    \sin^{l - 2 - j}\theta'
+    \cos^j\theta'
+    %
+    \nonumber                             \\
+    %
+    {_4}Z^{\mu,\nu}_{j}(b, \theta')   & =
+    \binom{l - 3}{j}
+    (-1)^{l - 3 - j}
+    b^{l - 3 - j}
+    b_c^3
+    \sin^{l - 3 - j}\theta'
+    \cos^j\theta'
+    %
+    \nonumber                             \\
+    %
+    \phi(b, \xi)                      & =
+    \begin{cases}
+        0               & \qquad 0 \leq \xi < \frac{\pi}{2}     \\
+        \pi             & \qquad \frac{\pi}{2} \leq \xi < \pi   \\
+        2 |b| b_c       & \qquad \pi < \xi \leq \frac{3\pi}{2}  \\
+        \pi + 2 |b| b_c & \qquad \frac{3\pi}{2} \leq \xi < 2\pi
+        \quad.
+    \end{cases}
+\end{align}
 
 %
 % DEBUG
