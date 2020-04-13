@@ -2037,40 +2037,39 @@ The components of the vector $\viW$ are given by the integral
     \quad.
 \end{align}
 %
-We may compute it by either upward or downward recursion. In the upward
-case, we start with the lower boundary condition
+We may compute it by either upward or downward recursion. In both cases,
+we compute each of the $\iW_v$ from
 %
-\begin{proof}{}
-    \iW_0 &= \Delta
-    \Bigg\{
-    \frac{\sinhalfkap[2]}{5}
-    \left(
-    \frac{1 - \mathbf{q}(k^2, \vkappa)^2}{1 - \mathbf{q}(k^2, \vkappa)^3}
-    +
-    \mathbf{q}(k^2, \vkappa)^3
-    \right)
-    \Bigg\}
+\begin{proof}{W}
+    \iW_v(k^2, \vkappa) = \Delta \mathbf{b}_v(k^2, \vkappa)
     \quad.
 \end{proof}
 %
-Defining
+In the upward case, we start with the lower boundary conditions
 %
-\begin{align}
+\begin{proof}{W}
+    \mathbf{b}_0(k^2, \vkappa) &=
+    \frac{\sinhalfkap[2]}{5}
+    \left(
+    \frac{1 - \mathbf{q}(k^2, \vkappa)^3}{1 - \mathbf{q}(k^2, \vkappa)^2}
+    +
+    \mathbf{q}(k^2, \vkappa)^3
+    \right)
+    \nonumber \\
     \mathbf{c}_0(k^2, \vkappa) & =
     \sinhalfkap[4]
     \frac{\mathbf{q}(k^2, \vkappa)^5}{1 - \mathbf{q}(k^2, \vkappa)^2}
     \quad,
-\end{align}
+\end{proof}
 %
-we may recurse upward in $\iW$ and $\mathbf{c}$ simultaneously:
+and recurse upward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
 %
-\begin{proof}{}
-    \label{eq:Wv}
-    \iW_v                      & =
-    \frac{\Delta}{2v + 5}
+\begin{proof}{W}
+    \mathbf{b}_v(k^2, \vkappa) & =
+    \frac{1}{2v + 5}
     \left(
     \frac{2 v \sinhalfkap[2]}{1 - \mathbf{q}(k^2, \vkappa)^2}
-    \iW_{v - 1}
+    \mathbf{b}_{v - 1}(k^2, \vkappa)
     - \mathbf{c}_{v - 1}(k^2, \vkappa)
     \right)
     \nonumber
@@ -2082,22 +2081,26 @@ we may recurse upward in $\iW$ and $\mathbf{c}$ simultaneously:
 for $v > 0$.
 %
 In the case of downward recursion, we start with the upper boundary
-condition for $v = \vmax$,
+conditions
 %
-\begin{proof}{}
-    \label{eq:Wsol}
-    \iW_\vmax &=
-    \frac{\sin^{2\vmax + 2}\left(\frac{\vkappa}{2}\right)}{\vmax + \frac{5}{2}}
+\begin{proof}{W}
+    \mathbf{b}_\vmax &=
+    \frac{\sin^{2\vmax + 2}\left(\frac{\vkappa}{2}\right)}{4\vmax + 10}
     \left(
     \mathbf{f}_\vmax(k^2, \vkappa)
     + 2 \mathbf{q}(k^2, \vkappa)^3
     \right)
+    \nonumber \\
+    \mathbf{c}_\vmax &=
+    \frac{1}{2}
+    \mathbf{q}(k^2, \vkappa)^5
+    \sin^{2\vmax}\left(\frac{\vkappa}{2}\right)
     \quad,
 \end{proof}
 %
 where
 %
-\begin{proof}{}
+\begin{proof}{W}
     \mathbf{f}_v(k^2, \vkappa)
     &\equiv
     \frac{3}{v+1}
@@ -2112,8 +2115,21 @@ where
 %
 and ${_2\mathbf{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
 hypergeometric function.
-We then recurse downward \xxx{...}
-\xxx{TODO: Check these expressions.}
+%
+We recurse downward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
+%
+\begin{proof}{W}
+    \mathbf{b}_v(k^2, \vkappa) & =
+    \frac{1 - \mathbf{q}(k^2, \vkappa)^2}{\sinhalfkap[2]}
+    \left(1 + \frac{5}{2v + 2}\right)
+    \mathbf{b}_{v + 1}(k^2, \vkappa) +
+    \frac{\mathbf{c}_{v + 1}(k^2, \vkappa)}{v + 1}
+    \nonumber
+    \\
+    \mathbf{c}_v(k^2, \vkappa) & =
+    \frac{\mathbf{c}_{v + 1}(k^2, \vkappa)}{\sinhalfkap[2]}
+    \quad.
+\end{proof}
 
 
 %
