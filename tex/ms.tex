@@ -33,18 +33,51 @@
 \label{sec:intro}
 %
 This is an extension of \citet{Luger2019}.
-\xxx{
-    \textbf{To do list:}
-    \begin{itemize}
-        \item Make our frame convention explicit.
-              Unprimed = sky. Prime = greens. Double prime = term.
-        \item Emphasize why we can't just analytically weight the nightside by
-              zero and integrate as before.
-        \item Add a table clarifying the notation.
-    \end{itemize}
-}
 
 %
+
+\section{Performance}
+\label{sec:performance}
+%
+See Figure~\ref{fig:speed}.
+%
+\begin{figure}[h!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/speed.pdf}
+        \oscaption{speed}{%
+            Evaluation time (vertical axis)
+            and numerical precision (point size)
+            for a single flux evaluation as a function of spherical
+            harmonic degree for different methods.
+            In orange we show results for the emitted light
+            \starry algorithm from \citet{Luger2019} (solid: no gradient,
+            dashed: with gradient), and in blue we show results for
+            the reflected
+            light algorithm from this paper (solid: no gradient,
+            dashed: with gradient). For comparison, in purple we show
+            results for discrete integration on a grid (solid) and
+            numerical integration using two-dimensional Gaussian
+            quadrature (dashed); neither of these include gradient
+            evaluations. The reflected light algorithm is around one
+            order of magnitude slower and less precise than the emitted
+            light algorithm, but still ${\sim}4$ orders of magnitude faster
+            and ${\sim}10$ orders of magnitude more precise than numerical
+            integration.
+            \label{fig:speed}
+        }
+    \end{centering}
+\end{figure}
+
+
+% Bibliography
+\bibliography{bib}
+
+
+% APPENDIX
+\appendix
+
+%
+
 \section{The Problem}
 \label{sec:the-problem}
 %
@@ -281,8 +314,20 @@ where
 \end{proof}
 %
 with $b_c = \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
+
+In principle, our task is now straightforward: weight each of the
+terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them
+over the visible portion of the body's disk to obtain the reflected
+light solution vector, $\sT$. Unfortunately, the piecewise nature
+of Equation~(\ref{eq:illum}) makes direct evaluation of these integrals
+extremely difficult in practice.
 %
-Since $I$ is just a polynomial in $x$, $y$, and $z(x, y)$, we
+We find that it is more tractable to weight our basis terms by
+the function $I$ (Equation~\ref{eq:illum_poly}) and to modify the limits
+of integration to exclude the nightside of the body, where $I$ is
+(unphysically) negative.
+%
+In particular, since $I$ is just a polynomial in $x$, $y$, and $z(x, y)$, we
 can express it as a vector $\mathbf{i}(b, \theta)$ in the polynomial basis $\bp$.
 Recalling the structure of the basis (Equation~\ref{eq:bp}),
 we may write
@@ -430,7 +475,7 @@ where the dimensions of the matrix are $\big((l + 2)^2, (l + 1)^2\big)$, where
 $l$ is the spherical harmonic degree of the map (this operator raises the
 degree of the map by one).
 %
-Note, importantly, that this weighting is valid only on the dayside
+Note, again, that this weighting is valid only on the dayside
 hemisphere (see Equation~\ref{eq:illum}), as the operator $\mathbf{I}$ weights
 points on the nightside by a \emph{negative} amount, which is clearly
 unphysical. As we will see momentarily, we account for this by excluding the
@@ -1797,6 +1842,7 @@ for $v \in [0, \vmax]$,
 where we define the helper angle
 %
 \begin{align}
+    \label{eq:kappa}
     \pmb{\kappa} = \pmb{\phi} + \frac{\pi}{2}
     \quad.
 \end{align}
@@ -1847,6 +1893,7 @@ The components of the vector $\viJ$ are given by the integral
     \quad.
 \end{align}
 %
+\xxx{Define $k^2$.}
 The integral in this expression is again the same as that in Equation (D39)
 of \citet{Luger2019}, except for a change in the limits of integration.
 In that paper, we computed all terms
@@ -1861,8 +1908,17 @@ via a quickly convergent series expansion and recursed downward.
 In order to solve Equation~(\ref{eq:J}), it is possible to
 replace the complete elliptic integrals $K(k^2)$ and $E(k^2)$ in the lower
 boundary conditions \citep[Equation D46 in ][]{Luger2019} with the
-incomplete elliptic integrals $\mathbbb{F}(k^2, \vkappa)$ and
-$\mathbbb{E}(k^2, \vkappa)$,
+incomplete elliptic integrals
+%
+\begin{align}
+    \label{eq:F}
+    \mathbb{F}(k^2, \kappa) & = \int_0^{\kappa} \frac{\dd \varphi}{\sqrt{1 - k^2 \sin^2 \varphi}}
+    \\
+    \intertext{and}
+    \label{eq:E}
+    \mathbb{E}(k^2, \kappa) & = \int_0^{\kappa} \sqrt{1 - k^2 \sin^2 \varphi} \, \dd \varphi
+\end{align}
+%
 then use the same upward
 recursion relation to obtain analytic solutions for all $\iJ_v$:
 %
@@ -2135,7 +2191,66 @@ We recurse downward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
 
 %
 
+\subsection{The term $\mathbb{p}_2$}
+\label{sec:p2}
+%
+The final integral we must solve is that corresponding to
+$\mathbb{p}_2$ ($\mu = \nu = 1$). As in \citet{Luger2019}, this is
+the integral of the linear limb darkening term,
+whose solution must be handled
+separately due to the fact that the corresponding antiderivative
+in Equation~(\ref{eq:G}) is not a polynomial in $x$, $y$, and $z(x, y)$.
+The integral we must solve is
+%
+\begin{align}
+    \mathbb{p}_2 & =
+    \vint{\pmb{\phi}}{
+        \left(
+        \frac{
+            1 - (1 - r_o^2 - b_o^2 - 2 b_o r_o \sin\varphi)^\frac{3}{2}
+        }{
+            r_o^2 + b_o^2 + 2 b_o r_o \sin\varphi
+        }
+        \right)
+        \left(r_o^2 + b_o r_o \sin\varphi\right)
+    }
+\end{align}
+%
+The solution is tricky, but fortunately a similar integral was solved in
+Equation~(34) of \citet{Pal2012}. Adapting their solution to our formalism,
+we obtain
+%
+\begin{proof}{}
+    \frac{1}{3}
+    \Big(
+    c_0 +
+    c_1 \Delta\mathbbb{F}(k^2, \vkappa) +
+    c_2 \Delta\mathbbb{E}(k^2, \vkappa) +
+    c_3 \Delta\mathbbb{P}(k^2, \vkappa)
+    \Big)
+\end{proof}
+%
+where
+%
+\begin{proof}{}
+    c_0 &=
+    \begin{cases}
+        ? & ?
+    \end{cases}
+    \nonumber \\
+    c_1 &= ?
+    \nonumber \\
+    c_2 &= -\frac{2}{3} \sqrt{k^2 b_o r_o} (4 - 7 r_o^2 - b_o^2)
+    \nonumber \\
+    c_3 &= \frac{1}{3} \sqrt{k^2 b_o r_o} \frac{b_o + r_o}{(b_o - r_o)^2}
+\end{proof}
+%
+\xxx{This section needs work!}
+
+%
+
 \subsection{The integral along the terminator, $\tT$}
+\label{sec:tT}
 %
 In this section we present a solution to Equation~(\ref{eq:tT}), the
 line integral along the day/night terminator of the occulted body. As
@@ -2419,6 +2534,7 @@ for all remaining terms.
 %
 
 \subsection{The integral along the occulted body limb, $\qT$}
+\label{sec:qT}
 %
 The final line integral we must solve is the integral along the boundary
 of the occulted body,  Equation~(\ref{eq:qT}). Fortunately, this is
@@ -2476,31 +2592,11 @@ Given $\vlambda$, the solution to Equation~(\ref{eq:qT}) is straightforward:
 %
 where the vector $\viH$ is given by Equation~(\ref{eq:H}).
 
-%
-% DEBUG
+
+% TABLE
 \vfill
 \pagebreak
-%
-
-\section{Performance}
-\label{sec:performance}
-%
-\xxx{Performance!} See Figure~\ref{fig:speed}.
-%
-\begin{figure}[h!]
-    \begin{centering}
-        \includegraphics[width=\linewidth]{figures/speed.pdf}
-        \oscaption{speed}{%
-            Evaluation time for the starry algorithm.
-            \label{fig:speed}
-        }
-    \end{centering}
-\end{figure}
-
-
-% Bibliography
-\bibliography{bib}
-
+\input{table}
 
 
 \end{document}
