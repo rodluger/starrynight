@@ -1482,7 +1482,7 @@ which sums the difference of successive pairs of values in
 a vector
 $\mathbf{x} = \left( x_0, x_1, x_2, x_3, {\cdot\cdot\cdot}, x_{N - 1} \right)^\top$.
 This will come in handy when computing definite integrals. Specifically,
-if $F$ is the antiderivative of some function $f$, we may use the
+if $g$ is the antiderivative of some function $f$, we may use the
 fundamental theorem of calculus to compute the integral of
 $f$ over the interval(s) given
 by the vector of limit pairs $\pmb{\varphi}$:
@@ -1497,15 +1497,15 @@ by the vector of limit pairs $\pmb{\varphi}$:
     +
     \int\limits_{\varphi_{N - 2}}^{\varphi_{N - 1}} f(\varphi) \dd\varphi
     \nonumber                                                          \\
-     & = \Delta \mathbf{F}(\pmb{\varphi})
+     & = \Delta \mathbf{g}(\pmb{\varphi})
 \end{align}
 %
-where $\mathbf{F}$ is the vector given by
+where $\mathbf{g}$ is the vector given by
 %
 \begin{align}
-    \mathbf{F}(\pmb{\varphi}) =
-    \bigg( F(\varphi_0), F(\varphi_1), F(\varphi_2), F(\varphi_3),
-    {\cdot\cdot\cdot}, F(\varphi_{N - 2}), F(\varphi_{N - 1}) \bigg)^\top
+    \mathbf{g}(\pmb{\varphi}) =
+    \bigg( g(\varphi_0), g(\varphi_1), g(\varphi_2), g(\varphi_3),
+    {\cdot\cdot\cdot}, g(\varphi_{N - 2}), g(\varphi_{N - 1}) \bigg)^\top
     \quad.
 \end{align}
 %
@@ -1544,12 +1544,13 @@ The former is given by
 \citep[c.f. Equation~24 in][]{Luger2019}
 %
 \begin{align}
-    \phi_0 & = \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
+    \phi_0 & =
+    \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
     \quad,
 \end{align}
 %
 where the sign is chosen such that the point
-$(r_o\cos\phi_l, b_o + r_o\sin\phi_l)$ is on the dayside of the occulted body,
+$(r_o\cos\phi_0, b_o + r_o\sin\phi_0)$ is on the dayside of the occulted body,
 and the latter (of which there may be multiple) is given by
 %
 % Introduce the function
@@ -1576,7 +1577,8 @@ and the latter (of which there may be multiple) is given by
 \end{align}
 %
 where $\mathbf{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
-These angles are then sorted and placed in the vector $\pmb{\phi}$ such that
+These angles are then wrapped to the range $[0, 2\pi)$
+and sorted into the vector $\pmb{\phi}$ such that
 the integration is always performed in a counter-clockwise sense about
 the center of the integration region.
 %
@@ -1585,7 +1587,7 @@ the lower integration limit $\phi_0 = 158.2^\circ$ corresponds to the
 point of intersection between the limbs of the two bodies and the upper
 integration limit $\phi_1 = 223.3^\circ$ corresponds to the
 limb-terminator intersection. Both angles are measured counter-clockwise
-from the $x'$-axis.
+from the line $x' = b_o$.
 
 In order to evaluate the integral in Equation~(\ref{eq:pT}),
 we follow the reparametrization tricks of \S{D.2.3} in \citet{Luger2019}.
@@ -2146,7 +2148,8 @@ the limb of the occultor and/or the point of intersection between the
 terminator and the limb of the occulted body. The former is given by
 %
 \begin{proof}{}
-    \pmb{\xi_0} &= \atantwo\left(\sqrt{1 - {\mathbf{x''}}^2}, \mathbf{x''} \right)
+    \pmb{\xi_0} &=
+    \atantwo\left(\sqrt{1 - {\mathbf{x''}}^2}, \mathbf{x''} \right)
 \end{proof}
 %
 where $\mathbf{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
@@ -2162,7 +2165,9 @@ The latter is given by
     \end{cases}
 \end{proof}
 %
-As before, these angles are then sorted and placed in the vector
+As before, these angles are then
+wrapped to the range $[0, 2\pi)$ and
+sorted into the vector
 $\pmb{\xi}$ such that the integration is performed counter-clockwise
 about the center of the integration region.
 %
@@ -2172,15 +2177,19 @@ limb and the terminator and $\xi_1 = 0^\circ$ corresponds to the
 point where the terminator extends onto the backside of the body.
 %
 Note, importantly, that unlike $\pmb{\phi}$, the angle $\pmb{\xi}$ is not
-measured between the $x$-axis and a point on the curve of $\mathcal{T}$.
+measured between the horizontal and a point on the curve of $\mathcal{T}$.
 Recall that $\pmb{\xi}$ is an angular parameter of the ellipse, so it is
 measured in the same way as the eccentric anomaly in a Keplerian orbit:
 it is the
-angle between the $x$-axis and the perpendicular
+angle between the semi-major axis of the ellipse and the perpendicular
 projection of a point on the ellipse onto the unit circle
 (see Figure~\ref{fig:geometry}).
 
-\begin{align}
+The solution to Equation~(\ref{eq:tT}) involves repeated application
+of the binomial theorem. As before, we simply present the result, with
+validation links:
+%
+\begin{proof}{}
     \mathbb{t}_n & =
     \begin{cases}
         %
@@ -2188,17 +2197,20 @@ projection of a point on the ellipse onto the unit circle
         b\cos\theta'
         \sum\limits_{j=0}^{\frac{\nu}{2}}
         \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        {_1}Z^{\mu,\nu}_{j,k}(b, \theta')
+        Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
+        (b, \theta') \,
         \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
         \\
         \quad\quad\quad\quad
         - \, \sin\theta'
         \sum\limits_{j=0}^{\frac{\nu}{2}}
         \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        {_1}Z^{\mu,\nu}_{j,k}(b, \theta')
+        Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
+        (b, \theta') \,
         \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
         %
-         & \qquad \mu, \nu, \, \text{even}
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\mu, \nu, \, \text{even}$}}
         %
         %
         \\[3em]
@@ -2206,43 +2218,46 @@ projection of a point on the ellipse onto the unit circle
         %
         \frac{1}{3}
         \Delta
-        \Bigg(
+        \Big\{
         \arctan\left( \frac{|b|\sin\vxi}{\cos\vxi} \right)
         \\
         \qquad\quad\quad
         - \, \sgn\left({\sin\vxi}\right)
         \left(
-            \arctan
-            \left(
-                \frac{
-                    \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
-                }{2 |b| b_c}
-                \right)
-            + |b| b_c \cos\vxi
+        \arctan
+        \left(
+            \frac{
+                \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
+            }{2 |b| b_c}
             \right)
-        \\
-        \qquad\quad\quad
-        + \, \pmb{\phi}(b, \vxi)
-        \Bigg)
+        + |b| b_c \cos\vxi
+        \right)
         %
          & \qquad \mu = \nu = 1
         %
+        \\
+        \qquad\quad\quad
+        + \, \pmb{\phi}(b, \vxi)
+        \Big\}
         %
         \\[3em]
         %
         %
         -b\sin\theta'
         \sum\limits_{j=0}^{l-2}
-        {_3}Z^{\mu,\nu}_{j}(b, \theta')
+        Z^{0, l-2}_{0,k}
+        (b, \theta') \,
         \iH_{j + 1, l + 1 - j}(\pmb{\xi})
         \\
         \quad\quad\quad\quad
         - \, \cos\theta'
         \sum\limits_{j=0}^{l-2}
-        {_3}Z^{\mu,\nu}_{j}(b, \theta')
+        Z^{0, l-2}_{0,k}
+        (b, \theta') \,
         \iH_{j, l + 2 - j}(\pmb{\xi})
         %
-         & \qquad \nu \, \text{odd}, \mu = 1, l \, \text{even}
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{even}$}}
         %
         %
         \\[3em]
@@ -2251,12 +2266,16 @@ projection of a point on the ellipse onto the unit circle
         -b\sin\theta'
         \sum\limits_{j=0}^{l-3}
         \bigg(
-        \sin\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \sin\theta'
+        Z^{0, l-3}_{0,k}
+        (b, \theta') \,
         \iH_{j + 2, l - j}(\pmb{\xi})
         \\
         \qquad\qquad\qquad
         +
-        b\cos\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \, b\cos\theta'
+        Z^{0, l-3}_{0,k}
+        (b, \theta') \,
         \iH_{j + 1, l + 1 - j}(\pmb{\xi})
         \bigg)
         \\
@@ -2264,83 +2283,64 @@ projection of a point on the ellipse onto the unit circle
         - \, \cos\theta'
         \sum\limits_{j=0}^{l-3}
         \bigg(
-        \sin\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \sin\theta'
+        Z^{0, l-3}_{0,k}
+        (b, \theta') \,
         \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+        %
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{odd}$}}
+        %
         \\
         \qquad\qquad\qquad
         +
-        b\cos\theta'{_4}Z^{\mu,\nu}_{j}(b, \theta')
+        \, b\cos\theta'
+        Z^{0, l-3}_{0,k}
+        (b, \theta') \,
         \iH_{j, l + 2 - j}(\pmb{\xi})
         \bigg)
         %
-         & \qquad \nu \, \text{odd}, \mu = 1, l \, \text{odd}
         %
         %
         \\[3em]
         b\cos\theta'
         \sum\limits_{j=0}^{\frac{\nu}{2}}
         \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        {_2}Z^{\mu,\nu}_{j,k}(b, \theta')
+        Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
+        (b, \theta') \,
         \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
         \\
         \quad\quad\quad\quad
         - \, \sin\theta'
         \sum\limits_{j=0}^{\frac{\nu}{2}}
         \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        {_2}Z^{\mu,\nu}_{j,k}(b, \theta')
+        Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
+        (b, \theta') \,
         \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
         %
-         & \qquad \text{otherwise}
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\text{otherwise}$}}
         %
         %
     \end{cases}
-\end{align}
+\end{proof}
 %
-where
+where we define
 %
-\begin{align}
-    {_1}Z^{\mu,\nu}_{j,k}(b, \theta') & =
-    \binom{\frac{\nu}{2}}{j}
-    \binom{\frac{\mu + 2}{2}}{k}
-    (-1)^{\frac{\mu + 2 - 2k}{2}}
-    b^{l + 1 - j - k}
-    \sin^\frac{\mu + 2 + 2j - 2k}{2}\theta'
-    \cos^\frac{\nu - 2j + 2k}{2}\theta'
-    %
-    \nonumber                             \\
-    %
-    {_2}Z^{\mu,\nu}_{j,k}(b, \theta') & =
-    \binom{\frac{\nu - 1}{2}}{j}
-    \binom{\frac{\mu - 3}{2}}{k}
-    (-1)^{\frac{\mu - 3 - 2k}{2}}
-    b^{l - 2 - j - k}
-    b_c^3
-    \sin^\frac{\mu - 3 + 2j - 2k}{2}\theta'
-    \cos^\frac{\nu - 1 - 2j + 2k}{2}\theta'
-    %
-    \nonumber                             \\
-    %
-    {_3}Z^{\mu,\nu}_{j}(b, \theta')   & =
-    \binom{l - 2}{j}
-    (-1)^{l - 2 - j}
-    b^{l - 2 - j}
-    b_c^3
-    \sin^{l - 2 - j}\theta'
-    \cos^j\theta'
-    %
-    \nonumber                             \\
-    %
-    {_4}Z^{\mu,\nu}_{j}(b, \theta')   & =
-    \binom{l - 3}{j}
-    (-1)^{l - 3 - j}
-    b^{l - 3 - j}
-    b_c^3
-    \sin^{l - 3 - j}\theta'
-    \cos^j\theta'
-    %
-    \nonumber                             \\
-    %
-    \phi(b, \xi)                      & =
+\begin{proof}{}
+    Z^{u,v}_{j,k}(b, \theta') & =
+    \binom{u}{j}
+    \binom{v}{k}
+    (-1)^{v-k}
+    b^{u+v-j-k}
+    \sin^{v+j-k}\theta'
+    \cos^{u-j+k}\theta'
+\end{proof}
+%
+and
+%
+\begin{proof}{}
+    \phi(b, \xi) & =
     \begin{cases}
         0               & \qquad 0 \leq \xi < \frac{\pi}{2}     \\
         \pi             & \qquad \frac{\pi}{2} \leq \xi < \pi   \\
@@ -2348,7 +2348,133 @@ where
         \pi + 2 |b| b_c & \qquad \frac{3\pi}{2} \leq \xi < 2\pi
         \quad.
     \end{cases}
+\end{proof}
+%
+The components of the vector $\viH$ are given by the integral
+%
+\begin{align}
+    \label{eq:H}
+    \iH_{u,v}(\vxi) & =
+    \vint{\vxi}{
+        \cos^u\varphi
+        \sin^v\varphi
+    }
+    \quad.
 \end{align}
+%
+This integral is the same as that in Equation (D27)
+of \citet{Luger2019}, except for a change in the limits of integration.
+We can compute this integral recursively given four lower boundary conditions:
+%
+\begin{proof}{H}
+    \label{eq:Hlower}
+    \iH_{0,0}(\vxi) &= \Delta \vxi
+    %
+    \nonumber \\
+    %
+    \iH_{1,0}(\vxi) &= \Delta \sin\vxi
+    %
+    \nonumber \\
+    %
+    \iH_{0,1}(\vxi) &= -\Delta \cos\vxi
+    %
+    \nonumber \\
+    %
+    \iH_{1,1}(\vxi) &= -\frac{\Delta\cos^2\vxi}{2}
+    %
+    \quad.
+\end{proof}
+%
+The remaining terms may be computed by upward recursion using the
+relations
+%
+\begin{proof}{H}
+    \label{eq:Hrec1}
+    \iH_{u,v}(\vxi) &=
+    \frac{
+        -\Delta \left(
+        \cos^{u + 1} \vxi
+        \sin^{v - 1} \vxi
+        \right)
+        +(v - 1)\iH_{u,v - 2}(\vxi)
+    }{u + v}
+\end{proof}
+%
+for $u < 2, v \ge 2$ and
+%
+\begin{proof}{H}
+    \label{eq:Hrec2}
+    \iH_{u,v}(\vxi) &=
+    \frac{
+        \Delta \left(
+        \cos^{u - 1} \vxi
+        \sin^{v + 1} \vxi
+        \right)
+        + (u - 1)\iH_{u - 2,v}(\vxi)
+    }{u + v}
+\end{proof}
+%
+for all remaining terms.
+
+%
+
+\subsection{The integral along the occulted body limb, $\qT$}
+%
+The final line integral we must solve is the integral along the boundary
+of the occulted body,  Equation~(\ref{eq:qT}). Fortunately, this is
+also the easiest of the three.
+%
+The limits of integration $\vlambda$
+correspond to the point at which the terminator crosses from the dayside
+to the night side,
+%
+\begin{proof}{}
+    \lambda_0 &=
+    \begin{cases}
+        \theta'        & \qquad \qquad \cos^2\theta' + (\sin\theta' - b_o)^2 < r_o^2
+        \\
+        \theta ' + \pi & \qquad \qquad \text{otherwise}
+        \quad.
+    \end{cases}
+\end{proof}
+%
+and the point of intersection between the limb of the occultor
+and the limb of the occulted body,
+%
+\begin{proof}{}
+    \lambda_1 & =
+    \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 + b_o ^ 2}{2 b_o}\right) - \frac{\pi}{2}\right)
+    \quad,
+\end{proof}
+%
+where the sign is chosen such that the point
+$(\cos\lambda_1, \sin\lambda_1)$ is on the dayside of the occulted body.
+%
+As before, these angles are
+wrapped to the range $[0, 2\pi)$ and
+placed in the vector
+$\lambda$ such that the line integral is taken in the counter-clockwise
+direction about the center of the integration region. The right panel
+of Figure~\ref{fig:geometry} shows a case where
+$\lambda_0 = 75^\circ$ and $\lambda_1 = 130.5^\circ$. Both angles are
+measured counter-clockwise from the $x'$-axis.
+
+Given $\vlambda$, the solution to Equation~(\ref{eq:qT}) is straightforward:
+%
+\begin{proof}{}
+    \mathbb{q}_n &=
+    \begin{cases}
+        \iH_{\frac{\mu + 4}{2}, \frac{\nu}{2}}(\vlambda)
+                                  & \qquad \mu, \nu, \, \text{even}
+        \\[1em]
+        \frac{1}{3}\Delta\vlambda & \qquad \mu = \nu = 1
+        \\[1em]
+        0                         & \qquad \text{otherwise}
+        \quad,
+    \end{cases}
+\end{proof}
+%
+where the vector $\viH$ is given by Equation~(\ref{eq:H}).
 
 %
 % DEBUG
@@ -2371,131 +2497,6 @@ where
     \end{centering}
 \end{figure}
 
-\appendix
-
-\xxx{Migrate this up.}
-
-%
-The function $\mathcal{H}_{u,v}$ is given by
-%
-\begin{align}
-    \label{eq:H}
-    \mathcal{H}_{u,v}(\vlambda) & =
-    \vint{\vlambda}{
-        \cos^u\varphi
-        \sin^v\varphi
-    }
-    \quad.
-\end{align}
-%
-The integral in this expression is the same as that in Equation (D27)
-of \citet{Luger2019}, except for a change in the limits of integration.
-We can compute this integral recursively given four lower boundary conditions:
-%
-\begin{proof}{H}
-    \label{eq:Hlower}
-    \mathcal{H}_{0,0}(\vlambda) &= \Delta \vlambda
-    %
-    \nonumber \\
-    %
-    \mathcal{H}_{1,0}(\vlambda) &= \Delta \sin\vlambda
-    %
-    \nonumber \\
-    %
-    \mathcal{H}_{0,1}(\vlambda) &= -\Delta \cos\vlambda
-    %
-    \nonumber \\
-    %
-    \mathcal{H}_{1,1}(\vlambda) &= -\frac{\Delta\cos^2\vlambda}{2}
-    %
-    \quad.
-\end{proof}
-%
-The remaining terms may be computed by upward recursion using the
-relations
-%
-\begin{proof}{H}
-    \label{eq:Hrec1}
-    \mathcal{H}_{u,v}(\vlambda) &=
-    \frac{
-        -\Delta \left(
-        \cos^{u + 1} \vlambda
-        \sin^{v - 1} \vlambda
-        \right)
-        +(v - 1)\mathcal{H}_{u,v - 2}(\vlambda)
-    }{u + v}
-\end{proof}
-%
-for $u < 2, v \ge 2$ and
-%
-\begin{proof}{H}
-    \label{eq:Hrec2}
-    \mathcal{H}_{u,v}(\vlambda) &=
-    \frac{
-        \Delta \left(
-        \cos^{u - 1} \vlambda
-        \sin^{v + 1} \vlambda
-        \right)
-        + (u - 1)\mathcal{H}_{u - 2,v}(\vlambda)
-    }{u + v}
-\end{proof}
-%
-for all remaining terms.
-
-\subsection{$\mathcal{\mathcal{T}}_{2}$}
-%
-The function $\mathcal{\mathcal{T}}_{2}$ is given by
-%
-\begin{align}
-    \label{eq:T2}
-    \mathcal{\mathcal{T}}_{2}(b, \vxi) & = ?
-    \quad.
-\end{align}
-
-\begin{proof}{}
-    \mathcal{\mathcal{T}}_{2}(b, \vxi) &= -\sgn(b) \Delta \mathbf{F}(b, \vxi)
-\end{proof}
-%
-where
-%
-\begin{proof}{}
-    \begin{split}
-        f_i(b, \xi_i) =
-        \frac{1}{3}\scalebox{1.4}{\Bigg(}
-        &\arctan\left( \frac{|b|\sin\xi_i}{\cos\xi_i} \right)
-        %
-        \\
-        %
-        &- \sgn\left({\sin\xi_i}\right)
-        \left(
-        \arctan
-        \left(
-            \frac{
-                \left(\frac{\sin\xi_i}{1 + \cos\xi_i}\right)^2 + 2 b^2 - 1
-            }{2 |b| \sqrt{1 - b^2}}
-            \right)
-        + |b| \sqrt{1 - b^2} \cos\xi_i
-        \right)
-        %
-        \\
-        %
-        &+ \phi(b, \xi_i)
-        \scalebox{1.4}{\Bigg)}
-    \end{split}
-\end{proof}
-%
-and
-%
-\begin{proof}{}
-    \phi(b, \xi_i) & =
-    \begin{cases}
-        0                          & \qquad 0 \leq \xi_i < \frac{\pi}{2}     \\
-        \pi                        & \qquad \frac{\pi}{2} \leq \xi_i < \pi   \\
-        2 |b| \sqrt{1 - b^2}       & \qquad \pi < \xi_i \leq \frac{3\pi}{2}  \\
-        \pi + 2 |b| \sqrt{1 - b^2} & \qquad \frac{3\pi}{2} \leq \xi_i < 2\pi
-        \quad.
-    \end{cases}
-\end{proof}
 
 % Bibliography
 \bibliography{bib}
