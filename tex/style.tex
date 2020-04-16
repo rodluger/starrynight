@@ -1,9 +1,10 @@
 % Packages
-\usepackage{amsmath}
 \usepackage{fontspec}
 \usepackage{unicode-math}
 \usepackage{xifthen}
 \usepackage{stackengine}
+
+\DeclareSymbolFontAlphabet{\amsmathbb}{AMSb}
 
 % Integrals
 \newcommand{\vint}[2]{\int\limits_{#1}#2\dd\varphi}
@@ -48,11 +49,13 @@
 \newcommand{\viH}{\ensuremath{\mathbbb{h}}}
 
 % Elliptic integrals
-\newcommand{\DE}{\Delta \mathbbb{E}(k^2, \vkappa)}
-\newcommand{\DF}{\Delta \mathbbb{F}(k^2, \vkappa)}
+\newcommand{\DE}{\Delta \mathbbb{E}\left(\valpha \,\Big|\, \frac{1}{k^2}\right)}
+\newcommand{\DF}{\Delta \mathbbb{F}\left(\valpha \,\Big|\, \frac{1}{k^2}\right)}
+\newcommand{\DPi}{\Delta \pmb{\mathbb{\Pi}}\left(n; \valpha \,\Big|\, \frac{1}{k^2}\right)}
 
 % Angles
 \newcommand{\vkappa}{\pmb{\kappa}}
+\newcommand{\valpha}{\pmb{\alpha}}
 \newcommand{\vlambda}{\pmb{\lambda}}
 \newcommand{\vxi}{\pmb{\xi}}
 \newcommand{\coshalfkap}[1][]{%

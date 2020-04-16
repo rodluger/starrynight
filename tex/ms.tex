@@ -203,6 +203,7 @@ with
 and
 %
 \begin{align}
+    \label{eq:z}
     z(x, y) \equiv \sqrt{1 - x^2 - y^2}
     \quad,
 \end{align}
@@ -1365,7 +1366,7 @@ component is given by
 %
 \begin{align}
     \label{eq:G}
-    \mathbf{G}_n (x, y) & =
+    \mathbf{G}_n (x', y') & =
     \begin{dcases}
         %
         x'^{\frac{\mu + 2}{2}}
@@ -1833,8 +1834,8 @@ The components of the vector $\viI$ are given by the integral
 %
 \begin{align}
     \label{eq:I}
-    \iI_v(\vkappa) & =
-    \vint{\vkappa}{\sinhalfkap[2v]}
+    \iI_v(\valpha) & =
+    \vint{\valpha}{\sin^{2v}\varphi}
     \quad,
 \end{align}
 %
@@ -1842,8 +1843,8 @@ for $v \in [0, \vmax]$,
 where we define the helper angle
 %
 \begin{align}
-    \label{eq:kappa}
-    \pmb{\kappa} = \pmb{\phi} + \frac{\pi}{2}
+    \label{eq:alpha}
+    \valpha \equiv \frac{\pmb{\phi}}{2} + \frac{\pi}{4}
     \quad.
 \end{align}
 %
@@ -1854,27 +1855,27 @@ a trivial lower boundary condition:
 %
 \begin{proof}{I}
     \label{eq:Irec}
-    \iI_0(\vkappa) &=
-    \frac{\Delta \vkappa}{2}
+    \iI_0(\valpha) &=
+    \Delta \valpha
     %
     \nonumber \\
     %
-    \iI_v(\vkappa) &=
+    \iI_v(\valpha) &=
     \frac{1}{2v}
     \bigg(
-    (2v - 1) \iI_{v-1}(\vkappa) -
-    \Delta \left(\sinhalfkap[2v - 1]\coshalfkap\right)
+    (2v - 1) \iI_{v-1}(\valpha) -
+    \Delta \left(\sin^{2v - 1}\valpha\cos^{2v -1}\valpha\right)
     \bigg)
 \end{proof}
 %
 where the last expression is valid for all $v > 0$. We find that this algorithm
 is generally stable, except when
-$\sin\left(\nicefrac{\vkappa}{2}\right)$ is small.
-In that limit, we evaluate $\iI_\vmax(\vkappa)$
+$\sin\valpha$ is small.
+In that limit, we evaluate $\iI_\vmax(\valpha)$
 by numerical integration of
 Equation~(\ref{eq:I}) using Gauss-Legendre quadrature with \STARRYQUADPOINTS
 points. We then recurse downward by substituting $v \rightarrow v + 1$ in
-Equation~(\ref{eq:Irec}) and solving for $\iI_v(\vkappa)$.
+Equation~(\ref{eq:Irec}) and solving for $\iI_v(\valpha)$.
 
 %
 
@@ -1885,15 +1886,22 @@ The components of the vector $\viJ$ are given by the integral
 %
 \begin{align}
     \label{eq:J}
-    \iJ_v(k^2, \vkappa) =
-    \vint{\vkappa}{
+    \iJ_v(k^2, \valpha) =
+    \vint{\valpha}{
         \sin^{2v}\varphi
         \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
     }
+    \quad,
+\end{align}
+%
+where
+%
+\begin{align}
+    \label{eq:k2}
+    k^2 & \equiv \frac{1 - r_o^2 - b_o^2 + 2 b_o r_o}{4 b_o r_o}
     \quad.
 \end{align}
 %
-\xxx{Define $k^2$.}
 The integral in this expression is again the same as that in Equation (D39)
 of \citet{Luger2019}, except for a change in the limits of integration.
 In that paper, we computed all terms
@@ -1912,44 +1920,52 @@ incomplete elliptic integrals
 %
 \begin{align}
     \label{eq:F}
-    \mathbb{F}(k^2, \kappa) & = \int_0^{\kappa} \frac{\dd \varphi}{\sqrt{1 - k^2 \sin^2 \varphi}}
+    \mathbb{F}(\psi \,|\, m) & \equiv \int_0^{\psi} \frac{\dd \varphi}{\sqrt{1 - m \sin^2 \varphi}}
     \\
     \intertext{and}
     \label{eq:E}
-    \mathbb{E}(k^2, \kappa) & = \int_0^{\kappa} \sqrt{1 - k^2 \sin^2 \varphi} \, \dd \varphi
+    \mathbb{E}(\psi \,|\, m) & \equiv \int_0^{\psi} \sqrt{1 - m \sin^2 \varphi} \, \dd \varphi
+    \quad,
 \end{align}
+%
+which we compute from the $el\mathit{2}$ parametrization of
+\citet{Bulirsch1965},
 %
 then use the same upward
 recursion relation to obtain analytic solutions for all $\iJ_v$:
 %
 \begin{proof}{J}
     \label{eq:Jrec}
-    \iJ_0(k^2, \vkappa) &=
+    \iJ_0(k^2, \valpha) &=
     \frac{1}{3} \bigg(
     2 \left(2 - \frac{1}{k^2}\right) \DE +
     \left(\frac{1}{k^2} - 1\right) \DF +
-    \Delta \mathbf{z}_0(k^2, \vkappa)
+    \Delta \mathbf{z}_0(k^2, \valpha)
     \bigg)
     %
     \nonumber \\
     %
-    \iJ_1(k^2, \vkappa) &=
+    \iJ_1(k^2, \valpha) &=
     \frac{1}{15} \bigg(
-    \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE +
+    \left(-3 k^2 + 13 - \frac{8}{k^2}\right) \DE
     \nonumber \\
     &\qquad\quad\quad\quad\quad\quad\quad\quad\quad
+    +
     \left(3 k^2 - 7 + \frac{4}{k^2}\right) \DF +
-    \Delta \mathbf{z}_1(k^2, \vkappa)
+    \Delta \mathbf{z}_1(k^2, \valpha)
     \bigg)
     %
     \nonumber \\
     %
-    \iJ_v(k^2, \vkappa) &=
+    \iJ_v(k^2, \valpha) &=
     \frac{1}{2v + 3}
     \bigg(
-    2 \left( v + 1 + (v - 1) k^2 \right) \iJ_{v - 1} -
-    (2v - 3) k^2 \iJ_{v - 2}
-    + \Delta \mathbf{z}_v(k^2, \vkappa)
+    2 \left( v + 1 + (v - 1) k^2 \right) \iJ_{v - 1}(k^2, \valpha)
+    \nonumber \\
+    &\qquad\qquad\quad\quad\quad\quad
+    -
+    (2v - 3) k^2 \iJ_{v - 2}(k^2, \valpha)
+    + \Delta \mathbf{z}_v(k^2, \valpha)
     \bigg)
 \end{proof}
 %
@@ -1958,28 +1974,30 @@ where the last expression is valid for all $v > 1$ and
 %
 \begin{proof}{J}
     \label{eq:Jrec_z}
-    \mathbf{z}_0(k^2, \pmb{\kappa}) & =
+    \mathbf{z}_0(k^2, \valpha) & =
     \frac{
-        \sinhalfkap
-        \coshalfkap
-        \mathbf{q}(k^2, \vkappa)
+        \sin\valpha
+        \cos\valpha
+        \,
+        \mathbf{q}(k^2, \valpha)
     }{
         k^2
     }
     %
     \nonumber\\
     %
-    \mathbf{z}_1(k^2, \pmb{\kappa}) & =
-    \left(\left(3 \sinhalfkap[2] + 4\right) - 6k^2\right)
-    \mathbf{z}_0(k^2, \pmb{\kappa})
+    \mathbf{z}_1(k^2, \valpha) & =
+    \left(3 \sin^2\valpha + 4 - 6k^2\right)
+    \mathbf{z}_0(k^2, \valpha)
     %
     \nonumber\\
     %
-    \mathbf{z}_v(k^2, \pmb{\kappa}) & =
+    \mathbf{z}_v(k^2, \valpha) & =
     k^2
-    \sinhalfkap[2v - 3]
-    \coshalfkap
-    \mathbf{q}(k^2, \pmb{\kappa})^5
+    \sin^{2v - 3}\valpha
+    \cos\valpha
+    \,
+    \mathbf{q}(k^2, \valpha)^5
     \quad,
 \end{proof}
 %
@@ -1987,11 +2005,27 @@ with
 %
 \begin{align}
     \label{eq:q}
-    \mathbf{q}(k^2, \vkappa) = \sqrt{1 - \frac{\sinhalfkap[2]}{k^2}}
+    \mathbf{q}(k^2, \valpha) = \sqrt{1 - \frac{\sin^2\valpha}{k^2}}
     \quad.
 \end{align}
 %
-However, in practice we find that this procedure is even more numerically
+Note that when $k^2 < 1$ we use the reciprocal-modulus transformation
+to evaluate the elliptic integrals:
+%
+\begin{align}
+    \mathbb{F}\left(\psi \,\Big|\, \frac{1}{k^2}\right) & =
+    k \, \mathbb{F}(\beta \,|\, k^2)
+    \nonumber                                                                                        \\
+    \mathbb{E}\left(\psi \,\Big|\, \frac{1}{k^2}\right) & =
+    \frac{\mathbb{E}(\beta \,|\, k^2) - (1 - k^2) \mathbb{F}(\beta \,|\, k^2)}{k}
+    \\
+    \intertext{with}
+    \beta                                               & = \arcsin\left( \frac{\sin\psi}{k} \right)
+    \quad.
+\end{align}
+%
+
+In practice, however, we find that this procedure is even more numerically
 unstable than it was in \citet{Luger2019}.
 To address this, we express the recurrence structure of the problem as
 a tridiagonal system with one lower boundary condition $\iJ_0$
@@ -2032,10 +2066,10 @@ where the recursion coefficients are given by
     \label{eq:Jtri_coeffs}
     a_v(k) &= -2\frac{(v + 1) + (v - 1) k^2}{2v + 3} \nonumber \\
     b_v(k) &= \frac{(2v - 3) k^2}{2v + 3} \nonumber \\
-    c_v(k^2, \vkappa) &= \Delta
+    c_v(k^2, \valpha) &= \Delta
     \bigg(
     \frac{
-            \mathbf{z}_v(k^2, \pmb{\kappa})
+            \mathbf{z}_v(k^2, \valpha)
         }{
             2v + 3
         }
@@ -2066,8 +2100,8 @@ The components of the vector $\viU$ are given by the integral
 %
 \begin{align}
     \label{eq:U}
-    \iU_v(\vkappa) =
-    \vint{\vkappa}{\cos\varphi\sin^{2v}\varphi}
+    \iU_v(\valpha) =
+    \vint{\valpha}{\cos\varphi\sin^{2v + 1}\varphi}
     \quad.
 \end{align}
 %
@@ -2075,7 +2109,7 @@ This integral has an analytic solution for all $v$:
 %
 \begin{proof}{U}
     \label{eq:Usol}
-    \iU_v(\vkappa) &= \frac{\Delta \sinhalfkap[v+1]}{v + 1}
+    \iU_v(\valpha) &= \frac{\Delta \sin^{2v+2}\valpha}{2v + 2}
     \quad.
 \end{proof}
 %
@@ -2087,8 +2121,8 @@ The components of the vector $\viW$ are given by the integral
 %
 \begin{align}
     \label{eq:W}
-    \iW_v(k^2, \vkappa) =
-    \vint{\vkappa}{
+    \iW_v(k^2, \valpha) =
+    \vint{\valpha}{
         \cos\varphi\sin^{2v + 1}\varphi
         \left(1 - \frac{\sin^2\varphi}{k^2}\right)^\frac{3}{2}
     }
@@ -2099,41 +2133,41 @@ We may compute it by either upward or downward recursion. In both cases,
 we compute each of the $\iW_v$ from
 %
 \begin{proof}{W}
-    \iW_v(k^2, \vkappa) = \Delta \mathbf{b}_v(k^2, \vkappa)
+    \iW_v(k^2, \valpha) = \Delta \mathbf{b}_v(k^2, \valpha)
     \quad.
 \end{proof}
 %
 In the upward case, we start with the lower boundary conditions
 %
 \begin{proof}{W}
-    \mathbf{b}_0(k^2, \vkappa) &=
-    \frac{\sinhalfkap[2]}{5}
+    \mathbf{b}_0(k^2, \valpha) &=
+    \frac{\sin^2\valpha}{5}
     \left(
-    \frac{1 - \mathbf{q}(k^2, \vkappa)^3}{1 - \mathbf{q}(k^2, \vkappa)^2}
+    \frac{1 - \mathbf{q}(k^2, \valpha)^3}{1 - \mathbf{q}(k^2, \valpha)^2}
     +
-    \mathbf{q}(k^2, \vkappa)^3
+    \mathbf{q}(k^2, \valpha)^3
     \right)
     \nonumber \\
-    \mathbf{c}_0(k^2, \vkappa) & =
-    \sinhalfkap[4]
-    \frac{\mathbf{q}(k^2, \vkappa)^5}{1 - \mathbf{q}(k^2, \vkappa)^2}
+    \mathbf{c}_0(k^2, \valpha) & =
+    \sin^4\valpha \,
+    \frac{\mathbf{q}(k^2, \valpha)^5}{1 - \mathbf{q}(k^2, \valpha)^2}
     \quad,
 \end{proof}
 %
 and recurse upward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
 %
 \begin{proof}{W}
-    \mathbf{b}_v(k^2, \vkappa) & =
+    \mathbf{b}_v(k^2, \valpha) & =
     \frac{1}{2v + 5}
     \left(
-    \frac{2 v \sinhalfkap[2]}{1 - \mathbf{q}(k^2, \vkappa)^2}
-    \mathbf{b}_{v - 1}(k^2, \vkappa)
-    - \mathbf{c}_{v - 1}(k^2, \vkappa)
+    \frac{2 v \sin^2\valpha}{1 - \mathbf{q}(k^2, \valpha)^2}
+    \mathbf{b}_{v - 1}(k^2, \valpha)
+    - \mathbf{c}_{v - 1}(k^2, \valpha)
     \right)
     \nonumber
     \\
-    \mathbf{c}_v(k^2, \vkappa) & =
-    \sinhalfkap[2] \mathbf{c}_{v - 1}(k^2, \vkappa)
+    \mathbf{c}_v(k^2, \valpha) & =
+    \sin^2\valpha \, \mathbf{c}_{v - 1}(k^2, \valpha)
 \end{proof}
 %
 for $v > 0$.
@@ -2143,23 +2177,23 @@ conditions
 %
 \begin{proof}{W}
     \mathbf{b}_\vmax &=
-    \frac{\sin^{2\vmax + 2}\left(\frac{\vkappa}{2}\right)}{4\vmax + 10}
+    \frac{\sin^{2\vmax + 2}\valpha}{4\vmax + 10}
     \left(
-    \mathbf{f}_\vmax(k^2, \vkappa)
-    + 2 \mathbf{q}(k^2, \vkappa)^3
+    \mathbf{f}_\vmax(k^2, \valpha)
+    + 2 \mathbf{q}(k^2, \valpha)^3
     \right)
     \nonumber \\
     \mathbf{c}_\vmax &=
     \frac{1}{2}
-    \mathbf{q}(k^2, \vkappa)^5
-    \sin^{2\vmax}\left(\frac{\vkappa}{2}\right)
+    \mathbf{q}(k^2, \valpha)^5
+    \sin^{2\vmax}\valpha
     \quad,
 \end{proof}
 %
 where
 %
 \begin{proof}{W}
-    \mathbf{f}_v(k^2, \vkappa)
+    \mathbf{f}_v(k^2, \valpha)
     &\equiv
     \frac{3}{v+1}
     \,
@@ -2167,25 +2201,26 @@ where
     -\frac{1}{2},
     v + 1;
     v + 2;
-    1 - \mathbf{q}(k^2, \vkappa)^2
+    1 - \mathbf{q}(k^2, \valpha)^2
     \right)
 \end{proof}
 %
 and ${_2\mathbbb{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
-hypergeometric function.
+hypergeometric function, which we compute via its series
+definition.
 %
 We recurse downward in $\mathbf{b}$ and $\mathbf{c}$ simultaneously:
 %
 \begin{proof}{W}
-    \mathbf{b}_v(k^2, \vkappa) & =
-    \frac{1 - \mathbf{q}(k^2, \vkappa)^2}{\sinhalfkap[2]}
+    \mathbf{b}_v(k^2, \valpha) & =
+    \frac{1 - \mathbf{q}(k^2, \valpha)^2}{\sin^2\valpha}
     \left(1 + \frac{5}{2v + 2}\right)
-    \mathbf{b}_{v + 1}(k^2, \vkappa) +
-    \frac{\mathbf{c}_{v + 1}(k^2, \vkappa)}{v + 1}
+    \mathbf{b}_{v + 1}(k^2, \valpha) +
+    \frac{\mathbf{c}_{v + 1}(k^2, \valpha)}{v + 1}
     \nonumber
     \\
-    \mathbf{c}_v(k^2, \vkappa) & =
-    \frac{\mathbf{c}_{v + 1}(k^2, \vkappa)}{\sinhalfkap[2]}
+    \mathbf{c}_v(k^2, \valpha) & =
+    \frac{\mathbf{c}_{v + 1}(k^2, \valpha)}{\sin^2\valpha}
     \quad.
 \end{proof}
 
@@ -2203,51 +2238,117 @@ in Equation~(\ref{eq:G}) is not a polynomial in $x$, $y$, and $z(x, y)$.
 The integral we must solve is
 %
 \begin{align}
+    \label{eq:p2}
     \mathbb{p}_2 & =
     \vint{\pmb{\phi}}{
+        \frac{1}{3}
         \left(
         \frac{
-            1 - (1 - r_o^2 - b_o^2 - 2 b_o r_o \sin\varphi)^\frac{3}{2}
+            1 - z(r_o\cos\varphi, b_o + r_o\sin\varphi)^3
         }{
-            r_o^2 + b_o^2 + 2 b_o r_o \sin\varphi
+            1 - z(r_o\cos\varphi, b_o + r_o\sin\varphi)^2
         }
         \right)
         \left(r_o^2 + b_o r_o \sin\varphi\right)
     }
+    \quad,
 \end{align}
 %
+where $z$ is the usual Cartesian coordinate (Equation~\ref{eq:z}).
 The solution is tricky, but fortunately a similar integral was solved in
 Equation~(34) of \citet{Pal2012}. Adapting their solution to our formalism,
 we obtain
 %
-\begin{proof}{}
+\begin{proof}{p2}
+    \label{eq:p2_soln}
+    \mathbb{p}_2 & =
     \frac{1}{3}
     \Big(
     c_0 +
-    c_1 \Delta\mathbbb{F}(k^2, \vkappa) +
-    c_2 \Delta\mathbbb{E}(k^2, \vkappa) +
-    c_3 \Delta\mathbbb{P}(k^2, \vkappa)
+    c_1 \DF +
+    c_2 \DE +
+    c_3 \DPi
     \Big)
 \end{proof}
 %
 where
 %
-\begin{proof}{}
+\begin{proof}{p2}
     c_0 &=
+    \Delta
+    \Bigg\{
+    -\atantwo\left(
+    -(b_o - r_o) \cos\valpha, (b_o + r_o) \sin\valpha
+    \right)
+    + \valpha
+    \nonumber \\
+    &\qquad\enspace\enspace
+    - \frac{4}{3} b_o r_o
+    \sin\valpha \cos\valpha
+    \sqrt{1 - (b_o - r_o)^2 - 4 b_o r_o \sin^2\alpha}
+    \nonumber \\
+    &\qquad\enspace\enspace
+    + \pmb{\delta}(b_o, r_o, \valpha)
+    \Bigg\}
+    \nonumber \\[0.5em]
+    c_1 &=
+    \frac{1 + b_o^4 - b_o^2(5 + 2 r_o^2) + r_o^4 + r_o^2}{3 \sqrt{1 - (b_o - r_o)^2}}
+    \nonumber \\[0.5em]
+    c_2 &= \frac{(b_o^2+7r_o^2-4)\sqrt{1 - (b_o - r_o)^2}}{3}
+    \nonumber \\[0.5em]
+    c_3 &= \frac{b_o + r_o}{(b_o - r_o)\sqrt{1 - (b_o - r_o)^2}}
+    \quad,
+    \\
+    \intertext{and}
+    %
+    \delta(b_o, r_o, \alpha) &=
     \begin{cases}
-        ? & ?
+        -2\pi
+         &
+        \qquad
+        \alpha > \frac{3\pi}{2} \,\, \text{and} \,\, b_o > r_o
+        \\
+        +2\pi
+         &
+        \qquad
+        \alpha > \frac{3\pi}{2} \,\, \text{and} \,\, b_o < r_o
+        \\
+        0
+         &
+        \qquad
+        \text{otherwise}
+        \quad.
     \end{cases}
-    \nonumber \\
-    c_1 &= ?
-    \nonumber \\
-    c_2 &= -\frac{2}{3} \sqrt{k^2 b_o r_o} (4 - 7 r_o^2 - b_o^2)
-    \nonumber \\
-    c_3 &= \frac{1}{3} \sqrt{k^2 b_o r_o} \frac{b_o + r_o}{(b_o - r_o)^2}
 \end{proof}
 %
-\xxx{This section needs work!}
-
+The quantities $\mathbbb{F}(\valpha \,|\, \nicefrac{1}{k^2})$ and
+$\mathbbb{E}(\valpha \,|\, \nicefrac{1}{k^2})$
+are the same incomplete elliptic integrals as those in
+\S\ref{sec:J}, while
 %
+\begin{align}
+    \label{eq:Pi}
+    \mathbb{\Pi}(n; \psi \,|\, m) & \equiv
+    \int_0^{\psi}
+    \frac{\dd \varphi}{(1 - n \sin^2\varphi)\sqrt{1 - m \sin^2 \varphi}}
+\end{align}
+%
+is the incomplete elliptic integral of the third
+kind, with
+%
+\begin{proof}{p2}
+    n & = -\frac{4 b_o r_o}{(r_o - b_o)^2}
+    \quad.
+\end{proof}
+%
+
+While stable algorithms exist to evaluate $\mathbb{\Pi}(n; \psi \,|\, m)$
+\citep[e.g.][]{Bulirsch1969}, we find that the parametrization above has
+poor numerical stability, particularly in the vicinity of the singular
+points $b_o = r_o$ and $b_o = 1 + r_o$. In practice, we find that
+numerical evaluation of Equation~(\ref{eq:p2}) via Gaussian quadrature
+is more numerically stable and just as computationally efficient as
+the procedure outlined above.
 
 \subsection{The integral along the terminator, $\tT$}
 \label{sec:tT}
@@ -2352,7 +2453,7 @@ validation links:
         %
         \\
         \qquad\quad\quad
-        + \, \pmb{\phi}(b, \vxi)
+        + \, \pmb{\delta}(b, \vxi)
         \Big\}
         %
         \\[3em]
@@ -2455,7 +2556,7 @@ where we define
 and
 %
 \begin{proof}{}
-    \phi(b, \xi) & =
+    \delta(b, \xi) & =
     \begin{cases}
         0               & \qquad 0 \leq \xi < \frac{\pi}{2}     \\
         \pi             & \qquad \frac{\pi}{2} \leq \xi < \pi   \\
