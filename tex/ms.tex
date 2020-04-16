@@ -86,6 +86,10 @@ notation and formalism introduced in \citet{Luger2019}. While we
 include all of the relevant equations and definitions below,
 the reader is encouraged to
 review \citet{Luger2019} before proceeding.
+To improve the readability of this paper,
+Tables~\ref{tab:symbols}--\ref{tab:matrices} at the end list the principal
+symbols and quantities used throughout the text, with links to the
+sections and equations in which they are defined.
 
 \subsection{Review of the \starry algorithm in emitted light}
 \label{sec:starry-review}
@@ -132,11 +136,11 @@ we compute the visible flux $f$ from
     \quad,
 \end{align}
 %
-where, from right to left, $\mathbf{R} = \mathbf{R}(i, \lambda, \vartheta)$
+where, from right to left, $\mathbf{R} = \mathbf{R}(\text{I}, \Lambda, \Theta)$
 is a Wigner rotation matrix that rotates $\bvec{y}$ from $\mathcal{F}_0$
 to the sky frame $\mathcal{F}$
-given the body's inclination $i$, obliquity
-$\lambda$, and rotational phase $\vartheta$
+given the body's inclination $\text{I}$, obliquity
+$\Lambda$, and rotational phase $\Theta$
 \citep[Appendix C in][]{Luger2019},
 %
 $\mathbf{R}' = \mathbf{R}'(x_o, y_o)$ rotates the body on the plane
@@ -221,7 +225,7 @@ visible flux $f_0$ from this body as
     \quad,
 \end{align}
 %
-where, as before, $\mathbf{R} = \mathbf{R}(i, \lambda, \vartheta)$
+where, as before, $\mathbf{R} = \mathbf{R}(\text{I}, \Lambda, \Theta)$
 rotates the body from $\mathcal{F}_0$
 to the sky frame $\mathcal{F}$,
 %
@@ -257,7 +261,7 @@ the projected visible disk of the body for each term in $\bp$
 \citep[Equation~19 in][]{Luger2019}.
 
 \subsection{Adapting the algorithm to the reflected light case}
-\label{sec:starry-review}
+\label{sec:adapting-starry}
 %
 In order to compute light curves in reflected light, we must make two
 modifications to the \starry algorithm. First,
@@ -314,7 +318,7 @@ where
     \bigg)
 \end{proof}
 %
-with $b_c = \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
+with $b_c \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 
 In principle, our task is now straightforward: weight each of the
 terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them
@@ -334,6 +338,7 @@ Recalling the structure of the basis (Equation~\ref{eq:bp}),
 we may write
 %
 \begin{proof}{}
+    \label{eq:ivec}
     \mathbf{i}(b, \theta, r_s) & =
     \frac{1}{4\pi r_s^2}
     \begin{pmatrix}
@@ -456,6 +461,7 @@ If we think about how each of the terms in $\bp$ transforms under $\mathbf{I}$,
 we can compose $\mathbf{I}$ out of these column vectors:
 %
 \begin{proof}{}
+    \label{eq:Imat}
     \mathbf{I}(b, \theta, r_s) & =
     \frac{1}{4\pi r_s^2}
     \begin{pmatrix}
@@ -514,7 +520,7 @@ is now given by
     \mathbf{I}(b, \theta', r_s)
     \mathbf{A_1}
     \mathbf{R}'(x_o, y_o)
-    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
 \end{align}
@@ -542,7 +548,7 @@ Similarly, the flux when there is no occultation is now given by
     \mathbf{I}(b, \theta'', r_s)
     \mathbf{A_1}
     \mathbf{R}''(x_s, y_s)
-    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
 \end{align}
@@ -631,10 +637,10 @@ intensity-weighted basis directly,
 %
 \begin{align}
     \label{eq:rTI}
-    \pmb{\rho}^\top(b, r_s) & \equiv
-    \rT(b) \mathbf{I}(b, 0, r_s)
-    \nonumber                        \\
-                            & =
+    \overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(b, r_s) & \equiv
+    \rT(b) \mathbf{I}(b, \theta'', r_s)
+    \nonumber                                                        \\
+                                                            & =
     \int_{-1}^{1}
     \int_{b\sqrt{1 - x''^2}}^{\sqrt{1 - x''^2}}
     \bp(x'', y'')
@@ -647,17 +653,18 @@ recalling that in frame $\mathcal{F}''$, $\theta'' = 0$ by
 definition.
 %
 Equation~(\ref{eq:rTI}) may be solved analytically in terms of purely
-trigonometric and algebraic functions of $b$. The component of $\pmb{\rho}^\top$
+trigonometric and algebraic functions of $b$.
+The component of $\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}$
 at index $n$ is given by
 %
 \begin{proof}{}
     \label{eq:rTsoln}
-    \rho_n(b, r_s) & =
+    \overset{\quad\wedge}{\mathbb{r}}_n(b, r_s) & =
     \frac{1}{4\pi r_s^2}
     \begin{cases}
         \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
-        J_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
-        b H_\frac{\nu}{2}(b) K_{\frac{\mu}{2}, \frac{\nu}{2}}
+        \mathbb{L}_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
+        b \mathbb{k}_\frac{\nu}{2}(b) \mathbb{M}_{\frac{\mu}{2}, \frac{\nu}{2}}
         %
          &
         %
@@ -667,7 +674,7 @@ at index $n$ is given by
         \\[1em]
         %
         b_c
-        H_{\frac{\nu + 1}{2}}(b) K_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
+        \mathbb{k}_{\frac{\nu + 1}{2}}(b) \mathbb{M}_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
         %
         \\[0.5em]
         \qquad
@@ -675,14 +682,14 @@ at index $n$ is given by
         - \frac{b}{2} \bigg\{
         \left(1 - b^{\frac{\nu + 1}{2}}\right)
         \left(
-        J_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}} -
-        J_{\frac{\mu + 3}{2}, \frac{\nu - 1}{2}}
+        \mathbb{L}_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}} -
+        \mathbb{L}_{\frac{\mu + 3}{2}, \frac{\nu - 1}{2}}
         \right)
         \\[0.5em]
         \qquad\qquad
         -
         \left(1 - b^{\frac{\nu + 5}{2}}\right)
-        J_{\frac{\mu - 1}{2}, \frac{\nu + 3}{2}}
+        \mathbb{L}_{\frac{\mu - 1}{2}, \frac{\nu + 3}{2}}
         \bigg\}
         %
          &
@@ -693,27 +700,15 @@ at index $n$ is given by
     \end{cases}
 \end{proof}
 %
-where we make use of the indices
-%
-\begin{align}
-    \label{eq:l-m-mu-nu}
-    \mu & = l - m
-    \nonumber                 \\
-    \nu & = l + m
-    \nonumber                 \\
-    l   & = \floor*{\sqrt{n}}
-    \nonumber                 \\
-    m   & = n - l^2 - l
-\end{align}
-%
-as in \citet{Luger2019} and we define the helper functions
+where the components of $\mathbbb{k}$, $\mathbbb{L}$, and $\mathbbb{M}$
+are given by
 %
 \begin{proof}{}
     \label{eq:HJK}
-    H_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
+    \mathbb{k}_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
     \nonumber \\
     %
-    J_{i,j} &=
+    \mathbb{L}_{i,j} &=
     \frac{
         \Gamma\left(\frac{i + 1}{2}\right)
         \Gamma\left(\frac{j + 1}{2}\right)
@@ -724,7 +719,7 @@ as in \citet{Luger2019} and we define the helper functions
     %
     \nonumber \\
     %
-    K_{i,j} &=
+    \mathbb{M}_{i,j} &=
     \frac{
         \Gamma\left(\frac{i + 1}{2}\right)
         \Gamma\left(\frac{j + 4}{2}\right)
@@ -732,30 +727,32 @@ as in \citet{Luger2019} and we define the helper functions
     {
         \Gamma\left(\frac{i + j + 5}{2}\right)
     }
-    \quad.
+    \quad,
 \end{proof}
+%
+where $\Gamma$ is the gamma function.
 %
 Given initial conditions
 %
 \\[1em]
 \begin{minipage}{.33\linewidth}
     \begin{align}
-        H_{0}(b) & = \frac{\arccos(b) - bb_c}{2}
+        \mathbb{k}_{0}(b) & = \frac{\arccos(b) - bb_c}{2}
         %
-        \nonumber                                \\
+        \nonumber                                         \\
         %
-        H_{1}(b) & = \frac{b_c^3}{3}
+        \mathbb{k}_{1}(b) & = \frac{b_c^3}{3}
         %
         \nonumber
     \end{align}
 \end{minipage}%
 \begin{minipage}{.32\linewidth}
     \begin{align}
-        J_{0,0} & = \pi
+        \mathbb{L}_{0,0} & = \pi
         %
-        \nonumber               \\
+        \nonumber                        \\
         %
-        J_{0,1} & = \frac{4}{3}
+        \mathbb{L}_{0,1} & = \frac{4}{3}
         %
         \nonumber
     \end{align}
@@ -763,10 +760,10 @@ Given initial conditions
 \begin{minipage}{.33\linewidth}
     \begin{proof}{}
         \label{eq:IJK0}
-        K_{0,0} &= \frac{4}{3}
+        \mathbb{M}_{0,0} &= \frac{4}{3}
         %
         \nonumber \\
-        K_{0,1} &= \frac{3\pi}{8}
+        \mathbb{M}_{0,1} &= \frac{3\pi}{8}
     \end{proof}
 \end{minipage}
 \\[1em]
@@ -775,36 +772,37 @@ we may compute all higher order terms from the recurrence relations
 %
 \begin{proof}{}
     \label{eq:IJKrec}
-    H_{j}(b) &= \frac{b^n b_c^3 + (j - 1) H_{j - 2}(b)}{j + 2}
+    \mathbb{k}_{j}(b) &= \frac{b^n b_c^3 + (j - 1) \mathbb{k}_{j - 2}(b)}{j + 2}
     %
     \nonumber \\
     %
-    J_{0,j} &= \left(\frac{j - 1}{j + 2}\right) J_{0,j-2}
+    \mathbb{L}_{0,j} &= \left(\frac{j - 1}{j + 2}\right) \mathbb{L}_{0,j-2}
     %
     \nonumber \\
     %
-    K_{0,j} &= \left(\frac{j + 2}{j + 3}\right) K_{0,j-2}
+    \mathbb{M}_{0,j} &= \left(\frac{j + 2}{j + 3}\right) \mathbb{M}_{0,j-2}
     %
     \nonumber \\
     %
-    J_{i,j} &= \left(\frac{i - 1}{i + j + 2}\right) J_{i-2,j}
+    \mathbb{L}_{i,j} &= \left(\frac{i - 1}{i + j + 2}\right) \mathbb{L}_{i-2,j}
     %
     \nonumber \\
     %
-    K_{i,j} &= \left(\frac{i - 1}{i + j + 3}\right) K_{i-2,j}
+    \mathbb{M}_{i,j} &= \left(\frac{i - 1}{i + j + 3}\right) \mathbb{M}_{i-2,j}
     \quad.
 \end{proof}
 %
-Once $\pmb{\rho}^\top$ is known, the observed flux is computed from
+Once $\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}$ is known,
+the observed flux is computed from
 (c.f. Equation~\ref{eq:rTIA1RRy})
 %
 \begin{proof}{}
     \label{eq:f0}
     f_0 & =
-    \pmb{\rho}^\top(b, r_s)
+    \overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(b, r_s)
     \mathbf{A_1}
     \mathbf{R}''(x_s, y_s)
-    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad.
 \end{proof}
@@ -815,10 +813,10 @@ Finally, for future reference, we can also compute what we will call the
 \begin{proof}{}
     \label{eq:f0hat}
     \hat{f}_0 & =
-    -\pmb{\rho}^\top(-b, r_s)
+    -\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(-b, r_s)
     \mathbf{A_1}
     \mathbf{R}''(-x_s, -y_s)
-    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
 \end{proof}
@@ -915,7 +913,7 @@ to determine whether or not the limb of the occultor intersects the terminator
 of the body, and if so, the points of intersection.
 While we perform the integration in frame $\mathcal{F}'$, finding the points
 of intersection with the terminator is easier if we temporarily switch to
-the frame $\mathcal{F}''$ (via Equation~\ref{eq:R''}) in which the terminator
+the frame $\mathcal{F}''$, in which the terminator
 is parallel to the $x''$-axis.
 In this frame, the equations defining the terminator and the limb of the
 occultor are, respectively,
@@ -1017,7 +1015,7 @@ polynomial illumination function:
     \mathbf{I}(b, \theta', r_s)
     \mathbf{A_1}
     \mathbf{R}'(x_o, y_o)
-    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
 \end{proof}
@@ -1149,7 +1147,7 @@ region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
     \mathbf{I}(b, \theta', r_s)
     \mathbf{A_1}
     \mathbf{R}'(x_o, y_o)
-    \mathbf{R}(i, \lambda, \vartheta)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad.
 \end{align}
@@ -1404,7 +1402,8 @@ component is given by
     \end{dcases}
 \end{align}
 %
-where the indices $l, m, \mu, \nu$ are given by Equation~(\ref{eq:l-m-mu-nu}).
+where the indices $l, m, \mu, \nu$ are given by
+Equations~(\ref{eq:l-m}) and (\ref{eq:mu-nu}).
 
 We showed in the previous sections that there are at most three curves
 $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ bounding a given closed surface of integration
@@ -1788,6 +1787,7 @@ where $\beta = \left(1 - (b_o - r_o)^2\right)^\frac{3}{2}$
 and we define the Vieta operator
 %
 \begin{align}
+    \label{eq:V}
     V\left(u, v, w; \mathbf{x}\right) \equiv
     \sum_{i=0}^{u + v}
     \mathcal{A}_{u, v, i}
@@ -1920,11 +1920,11 @@ incomplete elliptic integrals
 %
 \begin{align}
     \label{eq:F}
-    \mathbb{F}(\psi \,|\, m) & \equiv \int_0^{\psi} \frac{\dd \varphi}{\sqrt{1 - m \sin^2 \varphi}}
+    F(\psi \,|\, m) & \equiv \int_0^{\psi} \frac{\dd \varphi}{\sqrt{1 - m \sin^2 \varphi}}
     \\
     \intertext{and}
     \label{eq:E}
-    \mathbb{E}(\psi \,|\, m) & \equiv \int_0^{\psi} \sqrt{1 - m \sin^2 \varphi} \, \dd \varphi
+    E(\psi \,|\, m) & \equiv \int_0^{\psi} \sqrt{1 - m \sin^2 \varphi} \, \dd \varphi
     \quad,
 \end{align}
 %
@@ -2013,14 +2013,14 @@ Note that when $k^2 < 1$ we use the reciprocal-modulus transformation
 to evaluate the elliptic integrals:
 %
 \begin{align}
-    \mathbb{F}\left(\psi \,\Big|\, \frac{1}{k^2}\right) & =
-    k \, \mathbb{F}(\beta \,|\, k^2)
-    \nonumber                                                                                        \\
-    \mathbb{E}\left(\psi \,\Big|\, \frac{1}{k^2}\right) & =
-    \frac{\mathbb{E}(\beta \,|\, k^2) - (1 - k^2) \mathbb{F}(\beta \,|\, k^2)}{k}
+    F\left(\psi \,\Big|\, \frac{1}{k^2}\right) & =
+    k \, F(\beta \,|\, k^2)
+    \nonumber                                                                               \\
+    E\left(\psi \,\Big|\, \frac{1}{k^2}\right) & =
+    \frac{E(\beta \,|\, k^2) - (1 - k^2) F(\beta \,|\, k^2)}{k}
     \\
     \intertext{with}
-    \beta                                               & = \arcsin\left( \frac{\sin\psi}{k} \right)
+    \beta                                      & = \arcsin\left( \frac{\sin\psi}{k} \right)
     \quad.
 \end{align}
 %
@@ -2197,7 +2197,7 @@ where
     &\equiv
     \frac{3}{v+1}
     \,
-    {_2\mathbbb{F}_1}\left(
+    {_2\pmb{F}_1}\left(
     -\frac{1}{2},
     v + 1;
     v + 2;
@@ -2205,7 +2205,7 @@ where
     \right)
 \end{proof}
 %
-and ${_2\mathbbb{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
+and ${_2\pmb{F}_1}(a, b; c; \mathbf{z})$ is the Gauss
 hypergeometric function, which we compute via its series
 definition.
 %
@@ -2321,14 +2321,14 @@ where
     \end{cases}
 \end{proof}
 %
-The quantities $\mathbbb{F}(\valpha \,|\, \nicefrac{1}{k^2})$ and
-$\mathbbb{E}(\valpha \,|\, \nicefrac{1}{k^2})$
+The quantities $\pmb{F}(\valpha \,|\, \nicefrac{1}{k^2})$ and
+$\pmb{E}(\valpha \,|\, \nicefrac{1}{k^2})$
 are the same incomplete elliptic integrals as those in
 \S\ref{sec:J}, while
 %
 \begin{align}
     \label{eq:Pi}
-    \mathbb{\Pi}(n; \psi \,|\, m) & \equiv
+    \Pi(n; \psi \,|\, m) & \equiv
     \int_0^{\psi}
     \frac{\dd \varphi}{(1 - n \sin^2\varphi)\sqrt{1 - m \sin^2 \varphi}}
 \end{align}
@@ -2337,12 +2337,13 @@ is the incomplete elliptic integral of the third
 kind, with
 %
 \begin{proof}{p2}
+    \label{eq:n}
     n & = -\frac{4 b_o r_o}{(r_o - b_o)^2}
     \quad.
 \end{proof}
 %
 
-While stable algorithms exist to evaluate $\mathbb{\Pi}(n; \psi \,|\, m)$
+While stable algorithms exist to evaluate $\Pi(n; \psi \,|\, m)$
 \citep[e.g.][]{Bulirsch1969}, we find that the parametrization above has
 poor numerical stability, particularly in the vicinity of the singular
 points $b_o = r_o$ and $b_o = 1 + r_o$. In practice, we find that
@@ -2566,7 +2567,7 @@ and
     \end{cases}
 \end{proof}
 %
-The components of the vector $\viH$ are given by the integral
+The components of the matrix $\viH$ are given by the integral
 %
 \begin{align}
     \label{eq:H}
@@ -2691,7 +2692,7 @@ Given $\vlambda$, the solution to Equation~(\ref{eq:qT}) is straightforward:
     \end{cases}
 \end{proof}
 %
-where the vector $\viH$ is given by Equation~(\ref{eq:H}).
+where the matrix $\viH$ is given by Equation~(\ref{eq:H}).
 
 
 % TABLE
