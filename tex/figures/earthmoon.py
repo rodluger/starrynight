@@ -123,7 +123,7 @@ for reflected in False, True:
     ax_lc.plot(t_num, F_num, "C1o", label="numerical")
 
     # Appearance
-    ax_lc.set_ylim(0.65, 1.05)
+    ax_lc.set_ylim(0.6, 1.05)
     ax_lc.set_xlabel("time [hours]", fontsize=16)
     ax_lc.set_ylabel("normalized flux", fontsize=16)
     for tick in ax_lc.get_xticklabels() + ax_lc.get_yticklabels():

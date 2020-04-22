@@ -32,11 +32,60 @@
 \section{Introduction}
 \label{sec:intro}
 %
-This is an extension of \citet{Luger2019}.
+Introduction here.
 
 %
 \section{Overview}
 \label{sec:overview}
+
+Our goal in this paper is to derive analytic expressions for the
+flux received by a distant observer from a non-uniform Lambert sphere
+illuminated by a monochromatic source that may or may not be
+occulted by a (possibly different) spherical body. This applies, for example,
+to the
+case of exoplanet phase curves, exoplanet secondary
+eclipse (occultation) light curves, or exoplanet-moon and exoplanet-exoplanet
+occultations, all seen in reflected light. We explicitly assume the reflecting
+body is Lambertian, i.e., it scatters light isotropically, although with an
+intensity that varies across the surface according to a spatially-dependent
+albedo $A$. Throughout this paper, we will take $A$ to mean the \emph{spherical}
+albedo, the fraction of power incident on a body at a given wavelength
+that is scattered back out to space (in all directions).
+Note that the spherical albedo
+is closely related to the Bond albedo: the Bond albedo is the stellar
+flux-weighted integral of $A(\lambda)$ over all wavelengths $\lambda$. For
+more details, see \S4.5 of \citet{Schwartz2015}.
+
+As in \citet{Luger2019}, we compute fluxes by first expanding the surface
+in terms of spherical harmonics.
+While in \citet{Luger2019} we expanded the emissivity of the surface, here
+we instead expand the spherical albedo $A$.
+Specifically, if $\bvec{y}$ is the vector
+of spherical harmonic coefficients describing the albedo anywhere on
+the surface and
+$\by$ is the spherical harmonics basis (Equation~\ref{eq:by}),
+the albedo $A$ at a point $(x, y)$ on the sky-projected disk of the body
+is given by the dot product
+%
+\begin{align}
+    \label{eq:albedo}
+    A(x, y) = \by^\top (x, y) \, \bvec{y}
+    \quad.
+\end{align}
+%
+The flux measured from this body is the surface integral over the visible
+portion of the body's projected disk of the albedo $A$
+times the illumination profile $\mathcal{I}$ of the surface, given by
+Lambert's law as
+%
+\begin{align}
+    \label{eq:LambertsLaw}
+    \mathcal{I}(\phi) = \mathcal{I}_0 \, \text{max}\big( 0, \cos\phi \big)
+    \quad,
+\end{align}
+%
+where $\mathcal{I}_0$ is the peak illumination (at the sub-source point),
+which we discuss in more detail in \S\ref{sec:adapting-starry}.
 
 \begin{figure}[h!]
     \begin{centering}
@@ -56,6 +105,19 @@ This is an extension of \citet{Luger2019}.
         }
     \end{centering}
 \end{figure}
+
+\section{Extended illumination source}
+\label{sec:extended}
+Planets to consider: 55 Cnc e, Kelt-9b.
+The angular extent of the terminator past $\nicefrac{\pi}{2}$ is
+%
+\begin{align}
+    \tau = \arcsin\left( \frac{\Delta R}{d} \right)
+\end{align}
+
+\section{Non-Lambertian scatterers}
+\label{sec:nonlambertian}
+In principle, we can just change $\mathbf{I}$.
 
 \section{Performance}
 \label{sec:performance}
@@ -124,7 +186,7 @@ basis $\by$:
 %
 \begin{align}
     \label{eq:by}
-    \by & =
+    \by(x, y) & =
     \begin{pmatrix}
         Y_{0, 0}  &
         Y_{1, -1} & Y_{1, 0}  & Y_{1, 1} &
@@ -134,7 +196,7 @@ basis $\by$:
     \quad,
 \end{align}
 %
-where the component at index $n$ is $Y_{l,m}$ with
+where the component at index $n$ is the spherical harmonic $Y_{l,m}(x, y)$ with
 %
 \begin{align}
     \label{eq:l-m}
@@ -144,6 +206,12 @@ where the component at index $n$ is $Y_{l,m}$ with
     \quad.
 \end{align}
 %
+The spherical harmonics are traditionally expressed in spherical coordinates,
+but for our purposes
+it is more conventient to express them in Cartesian coordinates on
+the sky-projected disk, in which case they are simply polynomials in
+$x$, $y$, and $z$ \citep[see Appendix~A in][]{Luger2019}.
+
 An observer views the body from a large distance in the sky frame
 $\mathcal{F}$, in which the $x$-axis points to the right,
 the $y$-axis points up, and the $z$-axis points out of the sky
@@ -292,18 +360,19 @@ absence of limb darkening) is assumed to be Lambertian, i.e., all points on the
 surface emit equally in all directions.
 Here, we wish to derive the solution for the flux in the case of Lambertian
 reflectance, in which case the vector $\mathbf{y}$ is taken to describe the
-surface \emph{reflectivity} (or \emph{Bond albedo}).
+spherical albedo of the surface, $A$.
 
 Second, we must explicitly model the illumination of the body. We assume the
-body is illuminated by a point-like source of unit luminosity, in which case
-the radiance at any
-point on the surface is proportional to the cosine of the angle between
+body is illuminated by a point-like source whose flux measured by the observer
+is unity. In this case, the observed intensity at any
+point on the surface is proportional to the cosine of the angle $\phi$ between
 the incident light and the surface normal. Points for which
-this angle is greater than $\nicefrac{\pi}{2}$ are unilluminated and
-therefore have radiance of zero.
+$\phi \ge \nicefrac{\pi}{2}$ are unilluminated and
+therefore have an intensity of zero.
 %
 If the point-like illumination source is placed at sky coordinates
-$(x_s, y_s, z_s)$, the day/night terminator on the body is a half-ellipse
+$(x_s, y_s, z_s)$ in units of the radius of the illuminated body,
+the day/night terminator on the body is a half-ellipse
 of semi-major axis unity that is fully described by its (signed) semi-minor
 axis,
 %
@@ -333,13 +402,50 @@ where
 %
 \begin{proof}{}
     \label{eq:illum_poly}
-    I(b, \theta, r_s; x, y) &= \frac{1}{4\pi r_s^2}
+    I(b, \theta, r_s; x, y) &= \frac{1}{\pi r_s^2}
     \bigg(
     -b_c\sin\theta x + b_c\cos\theta y - bz(x, y)
     \bigg)
 \end{proof}
 %
 with $b_c \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
+A quick note on the normalization of Equation~(\ref{eq:illum_poly}):
+if we place the illumination source along the $+z$-axis at $(0, 0, z_s)$,
+the body is seen at full phase, so $b = -1$, $b_c = 0$, and
+%
+\begin{proof}{}
+    \mathcal{I}_\text{full}(x, y) = \frac{\sqrt{1 - x^2 - y^2}}{\pi z_s^2}
+    \quad.
+\end{proof}
+%
+Integrating this over the full disk, we obtain the reflected flux measured
+by the observer if the body has unit spherical albedo,
+%
+\begin{proof}{}
+    \mathcal{f}_\text{full} &=
+    \int_{-1}^{1}
+    \int_{-\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
+    \frac{\sqrt{1 - x^2 - y^2}}{\pi z_s^2}
+    \,
+    \dd y
+    \,
+    \dd x
+    \nonumber \\[0.5em]
+    &= \left(\frac{2}{3}\right) \frac{1}{z_s^2}
+    \quad,
+\end{proof}
+%
+recalling that $z_s$ is measured in units of the illuminated body's
+radius. The factor of $\nicefrac{2}{3}$ is
+precisely the ratio of the geometric albedo to the spherical
+albedo of a Lambert sphere \citep[see, e.g.][]{Seager2010}. If we placed
+the source at $z_s = 1$, reflection off the illuminated body would increase
+the total flux measured at the observer by $\nicefrac{2}{3}$ (since, by
+assumption, the source flux at the observer is unity). As a sanity check,
+if all radiation incident on the body were instead scattered back toward the
+source (and hence toward the observer), $f_\text{full}$ would instead be unity:
+the flux at the observer would \emph{double}.
+\xxx{Is this explanation satisfactory? Does it make sense?}
 
 In principle, our task is now straightforward: weight each of the
 terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them
@@ -361,7 +467,7 @@ we may write
 \begin{proof}{}
     \label{eq:ivec}
     \mathbf{i}(b, \theta, r_s) & =
-    \frac{1}{4\pi r_s^2}
+    \frac{1}{\pi r_s^2}
     \begin{pmatrix}
         0              \\
         -b_c\sin\theta \\
@@ -484,7 +590,7 @@ we can compose $\mathbf{I}$ out of these column vectors:
 \begin{proof}{}
     \label{eq:Imat}
     \mathbf{I}(b, \theta, r_s) & =
-    \frac{1}{4\pi r_s^2}
+    \frac{1}{\pi r_s^2}
     \begin{pmatrix}
         0              & 0              & -b             & 0              & \cdots \\
         -b_c\sin\theta & 0              & 0              & 0              & \cdots \\
@@ -681,7 +787,7 @@ at index $n$ is given by
 \begin{proof}{}
     \label{eq:rTsoln}
     \overset{\quad\wedge}{\mathbb{r}}_n(b, r_s) & =
-    \frac{1}{4\pi r_s^2}
+    \frac{1}{\pi r_s^2}
     \begin{cases}
         \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
         \mathbb{L}_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
