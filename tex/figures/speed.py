@@ -84,7 +84,7 @@ class Compare(object):
                         tt.reshape(z, [1, -1]),
                     )
                 )
-                I = self.map_ref.ops.compute_illumination(xyz, xs, ys, zs)
+                I = self.map_ref.ops.compute_illumination_point_source(xyz, xs, ys, zs)
                 intensity = tt.switch(tt.isnan(intensity), intensity, intensity * I)[
                     0, 0
                 ]
@@ -121,7 +121,7 @@ class Compare(object):
                 f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
                 alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
-                return self.map_ref.ops.flux(
+                return self.map_ref.ops.flux_point_source(
                     theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
                 )
 
@@ -148,7 +148,7 @@ class Compare(object):
                 alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
                 return theano.grad(
-                    self.map_ref.ops.flux(
+                    self.map_ref.ops.flux_point_source(
                         theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
                     )[0],
                     ro,
@@ -294,7 +294,18 @@ class Compare(object):
         return (time.time() - t) / nt, val, err
 
     def compare(
-        self, xs, ys, zs, xo, yo, ro, res=999, nt=1000, epsabs=1e-3, epsrel=1e-3,
+        self,
+        xs,
+        ys,
+        zs,
+        xo,
+        yo,
+        ro,
+        res=999,
+        nt=1000,
+        epsabs=1e-3,
+        epsrel=1e-3,
+        figname="speed.pdf",
     ):
         """Compare different integration schemes."""
 
@@ -426,7 +437,7 @@ class Compare(object):
         axleg2.set_xlim(2, 3)
         leg = axleg2.legend(loc="center", labelspacing=1, frameon=False, fontsize=8)
         leg.set_title("log error", prop={"weight": "bold", "size": 10})
-        fig.savefig("speed.pdf", bbox_inches="tight")
+        fig.savefig(figname, bbox_inches="tight")
         plt.close()
 
         # Restore
@@ -435,16 +446,26 @@ class Compare(object):
 
 if __name__ == "__main__":
 
-    # Geometric params
+    # Typical occultation
     xs = -0.5
     ys = 0.5
     zs = 0.5
     xo = -0.5
     yo = -0.1
     ro = 1.25
-
-    # Let's go
     ydeg = 10
     y = np.ones((ydeg + 1) ** 2)
     cmp = Compare(y=y)
-    cmp.compare(xs, ys, zs, xo, yo, ro)
+    cmp.compare(xs, ys, zs, xo, yo, ro, figname="speed.pdf")
+
+    # No occultation
+    xs = -0.5
+    ys = 0.5
+    zs = 0.5
+    xo = -0.5
+    yo = -0.1
+    ro = 0.0
+    ydeg = 10
+    y = np.ones((ydeg + 1) ** 2)
+    cmp = Compare(y=y)
+    cmp.compare(xs, ys, zs, xo, yo, ro, figname="speed_no_occ.pdf")
