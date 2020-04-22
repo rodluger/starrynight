@@ -6,7 +6,6 @@ import astropy.units as u
 
 # Config
 starry.config.lazy = False
-plt.switch_backend("MacOSX")
 
 # Star
 star_map = starry.Map(udeg=2, amp=1)
@@ -62,9 +61,10 @@ fig, ax = plt.subplots(1, figsize=(8, 5))
 t = t_phase - kwargs["t0"]
 ax.plot(t, flux_phase * 1e6, "C0-", label="point source")
 ax.plot(t, flux_phase_fin * 1e6, "C1-", label="extended source")
-ax.set_xlabel("time [days]", fontsize=18)
-ax.set_ylabel("flux [ppm]", fontsize=18)
+ax.set_xlabel("time [days]", fontsize=16)
+ax.set_ylabel("flux [ppm]", fontsize=16)
 ax.legend(loc="best")
+fig.savefig("55cancrie.pdf", bbox_inches="tight")
 
 # Plot eclipse ingress
 fig, ax = plt.subplots(1, figsize=(8, 5))
@@ -73,8 +73,7 @@ ax.plot(t, flux_em / flux_em[0], "C2-", label="uniform")
 ax.plot(t, flux_ld / flux_ld[0], "C3-", label="noon")
 ax.plot(t, flux_ref / flux_ref[0], "C0-", label="point source")
 ax.plot(t, flux_ref_fin / flux_ref_fin[0], "C1-", label="extended source")
-ax.set_xlabel("time [minutes]", fontsize=18)
-ax.set_ylabel("flux [relative]", fontsize=18)
+ax.set_xlabel("time [minutes]", fontsize=16)
+ax.set_ylabel("flux [relative]", fontsize=16)
 ax.legend(loc="best")
-
-plt.show()
+fig.savefig("55cancrie_ingress.pdf", bbox_inches="tight")

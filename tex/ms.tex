@@ -32,11 +32,7 @@
 \section{Introduction}
 \label{sec:intro}
 %
-Introduction here.
-
-%
-\section{Overview}
-\label{sec:overview}
+\xxx{A few paragraphs of introduction here. \citet{Russell1906}.}
 
 Our goal in this paper is to derive analytic expressions for the
 flux received by a distant observer from a non-uniform Lambert sphere
@@ -53,8 +49,8 @@ albedo, the fraction of power incident on a body at a given wavelength
 that is scattered back out to space (in all directions).
 Note that the spherical albedo
 is closely related to the Bond albedo: the Bond albedo is the stellar
-flux-weighted integral of $A(\lambda)$ over all wavelengths $\lambda$. For
-more details, see \S4.5 of \citet{Schwartz2015}.
+flux-weighted integral of $A(\lambda)$ over all wavelengths $\lambda$
+\citep[see, e.g.,][]{Seager2010}.
 
 As in \citet{Luger2019}, we compute fluxes by first expanding the surface
 in terms of spherical harmonics.
@@ -84,8 +80,54 @@ Lambert's law as
     \quad,
 \end{align}
 %
-where $\mathcal{I}_0$ is the peak illumination (at the sub-source point),
-which we discuss in more detail in \S\ref{sec:adapting-starry}.
+where $\mathcal{I}_0$ is the peak illumination (at the sub-source point).
+%
+
+The piecewise nature of the illumination function at the day/night terminator
+makes the problem of computing the visible flux particularly difficult; most
+studies to date have tackled the problem numerically, by discretizing the surface
+and computing the relevant integrals by summing over the visible
+pixels \xxx{(cite)}. Recently, \citep{Haggard2018} developed an analytic
+framework for computing light curves of unocculted bodies illuminated
+by a point source. In this paper, we re-derive their solution under the
+\starry framework and extend it for the first time to the case where
+the body is occulted by another spherical body, which may or may not be the
+illumination source.
+
+In \citet{Luger2019}, we reduced the problem of computing the flux from
+an occulted body in emitted light to a series of efficient, analytical
+operations involving trigonometric functions of the position and size of the
+occultor and certain complete elliptic integrals. In the case of reflected
+light, however, the change in the limits of integration due to the
+unilluminated night side breaks many of the symmetries that simplified
+the flux calculation. In particular, the limits of integration now depend
+on the solution to a quartic equation specifying the points of intersection
+between the occultor and the day/night terminator, and the solution to
+those integrals is now a function of \emph{incomplete} elliptic integrals.
+The procedure for computing the flux is therefore significantly more complex.
+%
+We therefore defer all calculations to the Appendix, and devote the body of
+the paper to validating and demonstrating applications of our approach.
+
+\section{Reflected light curves in \starry}
+\label{sec:validation}
+
+\subsection{Sample light curves}
+\label{sec:sample}
+
+Figure~\ref{fig:earthmoon} shows a sample application of the algorithm
+developed in this paper. The figure shows two mock occultation light curves
+of the cloudless Earth as the Moon is seen to transit its disk, both computed
+using \starry from an $l=25$ expansion of the map of the Earth.
+The top panel shows an occultation in emitted light and is a reproduction of
+Figure~7 in \citet{Luger2019}. The bottom panel shows a light curve for the
+same occultation geometry, but seen instead in reflected light, with the
+Sun to the top left and slightly out of the page.
+The black curves correspond to the analytical solution, and the orange dots
+to the brute force numerical solution, obtained by discretizing the disk
+on a grid of ${\sim}10^6$ points. The solutions agree to within the
+numerical precision of the brute force solution (about 100 ppm in this
+case).
 
 \begin{figure}[h!]
     \begin{centering}
@@ -106,24 +148,11 @@ which we discuss in more detail in \S\ref{sec:adapting-starry}.
     \end{centering}
 \end{figure}
 
-\section{Extended illumination source}
-\label{sec:extended}
-Planets to consider: 55 Cnc e, Kelt-9b.
-The angular extent of the terminator past $\nicefrac{\pi}{2}$ is
-%
-\begin{align}
-    \tau = \arcsin\left( \frac{\Delta R}{d} \right)
-\end{align}
-
-\section{Non-Lambertian scatterers}
-\label{sec:nonlambertian}
-In principle, we can just change $\mathbf{I}$.
-
-\section{Performance}
+\subsection{Performance}
 \label{sec:performance}
-%
-See Figure~\ref{fig:speed}.
-%
+
+Figure~\ref{fig:speed}
+
 \begin{figure}[h!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/speed.pdf}
@@ -150,6 +179,24 @@ See Figure~\ref{fig:speed}.
         }
     \end{centering}
 \end{figure}
+
+\section{Extensions}
+\label{sec:extensions}
+
+\subsection{Extended illumination source}
+\label{sec:extended}
+Planets to consider: 55 Cnc e, Kelt-9b.
+The angular extent of the terminator past $\nicefrac{\pi}{2}$ is
+%
+\begin{align}
+    \tau = \arcsin\left( \frac{\Delta R}{d} \right)
+\end{align}
+
+\subsection{Non-Lambertian scatterers}
+\label{sec:nonlambertian}
+In principle, we can just change $\mathbf{I}$.
+
+%
 
 
 % Bibliography
