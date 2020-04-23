@@ -457,15 +457,3 @@ if __name__ == "__main__":
     y = np.ones((ydeg + 1) ** 2)
     cmp = Compare(y=y)
     cmp.compare(xs, ys, zs, xo, yo, ro, figname="speed.pdf")
-
-    # No occultation
-    xs = -0.5
-    ys = 0.5
-    zs = 0.5
-    xo = -0.5
-    yo = -0.1
-    ro = 0.0
-    ydeg = 10
-    y = np.ones((ydeg + 1) ** 2)
-    cmp = Compare(y=y)
-    cmp.compare(xs, ys, zs, xo, yo, ro, figname="speed_no_occ.pdf")

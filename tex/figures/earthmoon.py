@@ -122,8 +122,6 @@ for reflected in False, True:
     F_num /= maxF
     ax_lc.plot(t_num, F_num, "C1o", label="numerical")
 
-    breakpoint()
-
     # Appearance
     ax_lc.set_ylim(0.6, 1.05)
     ax_lc.set_xlabel("time [hours]", fontsize=16)
