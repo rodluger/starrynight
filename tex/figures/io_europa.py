@@ -161,14 +161,25 @@ def get_starry_args(time):
 time, flux = get_phemu_data()
 
 # Instantiate a starry map & get geometrical parameters
-map = starry.Map(ydeg=20, reflected=True)
+map = starry.Map(ydeg=25, reflected=True)
 map.inc, map.obl, kwargs = get_starry_args(time)
 
+# Load the Galileo SSI / Voyager composite
+# https://astrogeology.usgs.gov/search/map/Io/
+# Voyager-Galileo/Io_GalileoSSI-Voyager_Global_Mosaic_1km
+map.load("data/io_mosaic.jpg")
+
+# View it
+map.show(projection="moll", colorbar=True, illuminate=False, file="io.pdf")
+
+# Model
+model = map.flux(**kwargs)
+model /= model[0]
 
 # Plot it
 fig, ax = plt.subplots(1, figsize=(14, 5))
 ax.plot(time.value - 55169, flux, "k.", alpha=0.75, ms=4, label="data")
-ax.plot(time.value - 55169, map.design_matrix(**kwargs)[:, 0] / 0.008, label="model")
+ax.plot(time.value - 55169, model, label="model")
 ax.legend()
 ax.set_xlabel("time [MJD - 55169]")
 ax.set_ylabel("normalized flux")
