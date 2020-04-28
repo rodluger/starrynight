@@ -18,11 +18,11 @@ def fit(y, z, b, Nyz, Nbbc):
     n = 0
     X = np.zeros((len(y * z * b), Nyz ** 2 * Nbbc ** 2))
     bc = np.sqrt(1 - b ** 2)
-    for i in range(Nyz):
-        for j in range(Nyz):
-            for k in range(Nbbc):
-                for l in range(Nbbc):
-                    X[:, n] = y ** i * z ** j * b ** k * bc ** l
+    for i in range(Nbbc):
+        for j in range(Nbbc):
+            for k in range(Nyz):
+                for l in range(Nyz):
+                    X[:, n] = b ** i * bc ** j * y ** k * z ** l
                     n += 1
 
     # Solve the linear problem
@@ -36,11 +36,11 @@ def get_S(y, z, b, Nyz, Nbbc, w):
     m = 0
     c = np.zeros(Nyz * Nyz)
     bc = np.sqrt(1 - b ** 2)
-    for i in range(Nyz):
-        for j in range(Nyz):
-            for k in range(Nbbc):
-                for l in range(Nbbc):
-                    c[n] += w[m] * b ** k * bc ** l
+    for i in range(Nbbc):
+        for j in range(Nbbc):
+            for k in range(Nyz):
+                for l in range(Nyz):
+                    c[n] += w[m] * b ** i * bc ** j
                     m += 1
             n += 1
 
