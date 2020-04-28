@@ -7,6 +7,14 @@ from matplotlib.colors import LinearSegmentedColormap
 # Disable lazy mode
 starry.config.lazy = False
 
+# Instantiate the Earth in emitted light
+map_e = starry.Map(25)
+map_e.load("earth", sigma=0.06)
+
+# Instantiate the Earth in reflected light
+map_r = starry.Map(25, reflected=True)
+map_r.load("earth", sigma=0.06)
+
 # Earth colormap
 cmap = LinearSegmentedColormap(
     "earth",
@@ -17,32 +25,14 @@ cmap = LinearSegmentedColormap(
     },
     N=256,
 )
-cmap.set_under("k")
 
-# Illumination colormap
-cmapI = LinearSegmentedColormap.from_list("illum", ["k", "k"], 256)
-cmapI._init()
-alphas = np.linspace(1.0, 0.0, cmapI.N + 3)
-cmapI._lut[:, -1] = alphas
-
-# Instantiate the Earth in emitted light
-map_e = starry.Map(25)
-map_e.load("earth", sigma=0.06)
-
-# Instantiate the Earth in reflected light
-map_r = starry.Map(25, reflected=True)
-map_r.load("earth", sigma=0.06)
-
-# Instantiate a dummy map for plotting the illumination filter
-map_I = starry.Map(1, reflected=True)
-
-for reflected in False, True:
+for reflected in (True, False):
 
     # Set up the plot
     nim = 12
     npts = 100
     nptsnum = 10
-    res = 999
+    res = 300
     fig = plt.figure(figsize=(12, 5))
     ax_im = [plt.subplot2grid((4, nim), (0, n)) for n in range(nim)]
     ax_lc = plt.subplot2grid((4, nim), (1, 0), colspan=nim, rowspan=3)
@@ -69,8 +59,6 @@ for reflected in False, True:
         xs = -1.0 * np.ones_like(time)
         ys = 0.3 * np.ones_like(time)
         zs = 1.0 * np.ones_like(time)
-        map_r = starry.Map(25, reflected=True)
-        map_r.load("earth", sigma=0.06)
         F = map_r.flux(theta=theta, xo=xo, yo=yo, ro=ro, xs=xs, ys=ys, zs=zs)
     else:
         F = map_e.flux(theta=theta, xo=xo, yo=yo, ro=ro)
@@ -79,68 +67,58 @@ for reflected in False, True:
     ax_lc.plot(time, F, "k-", label="analytic")
 
     # Plot the earth images & compute the numerical flux
-    res = 300
     t_num = np.zeros(nim)
     F_num = np.zeros(nim)
     for n in range(nim):
         i = int(np.linspace(0, npts - 1, nim)[n])
 
-        # Plot the (unilluminated) image of the Earth
-        img = map_e.render(theta=theta[i], res=res)
-        ax_im[n].imshow(
-            img, origin="lower", cmap=cmap, extent=(-1, 1, -1, 1), vmin=1e-8
-        )
-
+        # Show the image
         if reflected:
-
-            # Apply the illumination filter
-            I = map_I.render(xs=xs[i], ys=ys[i], zs=zs[i], res=res)
-            I /= np.nanmax(I)
-            ax_im[n].imshow(
-                I, origin="lower", cmap=cmapI, extent=(-1, 1, -1, 1), vmin=0, vmax=1,
+            map_r.show(
+                ax=ax_im[n],
+                cmap=cmap,
+                xs=xs[i],
+                ys=ys[i],
+                zs=zs[i],
+                theta=theta[i],
+                res=res,
+                grid=False,
             )
+        else:
+            map_e.show(ax=ax_im[n], cmap=cmap, theta=theta[i], res=res, grid=False)
 
-            # Now re-compute the image, this time with the illumination.
-            # We'll integrate this numerically below to get the numerical flux
-            img = map_r.render(xs=xs[i], ys=ys[i], zs=zs[i], theta=theta[i], res=res)
+        # Outline
+        if not reflected:
+            x = np.linspace(-1, 1, 1000)
+            y = np.sqrt(1 - x ** 2)
+            f = 0.98
+            ax_im[n].plot(f * x, f * y, "k-", lw=0.5, zorder=0)
+            ax_im[n].plot(f * x, -f * y, "k-", lw=0.5, zorder=0)
 
-        x = np.linspace(-1, 1, 1000)
-        y = np.sqrt(1 - x ** 2)
-        ax_im[n].plot(x, y, "k-", lw=1, zorder=10)
-        ax_im[n].plot(x, -y, "k-", lw=1, zorder=10)
-
-        xm = np.linspace(xo[i] - ro + 1e-5, xo[i] + ro - 1e-5, res)
+        # Occultor
+        x = np.linspace(xo[i] - ro + 1e-5, xo[i] + ro - 1e-5, res)
+        y = np.sqrt(ro ** 2 - (x - xo[i]) ** 2)
         ax_im[n].fill_between(
-            xm,
-            yo[i] - np.sqrt(ro ** 2 - (xm - xo[i]) ** 2),
-            yo[i] + np.sqrt(ro ** 2 - (xm - xo[i]) ** 2),
-            color="grey",
-            zorder=11,
+            x,
+            yo[i] - y,
+            yo[i] + y,
+            fc="#aaaaaa",
+            zorder=1,
             clip_on=False,
+            ec="k",
+            lw=0.5,
         )
-        ax_im[n].plot(
-            xm,
-            yo[i] - np.sqrt(ro ** 2 - (xm - xo[i]) ** 2),
-            "k-",
-            lw=1,
-            clip_on=False,
-            zorder=12,
-        )
-        ax_im[n].plot(
-            xm,
-            yo[i] + np.sqrt(ro ** 2 - (xm - xo[i]) ** 2),
-            "k-",
-            lw=1,
-            clip_on=False,
-            zorder=12,
-        )
-
         ax_im[n].axis("off")
         ax_im[n].set_xlim(-1.05, 1.05)
         ax_im[n].set_ylim(-1.05, 1.05)
+        ax_im[n].set_rasterization_zorder(0)
 
         # Compute the numerical flux by discretely summing over the unocculted region
         x, y, z = map_e.ops.compute_ortho_grid(res)
+        if reflected:
+            img = map_r.render(xs=xs[i], ys=ys[i], zs=zs[i], theta=theta[i], res=res)
+        else:
+            img = map_e.render(theta=theta[i], res=res)
         F_num[n] = (
             np.nansum(img.flatten()[(x - xo[i]) ** 2 + (y - yo[i]) ** 2 > ro ** 2])
             * 4
@@ -153,6 +131,7 @@ for reflected in False, True:
     ax_lc.plot(t_num, F_num, "C1o", label="numerical")
 
     # Appearance
+    ax_im[-1].set_zorder(-100)
     ax_lc.set_ylim(0.6, 1.05)
     ax_lc.set_xlabel("time [hours]", fontsize=16)
     ax_lc.set_ylabel("normalized flux", fontsize=16)
@@ -162,6 +141,6 @@ for reflected in False, True:
 
     # Save
     if reflected:
-        fig.savefig("earthmoon.pdf", bbox_inches="tight", dpi=300)
+        fig.savefig("earthmoon.pdf", bbox_inches="tight", dpi=500)
     else:
-        fig.savefig("earthmoon_emitted.pdf", bbox_inches="tight", dpi=300)
+        fig.savefig("earthmoon_emitted.pdf", bbox_inches="tight", dpi=500)

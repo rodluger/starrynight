@@ -7,6 +7,7 @@ from astropy.timeseries import TimeSeries
 from astroquery.jplhorizons import Horizons
 import os
 import starry
+from scipy.optimize import minimize
 
 
 starry.config.lazy = False
@@ -128,8 +129,8 @@ def get_phemu_data(file="data/G20091204_2o1_JHS_0.txt"):
     date_mjd = Time(f"{y}-{m}-{d}", format="isot", scale="utc").to_value("mjd")
     data = np.genfromtxt(file)
     times_mjd = date_mjd + data[:, 0] / (60 * 24)
-    time, flux = np.vstack([times_mjd, data[:, 1]])
-    return Time(time, format="mjd"), flux
+    time, flux, phemu_model = np.vstack([times_mjd, data[:, 1], data[:, 2]])
+    return Time(time, format="mjd"), flux, phemu_model
 
 
 def get_starry_args(time):
@@ -158,10 +159,10 @@ def get_starry_args(time):
 
 
 # Grab the PHEMU light curve
-time, flux = get_phemu_data()
+time, flux, phemu_model = get_phemu_data()
 
 # Instantiate a starry map & get geometrical parameters
-map = starry.Map(ydeg=25, reflected=True)
+map = starry.Map(ydeg=20, reflected=True)
 map.inc, map.obl, kwargs = get_starry_args(time)
 
 # Load the Galileo SSI / Voyager composite
@@ -169,18 +170,90 @@ map.inc, map.obl, kwargs = get_starry_args(time)
 # Voyager-Galileo/Io_GalileoSSI-Voyager_Global_Mosaic_1km
 map.load("data/io_mosaic.jpg")
 
-# View it
-map.show(projection="moll", colorbar=True, illuminate=False, file="io.pdf")
-
 # Model
-model = map.flux(**kwargs)
-model /= model[0]
+xo = kwargs.pop("xo")
+yo = kwargs.pop("yo")
 
-# Plot it
-fig, ax = plt.subplots(1, figsize=(14, 5))
-ax.plot(time.value - 55169, flux, "k.", alpha=0.75, ms=4, label="data")
-ax.plot(time.value - 55169, model, label="model")
-ax.legend()
-ax.set_xlabel("time [MJD - 55169]")
-ax.set_ylabel("normalized flux")
-fig.savefig("io_europa.pdf", bbox_inches="tight")
+
+# Very rough uncertainty (eyeballed)
+ferr = 0.02
+
+
+def loss(params):
+    dx, dy, amp = params
+    model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
+    return np.sum((flux - model) ** 2 / ferr ** 2)
+
+
+def plot(params):
+    plt.switch_backend("MacOSX")
+    dx, dy, amp = params
+    model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
+    plt.plot(flux, "k.")
+    plt.plot(model)
+    plt.plot(phemu_model)
+    plt.show()
+
+
+dx, dy, amp = -0.1, -0.5, 66
+res = minimize(loss, [dx, dy, amp])
+
+breakpoint()
+
+# Set up the plot
+nim = 7
+res = 300
+fig = plt.figure(figsize=(12, 5))
+ax_im = [plt.subplot2grid((4, nim), (0, n)) for n in range(nim)]
+ax_lc = plt.subplot2grid((4, nim), (1, 0), colspan=nim, rowspan=3)
+
+# Plot the light curve
+t = time.value - 55169
+ax_lc.plot(t, flux, "k.", alpha=0.75, ms=4, label="data")
+ax_lc.plot(t, model, label="model")
+
+# Plot the images
+for n in range(nim):
+
+    i1 = np.argmax(t > 0.37175)
+    i2 = np.argmax(t > 0.37445)
+    i = int(np.linspace(i1, i2, nim)[n])
+    ax_lc.axvline(t[i], color="C1", lw=1, ls="--")
+
+    # Show the image
+    map.show(
+        ax=ax_im[n],
+        cmap="plasma",
+        xs=kwargs["xs"],
+        ys=kwargs["ys"],
+        zs=kwargs["zs"],
+        theta=kwargs["theta"],
+        res=res,
+        grid=False,
+    )
+
+    # Occultor
+    xo = kwargs["xo"][i]
+    yo = kwargs["yo"][i]
+    ro = kwargs["ro"]
+    x = np.linspace(xo - ro + 1e-5, xo + ro - 1e-5, res)
+    y1 = yo - np.sqrt(ro ** 2 - (x - xo) ** 2)
+    y2 = yo + np.sqrt(ro ** 2 - (x - xo) ** 2)
+    ax_im[n].plot(x, y1, "k-", lw=0.5, zorder=0)
+    ax_im[n].plot(x, y2, "k-", lw=0.5, zorder=0)
+    ax_im[n].fill_between(
+        x, y1, y2, fc="#aaaaaa", zorder=1, clip_on=False, ec="k", lw=0.5
+    )
+
+    ax_im[n].axis("off")
+    ax_im[n].set_xlim(-1.05, 1.05)
+    ax_im[n].set_ylim(-1.05, 1.05)
+    ax_im[n].set_rasterization_zorder(0)
+
+# Appearance
+ax_lc.set_xlabel("time [MJD - 55169]")
+ax_lc.set_ylabel("normalized flux")
+ax_lc.legend(loc="lower right", fontsize=12)
+
+# Save
+fig.savefig("io_europa.pdf", bbox_inches="tight", dpi=500)
