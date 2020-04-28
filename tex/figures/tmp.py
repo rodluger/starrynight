@@ -18,11 +18,11 @@ def fit(y, z, b, Nyz, Nbbc):
     n = 0
     X = np.zeros((len(y * z * b), Nyz ** 2 * Nbbc ** 2))
     bc = np.sqrt(1 - b ** 2)
-    for i in range(Nbbc):
-        for j in range(Nbbc):
-            for k in range(Nyz):
-                for l in range(Nyz):
-                    X[:, n] = b ** i * bc ** j * y ** k * z ** l
+    for i in range(Nyz):
+        for j in range(Nyz):
+            for k in range(Nbbc):
+                for l in range(Nbbc):
+                    X[:, n] = y ** i * z ** j * b ** k * bc ** l
                     n += 1
 
     # Solve the linear problem
@@ -32,24 +32,62 @@ def fit(y, z, b, Nyz, Nbbc):
 
 def get_S(y, z, b, Nyz, Nbbc, w):
 
-    n = 0
-    m = 0
-    c = np.zeros(Nyz * Nyz)
+    # bbc basis
     bc = np.sqrt(1 - b ** 2)
-    for i in range(Nbbc):
-        for j in range(Nbbc):
-            for k in range(Nyz):
-                for l in range(Nyz):
-                    c[n] += w[m] * b ** i * bc ** j
-                    m += 1
+    bbc = np.zeros(Nbbc ** 2)
+    bbc[0] = 1
+    for l in range(1, Nbbc):
+        bbc[l] = bc * bbc[l - 1]
+    for k in range(1, Nbbc):
+        bbc[k * Nbbc] = b * bbc[(k - 1) * Nbbc]
+        for l in range(1, Nbbc):
+            bbc[k * Nbbc + l] = bc * bbc[k * Nbbc + l - 1]
+
+    # coefficients in the y-z basis
+    n = 0
+    m = np.arange(Nbbc ** 2)
+    c = np.zeros(Nyz * Nyz)
+    for i in range(Nyz):
+        for j in range(Nyz):
+            c[n] = w[m + Nbbc ** 2 * n].dot(bbc[m])
             n += 1
 
+    # Easy way out
     n = 0
     S = 0
     for i in range(Nyz):
         for j in range(Nyz):
             S += c[n] * y ** i * z ** j
             n += 1
+    return S
+
+    # Construct `c` in actual polynomial basis: `p`
+    # A3 transforms from c to p
+    # sA3 = np.zeros(((2 * Nyz + 1) ** 2), (Nyz * Nyz))
+    for i in range(Nyz):
+        for j in range(Nyz):
+            pass
+
+    # Polynomial basis
+    npts = len(y)
+    deg = Nyz
+    B = np.zeros((npts, (deg + 1) ** 2))
+    for n in range((deg + 1) ** 2):
+        if n == 0:
+            B[:, n] = 1
+        l = int(np.floor(np.sqrt(n)))
+        m = n - l * l - l
+        mu = l - m
+        nu = l + m
+        if nu % 2 == 0:
+            i = mu // 2
+            j = nu // 2
+            k = 0
+        else:
+            i = (mu - 1) // 2
+            j = (nu - 1) // 2
+            k = 1
+        B[:, n] = x ** i * y ** j * z ** k
 
     return S
 
