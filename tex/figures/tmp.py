@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend("MacOSX")
 
 
-def get_S_exact(y, z, b):
+def get_S_exact(x, y, z, b):
     bc = np.sqrt(1 - b ** 2)
     ci = bc * y - b * z
     f1 = -b / z - ci
@@ -13,68 +13,15 @@ def get_S_exact(y, z, b):
     return S
 
 
-def fit(y, z, b, Nyz, Nbbc):
+def fit(x, y, z, b, deg, Nb):
     # Construct the design matrix
+    N = (deg + 1) ** 2
     n = 0
-    X = np.zeros((len(y * z * b), Nyz ** 2 * Nbbc ** 2))
+    X = np.zeros((len(y * z * b), N * Nb ** 2))
     bc = np.sqrt(1 - b ** 2)
-    for i in range(Nyz):
-        for j in range(Nyz):
-            for k in range(Nbbc):
-                for l in range(Nbbc):
-                    X[:, n] = y ** i * z ** j * b ** k * bc ** l
-                    n += 1
+    for n in range(N):
 
-    # Solve the linear problem
-    w = np.linalg.solve(X.T.dot(X), X.T.dot(S))
-    return w
-
-
-def get_S(y, z, b, Nyz, Nbbc, w):
-
-    # bbc basis
-    bc = np.sqrt(1 - b ** 2)
-    bbc = np.zeros(Nbbc ** 2)
-    bbc[0] = 1
-    for l in range(1, Nbbc):
-        bbc[l] = bc * bbc[l - 1]
-    for k in range(1, Nbbc):
-        bbc[k * Nbbc] = b * bbc[(k - 1) * Nbbc]
-        for l in range(1, Nbbc):
-            bbc[k * Nbbc + l] = bc * bbc[k * Nbbc + l - 1]
-
-    # coefficients in the y-z basis
-    n = 0
-    m = np.arange(Nbbc ** 2)
-    c = np.zeros(Nyz * Nyz)
-    for i in range(Nyz):
-        for j in range(Nyz):
-            c[n] = w[m + Nbbc ** 2 * n].dot(bbc[m])
-            n += 1
-
-    # Easy way out
-    n = 0
-    S = 0
-    for i in range(Nyz):
-        for j in range(Nyz):
-            S += c[n] * y ** i * z ** j
-            n += 1
-    return S
-
-    # Construct `c` in actual polynomial basis: `p`
-    # A3 transforms from c to p
-    # sA3 = np.zeros(((2 * Nyz + 1) ** 2), (Nyz * Nyz))
-    for i in range(Nyz):
-        for j in range(Nyz):
-            pass
-
-    # Polynomial basis
-    npts = len(y)
-    deg = Nyz
-    B = np.zeros((npts, (deg + 1) ** 2))
-    for n in range((deg + 1) ** 2):
-        if n == 0:
-            B[:, n] = 1
+        # Get the nth term in the poly basis
         l = int(np.floor(np.sqrt(n)))
         m = n - l * l - l
         mu = l - m
@@ -87,7 +34,39 @@ def get_S(y, z, b, Nyz, Nbbc, w):
             i = (mu - 1) // 2
             j = (nu - 1) // 2
             k = 1
-        B[:, n] = x ** i * y ** j * z ** k
+        term = x ** i * y ** j * z ** k
+
+        for p in range(Nb):
+            for q in range(Nb):
+                X[:, n] = term * b ** p * bc ** q
+                n += 1
+
+    # Solve the linear problem
+    w = np.linalg.solve(X.T.dot(X), X.T.dot(S))
+    return w
+
+
+def get_S(x, y, z, b, deg, Nb, w):
+
+    # Compute the bbc basis
+    bc = np.sqrt(1 - b ** 2)
+    bbc = np.zeros(Nb ** 2)
+    bbc[0] = 1
+    for l in range(1, Nb):
+        bbc[l] = bc * bbc[l - 1]
+    for k in range(1, Nb):
+        bbc[k * Nb] = b * bbc[(k - 1) * Nb]
+        for l in range(1, Nb):
+            bbc[k * Nb + l] = bc * bbc[k * Nb + l - 1]
+
+    # coefficients in the polynomial basis
+    N = (deg + 1) ** 2
+    m = np.arange(Nb ** 2)
+    c = np.zeros(N)
+    for n in range(N):
+        c[n] = w[m + Nb ** 2 * n].dot(bbc[m])
+
+    breakpoint()
 
     return S
 
@@ -99,15 +78,16 @@ xygrid = np.linspace(-1, 1, res)
 x, y, b = np.meshgrid(xygrid, xygrid, bgrid)
 z = np.sqrt(1 - x ** 2 - y ** 2)
 idx = np.isfinite(z) & (y > b * np.sqrt(1 - x ** 2))
+x = x[idx]
 y = y[idx]
 z = z[idx]
 b = b[idx]
-S = get_S_exact(y, z, b)
+S = get_S_exact(x, y, z, b)
 
 # Solve
-Nyz = 3
-Nbbc = 3
-w = fit(y, z, b, Nyz, Nbbc)
+deg = 5
+Nb = 3
+w = fit(x, y, z, b, deg, Nb)
 
 # Visualize the fit
 res = 300
@@ -122,9 +102,9 @@ bs = np.linspace(-1, 0, 10)[:-1]
 fig, ax = plt.subplots(3, len(bs))
 for i, b in enumerate(bs):
     night = y < b * np.sqrt(1 - x ** 2)
-    Sapprox = get_S(y, z, b, Nyz, Nbbc, w)
+    Sapprox = get_S(x, y, z, b, deg, Nb, w)
     Sapprox[night] *= 0
-    Sexact = get_S_exact(y, z, b)
+    Sexact = get_S_exact(x, y, z, b)
 
     ax[0, i].imshow(
         Sexact.reshape(res, res), origin="lower", extent=(-1, 1, -1, 1), vmin=0, vmax=1,
