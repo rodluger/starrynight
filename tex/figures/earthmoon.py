@@ -88,12 +88,11 @@ for reflected in (True, False):
             map_e.show(ax=ax_im[n], cmap=cmap, theta=theta[i], res=res, grid=False)
 
         # Outline
-        if not reflected:
-            x = np.linspace(-1, 1, 1000)
-            y = np.sqrt(1 - x ** 2)
-            f = 0.98
-            ax_im[n].plot(f * x, f * y, "k-", lw=0.5, zorder=0)
-            ax_im[n].plot(f * x, -f * y, "k-", lw=0.5, zorder=0)
+        x = np.linspace(-1, 1, 1000)
+        y = np.sqrt(1 - x ** 2)
+        f = 0.98
+        ax_im[n].plot(f * x, f * y, "k-", lw=0.5, zorder=0)
+        ax_im[n].plot(f * x, -f * y, "k-", lw=0.5, zorder=0)
 
         # Occultor
         x = np.linspace(xo[i] - ro + 1e-5, xo[i] + ro - 1e-5, res)
