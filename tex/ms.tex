@@ -194,8 +194,17 @@ The angular extent of the terminator past $\nicefrac{\pi}{2}$ is
 
 \subsection{Non-Lambertian scatterers}
 \label{sec:nonlambertian}
-In principle, we can just change $\mathbf{I}$.
+Just change $\mathbf{I}$.
 
+\begin{figure}[h!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/oren_nayar.pdf}
+        \oscaption{oren_nayar}{%
+            Phase curves for different surface roughness coefficients.
+            \label{fig:oren_nayar}
+        }
+    \end{centering}
+\end{figure}
 %
 
 
@@ -809,6 +818,8 @@ nightside from the integration region.
 For computational efficiency, in practice we compute the integral of the
 intensity-weighted basis directly,
 %
+\xxx{NO LONGER TRUE. FIX THIS DEFINITION.}
+%
 \begin{align}
     \label{eq:rTI}
     \overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(b, r_s) & \equiv
@@ -994,6 +1005,8 @@ Finally, for future reference, we can also compute what we will call the
     \mathbf{y}
     \quad,
 \end{proof}
+%
+\xxx{FIX THIS DEFINITION. NO LONGER HOW WE COMPUTE IT.}
 %
 This is the flux we would get if we placed a \emph{negative} illumination
 source at the antipode $(-x_s, -y_s, -z_s)$ of the true source, and
