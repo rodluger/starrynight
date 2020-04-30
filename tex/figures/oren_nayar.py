@@ -1,163 +1,128 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import colors
+import starry
 
+# Instantiate a starry map
+starry.config.lazy = False
+map = starry.Map(reflected=True)
 
-def fig9():
-    """Reproduce Figure 9 in Oren & Nayar (1994)."""
-    theta_i = 75 * np.pi / 180
-    fig, ax = plt.subplots(1)
-    for sig in np.array([0, 10, 20, 40]) * np.pi / 180:
-        sig2 = sig ** 2
-        A = 1 - 0.5 * sig2 / (sig2 + 0.33)
-        B = 0.45 * sig2 / (sig2 + 0.09)
-        theta_r = np.linspace(-90, 90, 10000) * np.pi / 180
-        alpha = np.maximum(theta_r, theta_i)
-        beta = np.minimum(theta_r, theta_i)
-        I = 0.9 / np.pi * np.cos(theta_i) * (A + B * np.sin(alpha) * np.tan(beta))
-        plt.plot(theta_r, I)
-    plt.ylim(0, 0.16)
-    return fig, ax
-
-
-def R(axis=[0, 1, 0], theta=0):
-    """Axis-angle rotation matrix in 3D."""
-    axis = np.array(axis) / np.sqrt(np.sum(np.array(axis) ** 2))
-    cost = np.cos(theta)
-    sint = np.sin(theta)
-    return np.reshape(
-        [
-            cost + axis[0] * axis[0] * (1 - cost),
-            axis[0] * axis[1] * (1 - cost) - axis[2] * sint,
-            axis[0] * axis[2] * (1 - cost) + axis[1] * sint,
-            axis[1] * axis[0] * (1 - cost) + axis[2] * sint,
-            cost + axis[1] * axis[1] * (1 - cost),
-            axis[1] * axis[2] * (1 - cost) - axis[0] * sint,
-            axis[2] * axis[0] * (1 - cost) - axis[1] * sint,
-            axis[2] * axis[1] * (1 - cost) + axis[0] * sint,
-            cost + axis[2] * axis[2] * (1 - cost),
-        ],
-        [3, 3],
-    )
-
-
-@np.vectorize
-def Lambertian(b, theta, x, y):
-    """Lambertian intensity at a point on the surface."""
-    ct = np.cos(theta)
-    st = np.sin(theta)
-    bc = np.sqrt(1 - b ** 2)
-    z = np.sqrt(1 - x ** 2 - y ** 2)
-    ci = -bc * st * x + bc * ct * y - b * z
-    return np.maximum(0, ci)
-
-
-@np.vectorize
-def OrenNayarExplicit(b, theta, sig, x, y):
-    """Oren-Nayar intensity at a point on the surface (computed explicitly)."""
-
-    # The three vectors in the observer (sky) frame
-    bc = np.sqrt(1 - b ** 2)
-    s0 = np.array([-bc * np.sin(theta), bc * np.cos(theta), -b])  # source vector
-    v0 = np.array([0, 0, 1.0])  # observer vector
-    n0 = np.array([x, y, np.sqrt(1 - x ** 2 - y ** 2)])  # normal vector
-
-    # Transform to the surface normal frame
-    n = np.array([0, 0, 1.0])  # normal vector
-
-    # Find the rotation matrix that transforms to
-    # the normal frame
-    axis = np.cross(n0, n)
-    costhet = np.dot(n0, n)
-    thet = np.arccos(costhet)
-    Rn = R(axis, -thet)
-
-    # Check that the sign is right
-    # Rn.dot(n0) should be equal to n
-    Rnp = R(axis, thet)
-    if Rnp.dot(n0)[2] > Rn.dot(n0)[2]:
-        Rn = Rnp
-
-    # Rotate s and v
-    s = Rn.dot(s0)
-    v = Rn.dot(v0)
-
-    # Compute the angles
-    theta_r = np.arccos(np.dot(v, n))
-    theta_i = np.arccos(np.dot(s, n))
-    if theta_i >= np.pi / 2:
-        # Unilluminated
-        return 0
-
-    phi_r = np.arctan2(v[1], v[0])
-    phi_i = np.arctan2(s[1], s[0])
-    del_phi = phi_i - phi_r
-
-    # Now compute the intensity
-    alpha = max(theta_r, theta_i)
-    beta = min(theta_r, theta_i)
-    f = max(0, np.cos(del_phi)) * np.sin(alpha) * np.tan(beta)
-    sig2 = sig ** 2
-    A = 1 - 0.5 * sig2 / (sig2 + 0.33)
-    B = 0.45 * sig2 / (sig2 + 0.09)
-    S = A + B * f
-
-    return Lambertian(b, theta, x, y) * S
-
-
-@np.vectorize
-def OrenNayar(b, theta, sig, x, y):
-    """Oren-Nayar intensity at a point on the surface (simplified)."""
-    ct = np.cos(theta)
-    st = np.sin(theta)
-    bc = np.sqrt(1 - b ** 2)
-    z = np.sqrt(1 - x ** 2 - y ** 2)
-    ci = -bc * st * x + bc * ct * y - b * z
-    f1 = -b / z - ci
-    f2 = -b / ci - z
-    sig2 = sig ** 2
-    A = 1 - 0.5 * sig2 / (sig2 + 0.33)
-    B = 0.45 * sig2 / (sig2 + 0.09)
-    S = A + B * np.maximum(0, np.minimum(f1, f2))
-    return Lambertian(b, theta, x, y) * S
-
-
-@np.vectorize
-def OrenNayarExpansion(b, theta, sig, x, y, deg):
-    """Oren-Nayar intensity at a point on the surface (polynomial expansion)."""
-    ct = np.cos(theta)
-    st = np.sin(theta)
-    bc = np.sqrt(1 - b ** 2)
-    z = np.sqrt(1 - x ** 2 - y ** 2)
-    ci = -bc * st * x + bc * ct * y - b * z
-    f1 = -b / z - ci
-    f2 = -b / ci - z
-    sig2 = sig ** 2
-    A = 1 - 0.5 * sig2 / (sig2 + 0.33)
-    B = 0.45 * sig2 / (sig2 + 0.09)
-    S = A + B * np.maximum(0, np.minimum(f1, f2))
-    return Lambertian(b, theta, x, y) * S
-
-
-# Params
+# Settings
 res = 300
-theta = np.pi / 3
-b = -0.5
-sig = 1.0
-deg = 3
+theta_im = np.linspace(0, 360, 9)[1:-1] * np.pi / 180
+theta_lr = np.linspace(0, 360, 20) * np.pi / 180
+theta_hr = np.linspace(0, 360, 1000) * np.pi / 180
+rs = [0, 15, 30, 45]
 
-# Grid up the surface
-grid = np.linspace(-1, 1, res)
-x, y = np.meshgrid(grid, grid)
+# Set up the figure
+fig = plt.figure(figsize=(12, 8))
+ax_im = np.array(
+    [
+        [
+            plt.subplot2grid(
+                (4 * len(rs), len(theta_im)), (2 * i, j), rowspan=2
+            )
+            for j in range(len(theta_im))
+        ]
+        for i in range(len(rs))
+    ]
+)
+ax_lc = plt.subplot2grid(
+    (4 * len(rs), len(theta_im)),
+    (2 * len(rs) + 1, 0),
+    colspan=len(theta_im),
+    rowspan=2 * len(rs) - 1,
+)
 
-# DEBUG
-plt.switch_backend("MacOSX")
-fig, ax = plt.subplots(1, 6)
+# Illumination colormap
+cmap = colors.LinearSegmentedColormap.from_list("illum", ["k", "k"], 256)
+cmap._init()
+alphas = np.linspace(1.0, 0.0, cmap.N + 3)
+cmap._lut[:, -1] = alphas
+cmap.set_under((0, 0, 0, 1))
+cmap.set_over((0, 0, 0, 0))
 
-for i, sig in enumerate(np.array([0, 10, 20, 40, 60, 90]) * np.pi / 180):
-    I = OrenNayar(b, theta, sig, x, y)
-    ax[i].imshow(
-        I, origin="lower", extent=(-1, 1, -1, 1), cmap="plasma", vmax=1, vmin=0
+# Plot the images & light curves
+for i, roughness in enumerate(rs):
+
+    # Set the roughness in degrees
+    map.roughness = roughness
+
+    # Plot the images for all phases
+    img = map.render(
+        xs=np.sin(theta_im),
+        ys=0,
+        zs=-np.cos(theta_im),
+        res=res,
+        on94_exact=False,
     )
-    ax[i].axis("off")
+    for j in range(len(theta_im)):
+        if j < len(theta_im) - 1:
+            ax_im[i, j].imshow(
+                np.pi * img[j],
+                origin="lower",
+                extent=(-1, 1, -1, 1),
+                cmap=cmap,
+                vmin=0,
+                vmax=1,
+            )
+            ax_im[i, j].add_artist(plt.Circle((0, 0), 1, ec="w", fc="none"))
+        else:
+            ax_im[i, j].plot([0, 1], [0, 0], "C{}".format(i), lw=3)
+            ax_im[i, j].set_xlim(0, 2.5)
+            ax_im[i, j].set_ylim(-1, 1)
+            ax_im[i, j].annotate(
+                r"$\sigma = {}^\circ$".format(roughness),
+                xy=(1, 0),
+                xycoords="data",
+                xytext=(15, 0),
+                textcoords="offset points",
+                ha="left",
+                va="center",
+                fontsize=14,
+                color="k",
+            )
+        ax_im[i, j].axis("off")
 
-plt.show()
+    # Plot the analytic light curve
+    ax_lc.plot(
+        theta_hr / (2 * np.pi),
+        map.flux(xs=np.sin(theta_hr), ys=0, zs=-np.cos(theta_hr)),
+        color="C{}".format(i),
+    )
+
+    # Render the exact Oren-Nayar image and compute
+    # the numerical flux based on their Equation (30)
+    img = map.render(
+        xs=np.sin(theta_lr),
+        ys=0,
+        zs=-np.cos(theta_lr),
+        res=res,
+        on94_exact=True,
+    )
+    ax_lc.plot(
+        theta_lr / (2 * np.pi),
+        np.nansum(img, axis=(1, 2)) * 4 / res ** 2,
+        "o",
+        ms=3,
+        color="C{}".format(i),
+    )
+
+ax_lc.set_xlabel("illumination phase", fontsize=18)
+ax_lc.set_ylabel("observed intensity", fontsize=18)
+ax_lc.axhline(2 / 3, color="C0", lw=1, ls="--")
+ax_lc.annotate(
+    "lambertian geometric albedo",
+    xy=(0, 2 / 3),
+    xycoords="data",
+    xytext=(15, 5),
+    textcoords="offset points",
+    ha="left",
+    va="bottom",
+    fontsize=10,
+    color="C0",
+)
+ax_lc.set_xlim(0, 1)
+ax_lc.set_ylim(-0.05, 0.75)
+
+fig.savefig("oren_nayar.pdf", bbox_inches="tight", dpi=300)
