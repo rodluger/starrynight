@@ -158,102 +158,101 @@ def get_starry_args(time):
     return inc, obl, dict(theta=theta, xo=xo, yo=yo, ro=ro, xs=xs, ys=ys, zs=zs)
 
 
-# Grab the PHEMU light curve
-time, flux, phemu_model = get_phemu_data()
+# DEBUG
+if False:
 
-# Instantiate a starry map & get geometrical parameters
-map = starry.Map(ydeg=20, reflected=True)
-map.inc, map.obl, kwargs = get_starry_args(time)
+    # Grab the PHEMU light curve
+    time, flux, phemu_model = get_phemu_data()
 
-# Load the Galileo SSI / Voyager composite
-# https://astrogeology.usgs.gov/search/map/Io/
-# Voyager-Galileo/Io_GalileoSSI-Voyager_Global_Mosaic_1km
-map.load("data/io_mosaic.jpg")
+    # Instantiate a starry map & get geometrical parameters
+    map = starry.Map(ydeg=20, reflected=True)
+    map.inc, map.obl, kwargs = get_starry_args(time)
 
-# Model
-xo = kwargs.pop("xo")
-yo = kwargs.pop("yo")
+    # Load the Galileo SSI / Voyager composite
+    # https://astrogeology.usgs.gov/search/map/Io/
+    # Voyager-Galileo/Io_GalileoSSI-Voyager_Global_Mosaic_1km
+    map.load("data/io_mosaic.jpg")
 
+    # Model
+    xo = kwargs.pop("xo")
+    yo = kwargs.pop("yo")
 
-# Very rough uncertainty (eyeballed)
-ferr = 0.02
+    # Very rough uncertainty (eyeballed)
+    ferr = 0.02
 
+    def loss(params):
+        dx, dy, amp = params
+        model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
+        return np.sum((flux - model) ** 2 / ferr ** 2)
 
-def loss(params):
-    dx, dy, amp = params
-    model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
-    return np.sum((flux - model) ** 2 / ferr ** 2)
+    def plot(params):
+        plt.switch_backend("MacOSX")
+        dx, dy, amp = params
+        model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
+        plt.plot(flux, "k.")
+        plt.plot(model)
+        plt.plot(phemu_model)
+        plt.show()
 
+    dx, dy, amp = -0.1, -0.5, 66
+    res = minimize(loss, [dx, dy, amp])
 
-def plot(params):
-    plt.switch_backend("MacOSX")
-    dx, dy, amp = params
-    model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
-    plt.plot(flux, "k.")
-    plt.plot(model)
-    plt.plot(phemu_model)
-    plt.show()
+    breakpoint()
 
+    # Set up the plot
+    nim = 7
+    res = 300
+    fig = plt.figure(figsize=(12, 5))
+    ax_im = [plt.subplot2grid((4, nim), (0, n)) for n in range(nim)]
+    ax_lc = plt.subplot2grid((4, nim), (1, 0), colspan=nim, rowspan=3)
 
-dx, dy, amp = -0.1, -0.5, 66
-res = minimize(loss, [dx, dy, amp])
+    # Plot the light curve
+    t = time.value - 55169
+    ax_lc.plot(t, flux, "k.", alpha=0.75, ms=4, label="data")
+    ax_lc.plot(t, model, label="model")
 
-breakpoint()
+    # Plot the images
+    for n in range(nim):
 
-# Set up the plot
-nim = 7
-res = 300
-fig = plt.figure(figsize=(12, 5))
-ax_im = [plt.subplot2grid((4, nim), (0, n)) for n in range(nim)]
-ax_lc = plt.subplot2grid((4, nim), (1, 0), colspan=nim, rowspan=3)
+        i1 = np.argmax(t > 0.37175)
+        i2 = np.argmax(t > 0.37445)
+        i = int(np.linspace(i1, i2, nim)[n])
+        ax_lc.axvline(t[i], color="C1", lw=1, ls="--")
 
-# Plot the light curve
-t = time.value - 55169
-ax_lc.plot(t, flux, "k.", alpha=0.75, ms=4, label="data")
-ax_lc.plot(t, model, label="model")
+        # Show the image
+        map.show(
+            ax=ax_im[n],
+            cmap="plasma",
+            xs=kwargs["xs"],
+            ys=kwargs["ys"],
+            zs=kwargs["zs"],
+            theta=kwargs["theta"],
+            res=res,
+            grid=False,
+        )
 
-# Plot the images
-for n in range(nim):
+        # Occultor
+        xo = kwargs["xo"][i]
+        yo = kwargs["yo"][i]
+        ro = kwargs["ro"]
+        x = np.linspace(xo - ro + 1e-5, xo + ro - 1e-5, res)
+        y1 = yo - np.sqrt(ro ** 2 - (x - xo) ** 2)
+        y2 = yo + np.sqrt(ro ** 2 - (x - xo) ** 2)
+        ax_im[n].plot(x, y1, "k-", lw=0.5, zorder=0)
+        ax_im[n].plot(x, y2, "k-", lw=0.5, zorder=0)
+        ax_im[n].fill_between(
+            x, y1, y2, fc="#aaaaaa", zorder=1, clip_on=False, ec="k", lw=0.5
+        )
 
-    i1 = np.argmax(t > 0.37175)
-    i2 = np.argmax(t > 0.37445)
-    i = int(np.linspace(i1, i2, nim)[n])
-    ax_lc.axvline(t[i], color="C1", lw=1, ls="--")
+        ax_im[n].axis("off")
+        ax_im[n].set_xlim(-1.05, 1.05)
+        ax_im[n].set_ylim(-1.05, 1.05)
+        ax_im[n].set_rasterization_zorder(0)
 
-    # Show the image
-    map.show(
-        ax=ax_im[n],
-        cmap="plasma",
-        xs=kwargs["xs"],
-        ys=kwargs["ys"],
-        zs=kwargs["zs"],
-        theta=kwargs["theta"],
-        res=res,
-        grid=False,
-    )
+    # Appearance
+    ax_lc.set_xlabel("time [MJD - 55169]")
+    ax_lc.set_ylabel("normalized flux")
+    ax_lc.legend(loc="lower right", fontsize=12)
 
-    # Occultor
-    xo = kwargs["xo"][i]
-    yo = kwargs["yo"][i]
-    ro = kwargs["ro"]
-    x = np.linspace(xo - ro + 1e-5, xo + ro - 1e-5, res)
-    y1 = yo - np.sqrt(ro ** 2 - (x - xo) ** 2)
-    y2 = yo + np.sqrt(ro ** 2 - (x - xo) ** 2)
-    ax_im[n].plot(x, y1, "k-", lw=0.5, zorder=0)
-    ax_im[n].plot(x, y2, "k-", lw=0.5, zorder=0)
-    ax_im[n].fill_between(
-        x, y1, y2, fc="#aaaaaa", zorder=1, clip_on=False, ec="k", lw=0.5
-    )
-
-    ax_im[n].axis("off")
-    ax_im[n].set_xlim(-1.05, 1.05)
-    ax_im[n].set_ylim(-1.05, 1.05)
-    ax_im[n].set_rasterization_zorder(0)
-
-# Appearance
-ax_lc.set_xlabel("time [MJD - 55169]")
-ax_lc.set_ylabel("normalized flux")
-ax_lc.legend(loc="lower right", fontsize=12)
-
-# Save
-fig.savefig("io_europa.pdf", bbox_inches="tight", dpi=500)
+    # Save
+    fig.savefig("io_europa.pdf", bbox_inches="tight", dpi=500)
