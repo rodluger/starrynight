@@ -7,7 +7,7 @@ from astropy.timeseries import TimeSeries
 from astroquery.jplhorizons import Horizons
 import os
 import starry
-from scipy.optimize import minimize
+from matplotlib.patches import ConnectionPatch
 
 
 starry.config.lazy = False
@@ -158,101 +158,104 @@ def get_starry_args(time):
     return inc, obl, dict(theta=theta, xo=xo, yo=yo, ro=ro, xs=xs, ys=ys, zs=zs)
 
 
-# DEBUG
-if False:
+# Grab the PHEMU light curve
+time, flux, phemu_model = get_phemu_data()
 
-    # Grab the PHEMU light curve
-    time, flux, phemu_model = get_phemu_data()
+# Instantiate a starry map & get geometrical parameters
+map = starry.Map(ydeg=15, reflected=True)
+map.inc, map.obl, kwargs = get_starry_args(time)
 
-    # Instantiate a starry map & get geometrical parameters
-    map = starry.Map(ydeg=20, reflected=True)
-    map.inc, map.obl, kwargs = get_starry_args(time)
+# Load the Galileo SSI / Voyager composite
+# https://astrogeology.usgs.gov/search/map/Io/
+# Voyager-Galileo/Io_GalileoSSI-Voyager_Global_Mosaic_1km
+map.load("data/io_mosaic.jpg")
 
-    # Load the Galileo SSI / Voyager composite
-    # https://astrogeology.usgs.gov/search/map/Io/
-    # Voyager-Galileo/Io_GalileoSSI-Voyager_Global_Mosaic_1km
-    map.load("data/io_mosaic.jpg")
+# Fitted params (see `io_europa.ipynb`)
+dx = 0.06095157484199265
+dy = 0.01138082906950788
+amp = 43.93375998007594
+europa_amp = 0.46504556572406075
+roughness = 141.37543727300337
 
-    # Model
-    xo = kwargs.pop("xo")
-    yo = kwargs.pop("yo")
+# Compute the model
+map.roughness = roughness
+kwargs["xo"] += dx
+kwargs["yo"] += dy
+model = europa_amp + amp * map.flux(**kwargs)
 
-    # Very rough uncertainty (eyeballed)
-    ferr = 0.02
+# Set up the plot
+nim = 7
+res = 300
+fig = plt.figure(figsize=(12, 5))
+fig.subplots_adjust(hspace=0.5)
+ax_im = [plt.subplot2grid((4, nim), (0, n)) for n in range(nim)]
+ax_lc = plt.subplot2grid((4, nim), (1, 0), colspan=nim, rowspan=3)
 
-    def loss(params):
-        dx, dy, amp = params
-        model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
-        return np.sum((flux - model) ** 2 / ferr ** 2)
+# Plot the light curve
+t = time.value - 55169
+ax_lc.plot(t, flux, "k.", alpha=0.75, ms=4, label="data")
+ax_lc.plot(t, model, label="model")
+ax_lc.margins(0, None)
+ax_lc.set_ylim(0.6, 1.1)
 
-    def plot(params):
-        plt.switch_backend("MacOSX")
-        dx, dy, amp = params
-        model = amp * map.flux(xo=xo + dx, yo=yo + dy, **kwargs)
-        plt.plot(flux, "k.")
-        plt.plot(model)
-        plt.plot(phemu_model)
-        plt.show()
+# Plot the images
+for n in range(nim):
 
-    dx, dy, amp = -0.1, -0.5, 66
-    res = minimize(loss, [dx, dy, amp])
+    i1 = np.argmax(t > 0.37175)
+    i2 = np.argmax(t > 0.37445)
+    i = int(np.linspace(i1, i2, nim)[n])
 
-    breakpoint()
+    con = ConnectionPatch(
+        xyA=(0, -1.5),
+        xyB=(t[i], 1.1),
+        coordsA="data",
+        coordsB="data",
+        axesA=ax_im[n],
+        axesB=ax_lc,
+        color="k",
+        alpha=0.25,
+    )
+    ax_im[n].add_artist(con)
 
-    # Set up the plot
-    nim = 7
-    res = 300
-    fig = plt.figure(figsize=(12, 5))
-    ax_im = [plt.subplot2grid((4, nim), (0, n)) for n in range(nim)]
-    ax_lc = plt.subplot2grid((4, nim), (1, 0), colspan=nim, rowspan=3)
+    # Show the image
+    map.show(
+        ax=ax_im[n],
+        cmap="plasma",
+        xs=kwargs["xs"],
+        ys=kwargs["ys"],
+        zs=kwargs["zs"],
+        theta=kwargs["theta"],
+        res=res,
+        grid=False,
+    )
+    x = np.linspace(-1, 1, 1000)
+    y1 = -np.sqrt(0.975 ** 2 - x ** 2)
+    y2 = np.sqrt(0.975 ** 2 - x ** 2)
+    ax_im[n].plot(x, y1, "C0-", lw=0.5, zorder=0)
+    ax_im[n].plot(x, y2, "C0-", lw=0.5, zorder=0)
 
-    # Plot the light curve
-    t = time.value - 55169
-    ax_lc.plot(t, flux, "k.", alpha=0.75, ms=4, label="data")
-    ax_lc.plot(t, model, label="model")
+    # Occultor
+    xo = kwargs["xo"][i]
+    yo = kwargs["yo"][i]
+    ro = kwargs["ro"]
+    x = np.linspace(xo - ro + 1e-5, xo + ro - 1e-5, res)
+    y1 = yo - np.sqrt(ro ** 2 - (x - xo) ** 2)
+    y2 = yo + np.sqrt(ro ** 2 - (x - xo) ** 2)
+    ax_im[n].plot(x, y1, "k-", lw=0.5, zorder=0, clip_on=False)
+    ax_im[n].plot(x, y2, "k-", lw=0.5, zorder=0, clip_on=False)
+    ax_im[n].fill_between(
+        x, y1, y2, fc="#aaaaaa", zorder=1, clip_on=False, ec="none", lw=0.5
+    )
 
-    # Plot the images
-    for n in range(nim):
+    ax_im[n].axis("off")
+    ax_im[n].set_xlim(-1.5, 1.5)
+    ax_im[n].set_ylim(-1.5, 1.5)
+    ax_im[n].set_rasterization_zorder(0)
 
-        i1 = np.argmax(t > 0.37175)
-        i2 = np.argmax(t > 0.37445)
-        i = int(np.linspace(i1, i2, nim)[n])
-        ax_lc.axvline(t[i], color="C1", lw=1, ls="--")
+# Appearance
+ax_lc.set_xlabel("time [MJD - 55169]")
+ax_lc.set_ylabel("normalized flux")
+ax_lc.legend(loc="lower right", fontsize=12)
 
-        # Show the image
-        map.show(
-            ax=ax_im[n],
-            cmap="plasma",
-            xs=kwargs["xs"],
-            ys=kwargs["ys"],
-            zs=kwargs["zs"],
-            theta=kwargs["theta"],
-            res=res,
-            grid=False,
-        )
-
-        # Occultor
-        xo = kwargs["xo"][i]
-        yo = kwargs["yo"][i]
-        ro = kwargs["ro"]
-        x = np.linspace(xo - ro + 1e-5, xo + ro - 1e-5, res)
-        y1 = yo - np.sqrt(ro ** 2 - (x - xo) ** 2)
-        y2 = yo + np.sqrt(ro ** 2 - (x - xo) ** 2)
-        ax_im[n].plot(x, y1, "k-", lw=0.5, zorder=0)
-        ax_im[n].plot(x, y2, "k-", lw=0.5, zorder=0)
-        ax_im[n].fill_between(
-            x, y1, y2, fc="#aaaaaa", zorder=1, clip_on=False, ec="k", lw=0.5
-        )
-
-        ax_im[n].axis("off")
-        ax_im[n].set_xlim(-1.05, 1.05)
-        ax_im[n].set_ylim(-1.05, 1.05)
-        ax_im[n].set_rasterization_zorder(0)
-
-    # Appearance
-    ax_lc.set_xlabel("time [MJD - 55169]")
-    ax_lc.set_ylabel("normalized flux")
-    ax_lc.legend(loc="lower right", fontsize=12)
-
-    # Save
-    fig.savefig("io_europa.pdf", bbox_inches="tight", dpi=500)
+# Save
+fig.savefig("io_europa.pdf", bbox_inches="tight", dpi=500)

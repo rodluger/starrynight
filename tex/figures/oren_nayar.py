@@ -10,7 +10,7 @@ map = starry.Map(reflected=True)
 # Settings
 res = 300
 theta_im = np.linspace(0, 360, 9)[1:-1] * np.pi / 180
-theta_lr = np.linspace(0, 360, 20) * np.pi / 180
+theta_lr = np.linspace(0, 360, 100) * np.pi / 180
 theta_hr = np.linspace(0, 360, 1000) * np.pi / 180
 rs = [0, 15, 30, 45]
 
@@ -19,9 +19,7 @@ fig = plt.figure(figsize=(12, 8))
 ax_im = np.array(
     [
         [
-            plt.subplot2grid(
-                (4 * len(rs), len(theta_im)), (2 * i, j), rowspan=2
-            )
+            plt.subplot2grid((4 * len(rs), len(theta_im)), (2 * i, j), rowspan=2)
             for j in range(len(theta_im))
         ]
         for i in range(len(rs))
@@ -50,11 +48,7 @@ for i, roughness in enumerate(rs):
 
     # Plot the images for all phases
     img = map.render(
-        xs=np.sin(theta_im),
-        ys=0,
-        zs=-np.cos(theta_im),
-        res=res,
-        on94_exact=False,
+        xs=np.sin(theta_im), ys=0, zs=-np.cos(theta_im), res=res, on94_exact=False,
     )
     for j in range(len(theta_im)):
         if j < len(theta_im) - 1:
@@ -94,17 +88,13 @@ for i, roughness in enumerate(rs):
     # Render the exact Oren-Nayar image and compute
     # the numerical flux based on their Equation (30)
     img = map.render(
-        xs=np.sin(theta_lr),
-        ys=0,
-        zs=-np.cos(theta_lr),
-        res=res,
-        on94_exact=True,
+        xs=np.sin(theta_lr), ys=0, zs=-np.cos(theta_lr), res=res, on94_exact=True,
     )
     ax_lc.plot(
         theta_lr / (2 * np.pi),
         np.nansum(img, axis=(1, 2)) * 4 / res ** 2,
         "o",
-        ms=3,
+        ms=2,
         color="C{}".format(i),
     )
 
