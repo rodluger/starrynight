@@ -84,7 +84,14 @@ class Compare(object):
                         tt.reshape(z, [1, -1]),
                     )
                 )
-                I = self.map_ref.ops.compute_illumination_point_source(xyz, xs, ys, zs)
+                I = self.map_ref.ops.compute_illumination_point_source(
+                    xyz,
+                    xs,
+                    ys,
+                    zs,
+                    tt.as_tensor_variable(0.0),
+                    tt.as_tensor_variable(np.array(False)),
+                )
                 intensity = tt.switch(tt.isnan(intensity), intensity, intensity * I)[
                     0, 0
                 ]
@@ -122,7 +129,7 @@ class Compare(object):
                 alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
                 return self.map_ref.ops.flux_point_source(
-                    theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
+                    theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha, 0.0
                 )
 
             self._flux = theano.function(
@@ -149,7 +156,7 @@ class Compare(object):
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
                 return theano.grad(
                     self.map_ref.ops.flux_point_source(
-                        theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha
+                        theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha, 0.0
                     )[0],
                     ro,
                 )
