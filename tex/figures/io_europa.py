@@ -212,7 +212,7 @@ for n in range(nim):
         coordsB="data",
         axesA=ax_im[n],
         axesB=ax_lc,
-        color="k",
+        color="C0",
         alpha=0.25,
     )
     ax_im[n].add_artist(con)
@@ -228,11 +228,11 @@ for n in range(nim):
         res=res,
         grid=False,
     )
-    x = np.linspace(-1, 1, 1000)
+    x = np.linspace(-0.975, 0.975, 1000)
     y1 = -np.sqrt(0.975 ** 2 - x ** 2)
     y2 = np.sqrt(0.975 ** 2 - x ** 2)
-    ax_im[n].plot(x, y1, "C0-", lw=0.5, zorder=0)
-    ax_im[n].plot(x, y2, "C0-", lw=0.5, zorder=0)
+    ax_im[n].plot(x, y1, "k-", lw=0.5, zorder=0)
+    ax_im[n].plot(x, y2, "k-", lw=0.5, zorder=0)
 
     # Occultor
     xo = kwargs["xo"][i]
