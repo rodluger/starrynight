@@ -480,11 +480,11 @@ where
 %
 with $b_c \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 A quick note on the normalization of Equation~(\ref{eq:illum_poly}):
-if we place the illumination source along the $+z$-axis at $(0, 0, z_s)$,
+if we place the illumination source along the $+z$-axis at $(0, 0, 1)$,
 the body is seen at full phase, so $b = -1$, $b_c = 0$, and
 %
 \begin{proof}{}
-    \mathcal{I}_\text{full}(x, y) = \frac{\sqrt{1 - x^2 - y^2}}{\pi z_s^2}
+    \mathcal{I}_\text{full}(x, y) = \frac{\sqrt{1 - x^2 - y^2}}{\pi}
     \quad.
 \end{proof}
 %
@@ -495,27 +495,18 @@ by the observer if the body has unit spherical albedo,
     \mathcal{f}_\text{full} &=
     \int_{-1}^{1}
     \int_{-\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
-    \frac{\sqrt{1 - x^2 - y^2}}{\pi z_s^2}
+    \frac{\sqrt{1 - x^2 - y^2}}{\pi}
     \,
     \dd y
     \,
     \dd x
     \nonumber \\[0.5em]
-    &= \left(\frac{2}{3}\right) \frac{1}{z_s^2}
+    &= \frac{2}{3}
     \quad,
 \end{proof}
 %
-recalling that $z_s$ is measured in units of the illuminated body's
-radius. The factor of $\nicefrac{2}{3}$ is
-precisely the ratio of the geometric albedo to the spherical
-albedo of a Lambert sphere \citep[see, e.g.][]{Seager2010}. If we placed
-the source at $z_s = 1$, reflection off the illuminated body would increase
-the total flux measured at the observer by $\nicefrac{2}{3}$ (since, by
-assumption, the source flux at the observer is unity). As a sanity check,
-if all radiation incident on the body were instead scattered back toward the
-source (and hence toward the observer), $f_\text{full}$ would instead be unity:
-the flux at the observer would \emph{double}.
-\xxx{Is this explanation satisfactory? Does it make sense?}
+which is precisely the geometric albedo of a Lambert
+sphere \citep[see, e.g.][]{Seager2010}.
 
 In principle, our task is now straightforward: weight each of the
 terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them

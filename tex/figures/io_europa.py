@@ -154,7 +154,10 @@ def get_starry_args(time):
     xs = np.mean(eph_io["xs"].value)
     ys = np.mean(eph_io["ys"].value)
     zs = np.mean(eph_io["zs"].value)
-
+    rs = np.sqrt(xs ** 2 + ys ** 2 + zs ** 2)
+    xs /= rs
+    ys /= rs
+    zs /= rs
     return inc, obl, dict(theta=theta, xo=xo, yo=yo, ro=ro, xs=xs, ys=ys, zs=zs)
 
 
@@ -171,11 +174,11 @@ map.inc, map.obl, kwargs = get_starry_args(time)
 map.load("data/io_mosaic.jpg")
 
 # Fitted params (see `io_europa.ipynb`)
-dx = 0.06095157484199265
-dy = 0.01138082906950788
-amp = 43.93375998007594
-europa_amp = 0.46504556572406075
-roughness = 141.37543727300337
+dx = 0.06008183547425794
+dy = 0.004225467744578548
+amp = 1.5660538382102391
+europa_amp = 0.4695859742417233
+roughness = 55.766858039463685
 
 # Compute the model
 map.roughness = roughness
