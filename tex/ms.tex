@@ -129,7 +129,7 @@ on a grid of ${\sim}10^6$ points. The solutions agree to within the
 numerical precision of the brute force solution (about 100 ppm in this
 case).
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/earthmoon_emitted.pdf}
         \includegraphics[width=\linewidth]{figures/earthmoon.pdf}
@@ -153,7 +153,7 @@ case).
 
 Figure~\ref{fig:speed}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/speed.pdf}
         \oscaption{speed}{%
@@ -186,21 +186,87 @@ Figure~\ref{fig:speed}
 \subsection{Extended illumination source}
 \label{sec:extended}
 Planets to consider: 55 Cnc e, Kelt-9b.
-The angular extent of the terminator past $\nicefrac{\pi}{2}$ is
+Assuming $R_\star > R_p$, the angular extent of the terminator
+past $\nicefrac{\pi}{2}$ is
 %
-\begin{align}
-    \tau = \arcsin\left( \frac{\Delta R}{d} \right)
-\end{align}
+\begin{proof}{}
+    \label{eq:tau}
+    \tau &= \arcsin\left( \frac{R_\star - R_p}{d} \right)
+\end{proof}
+%
+where $R_\star$ is the radius of the star,
+$R_p$ is the radius of the planet, and $d$ is the separation of their
+centers.
+
+For Kelt-9b, $\nicefrac{R_p}{R_\star} = 0.083$ and
+$\nicefrac{a}{R_\star} = 3.16$, where $a$ is the semi-major axis of the
+planet \citep{Wong2019}. Asssuming zero eccentricity and ignoring any
+stellar oblateness
+\citep[see][]{Ahlers2020}, we find that
+the day/night terminator extends $\tau \approx 17^\circ$ past the limb
+of the planet. Figure~\ref{fig:extended} shows...
+
+\begin{figure}[ht!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/extended.pdf}
+        \oscaption{extended}{%
+            Normalized surface intensity on Kelt-9b viewed in a
+            Mollweide projection assuming a point illumination source
+            (left) and accounting for the finite extent of the star
+            (right). The day/night terminator extends about $17^\circ$
+            past where it is in the point source case. The sub-stellar
+            intensity is higher in the extended source case because the
+            sub-planet point on the star is 
+            closer to the planet than in the case where the star is a point
+            source located at the center of the star.
+            \label{fig:extended}
+        }
+    \end{centering}
+\end{figure}
+
+Figure~\ref{fig:kelt9b} shows...
+
+\begin{figure}[ht!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/kelt9b.pdf}
+        \oscaption{kelt9b}{%
+            Reflected light phase curve model (left) and
+            secondary eclipse model for Kelt-9b, assuming
+            a spherical albedo $A = 0.2$. The transit (phase zero)
+            is not included. Blue is the \starry model
+            assuming a point source illumination; orange accounts for
+            the finite size of the star. The right panel shows
+            the normalized flux during secondary eclipse ingress
+            for the two \starry models and for two approximations:
+            a surface with uniform intensity (solid purple)
+            and a surface whose intensity falls as the cosine of the
+            viewing angle from the center of the planet disk
+            (dashed purple).
+            \label{fig:kelt9b}
+        }
+    \end{centering}
+\end{figure}
 
 \subsection{Non-Lambertian scatterers}
 \label{sec:nonlambertian}
 Just change $\mathbf{I}$. \citep{OrenNayar1994}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/oren_nayar.pdf}
         \oscaption{oren_nayar}{%
-            Phase curves for different surface roughness coefficients.
+            Intensity measured from a sphere at varying illumination
+            phase under the \citet{OrenNayar1994} scattering model.
+            The top panel shows spheres rendered with different surface
+            roughness coefficients ranging from $\sigma = 0^\circ$
+            (the Lambertian case) to $\sigma = 45^\circ$. The bottom
+            panel shows the corresponding phase curves for a sphere
+            of unit spherical albedo illuminated by a point source
+            at $r_s = 1$, computed
+            analytically from a degree \STARRYQUADPOINTS expansion
+            of the scattering law. Dots
+            correspond to the intensity computed numerically directly
+            from Equation~(30) in \citet{OrenNayar1994}.
             \label{fig:oren_nayar}
         }
     \end{centering}
@@ -210,11 +276,19 @@ Just change $\mathbf{I}$. \citep{OrenNayar1994}.
 \section{Applications}
 \label{sec:applications}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/io_europa.pdf}
         \oscaption{io_europa}{%
-            Occultation of Io by Europa.
+            Visible-light occultation of Io by Europa observed
+            on 04 Dec 2009 by the PHEMU09 campaign \citep{Arlot2014}.
+            The blue line is the \starry model, based of an
+            $l=15$ spherical harmonic fit to the
+            Galileio global color mosaic of Io \citep{Becker2005},
+            an $l=\STARRYQUADPOINTS$ expansion of the
+            \citep{OrenNayar1994} scattering law, and orbital
+            information from the JPL Horizons \xxx{(cite)} database.
+            See text for details.
             \label{fig:io_europa}
         }
     \end{centering}
