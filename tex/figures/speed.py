@@ -337,10 +337,10 @@ class Compare(object):
         styles = [
             ("starry: reflected", "C0", "-"),
             ("starry: reflected (grad)", "C0", "--"),
-            ("starry: emitted", "C1", "-"),
-            ("starry: emitted (grad)", "C1", "--"),
-            ("grid", "C4", "-"),
-            ("dblquad", "C4", "--"),
+            ("starry: emitted", "C4", "-"),
+            ("starry: emitted (grad)", "C4", "--"),
+            ("grid", "C1", "-"),
+            ("dblquad", "C1", "--"),
         ]
 
         # Loop over all degrees

@@ -64,7 +64,7 @@ fig.subplots_adjust(hspace=0.025)
 t = t_phase - kwargs["t0"]
 phase = t / kwargs["porb"]
 ax[0].plot(t, flux_phase * 1e6, "C0-", label="point source")
-ax[0].plot(t, flux_phase_fin * 1e6, "C1-", label="extended source")
+ax[0].plot(t, flux_phase_fin * 1e6, "C4-", label="extended source")
 ax[0].set_xlabel("time [days]", fontsize=16)
 ax[0].set_ylabel("flux [ppm]", fontsize=16)
 ax[0].xaxis.labelpad = 10
@@ -74,10 +74,10 @@ ax[0].legend(loc="best", fontsize=12)
 
 # Plot eclipse ingress
 t = (t_ingress * u.day).to(u.minute)
-ax[1].plot(t, flux_em / flux_em[0], "C4-", label="uniform")
-ax[1].plot(t, flux_ld / flux_ld[0], "C4--", label="cosine")
+ax[1].plot(t, flux_em / flux_em[0], "C1-", label="uniform")
+ax[1].plot(t, flux_ld / flux_ld[0], "C1--", label="cosine")
 ax[1].plot(t, flux_ref / flux_ref[0], "C0-", label="point source")
-ax[1].plot(t, flux_ref_fin / flux_ref_fin[0], "C1-", label="extended source")
+ax[1].plot(t, flux_ref_fin / flux_ref_fin[0], "C4-", label="extended source")
 ax[1].set_xlabel("phase", fontsize=16)
 ax[1].set_ylabel("flux [normalized]", fontsize=16)
 ax[1].yaxis.tick_right()
