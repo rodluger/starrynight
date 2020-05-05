@@ -40,7 +40,7 @@ map.show(image=img2, projection="moll", ax=ax[1], norm=norm)
 # Plot contours
 X = np.linspace(-2 * np.sqrt(2), 2 * np.sqrt(2), img2.shape[1])
 Y = np.linspace(-np.sqrt(2), np.sqrt(2), img2.shape[0])
-levels = np.array([0.0, 0.01, 0.05, 0.10, 0.30, 0.50, 0.75]) * 100
+levels = np.array([0, 1, 5, 10, 30, 50, 75])
 for i, axis, img in zip([0, 1], ax, [img1, img2]):
     cont = axis.contour(
         X,
@@ -53,12 +53,13 @@ for i, axis, img in zip([0, 1], ax, [img1, img2]):
         linestyles="dotted",
     )
     if i == 0:
-        x = np.array([-90, -80, -70, -60, -40]) * 2 * np.sqrt(2) / 180.0
+        x = np.array([-90, -70, -60, -40]) * 2 * np.sqrt(2) / 180.0
     else:
         x = np.array([-106, -98, -92, -86, -70, -60, -40]) * 2 * np.sqrt(2) / 180.0
     y = np.zeros(len(x))
     manual = zip(x, y)
-    labels = axis.clabel(cont, inline=1, fontsize=6, fmt=r"%.0f", manual=manual)
+    fmt = {0: "0%", 1: "1", 5: "5", 10: "10", 30: "30", 50: "50", 75: "75%"}
+    labels = axis.clabel(cont, inline=1, fontsize=6, fmt=fmt, manual=manual)
     for l in labels:
         l.set_rotation(0)
 

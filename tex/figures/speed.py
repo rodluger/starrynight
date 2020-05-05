@@ -113,7 +113,9 @@ class Compare(object):
                 theano_code(_y, _x, _xs, _ys, _zs, _xo, _yo, _ro),
             )
 
-        return self._intensity(np.array([y]), np.array([x]), xs, ys, zs, xo, yo, ro)
+        return self.map_ref.amp * self._intensity(
+            np.array([y]), np.array([x]), xs, ys, zs, xo, yo, ro
+        )
 
     def flux(self, xs, ys, zs, xo, yo, ro, reset=False):
 
@@ -137,7 +139,7 @@ class Compare(object):
                 theano_code(_xs, _ys, _zs, _xo, _yo, _ro),
             )
 
-        flux = self._flux(xs, ys, zs, xo, yo, ro)
+        flux = self.map_ref.amp * self._flux(xs, ys, zs, xo, yo, ro)
         err = np.max(flux) - np.min(flux)
         return np.median(flux), err
 
@@ -166,7 +168,7 @@ class Compare(object):
                 theano_code(_xs, _ys, _zs, _xo, _yo, _ro),
             )
 
-        return self._dfluxdro(xs, ys, zs, xo, yo, ro), np.nan
+        return self.map_ref.amp * self._dfluxdro(xs, ys, zs, xo, yo, ro), np.nan
 
     def flux_emitted(self, xs, ys, zs, xo, yo, ro, reset=False):
 
@@ -189,7 +191,7 @@ class Compare(object):
                 [_xo, _yo, _ro], theano_code(_xo, _yo, _ro),
             )
 
-        flux = self._flux_emitted(xo, yo, ro)
+        flux = self.map_emi.amp * self._flux_emitted(xo, yo, ro)
         err = np.max(flux) - np.min(flux)
         return np.median(flux), err
 
@@ -217,13 +219,13 @@ class Compare(object):
                 [_xo, _yo, _ro], theano_code(_xo, _yo, _ro),
             )
 
-        return self._dfluxdro_emitted(xo, yo, ro), np.nan
+        return self.map_emi.amp * self._dfluxdro_emitted(xo, yo, ro), np.nan
 
     def flux_brute(self, xs, ys, zs, xo, yo, ro, res=999, **kwargs):
         # Compute the flux by brute force grid integration
         img = self.map_ref.render(xs=xs, ys=ys, zs=zs, res=res)
         x, y, z = self.map_ref.ops.compute_ortho_grid(res)
-        idx = x ** 2 + (y - yo) ** 2 > ro ** 2
+        idx = (x - xo) ** 2 + (y - yo) ** 2 > ro ** 2
         return np.nansum(img.flat[idx]) * 4 / res ** 2, np.nan
 
     def flux_quad(self, xs, ys, zs, xo, yo, ro, epsabs=1e-3, epsrel=1e-3, **kwargs):
@@ -464,3 +466,15 @@ if __name__ == "__main__":
     y = np.ones((ydeg + 1) ** 2)
     cmp = Compare(y=y)
     cmp.compare(xs, ys, zs, xo, yo, ro, figname="speed.pdf")
+
+    # Typical phase curve
+    xs = -0.5
+    ys = 0.5
+    zs = 0.5
+    xo = 0
+    yo = 0
+    ro = 0
+    ydeg = 10
+    y = np.ones((ydeg + 1) ** 2)
+    cmp = Compare(y=y)
+    cmp.compare(xs, ys, zs, xo, yo, ro, figname="speed_no_occ.pdf")

@@ -11,7 +11,7 @@ starry.config.lazy = False
 # Instantiate the Earth in reflected light
 map = starry.Map(25, reflected=True)
 map.load("earth", sigma=0.06)
-map.obl = 23.5
+map.obl = -23.5
 
 # Earth colormap
 cmap = LinearSegmentedColormap(

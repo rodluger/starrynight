@@ -95,7 +95,7 @@ the body is occulted by another spherical body, which may or may not be the
 illumination source.
 
 In \citet{Luger2019}, we reduced the problem of computing the flux from
-an occulted body in emitted light to a series of efficient, analytical
+an occulted body in thermal (emitted) light to a series of efficient, analytical
 operations involving trigonometric functions of the position and size of the
 occultor and certain complete elliptic integrals. In the case of reflected
 light, however, the change in the limits of integration due to the
@@ -115,35 +115,79 @@ the paper to validating and demonstrating applications of our approach.
 \subsection{Sample light curves}
 \label{sec:sample}
 
-Figure~\ref{fig:earthphase} shows...
-
-\begin{figure}[p!]
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/earthphase.pdf}
         \oscaption{earthphase}{%
-            Mock reflected light  phase curve of the cloudless Earth expanded
-            to spherical harmonic degree $l = 25$. The main plot shows the
-            phase curve over the course of one year.
+            Mock reflected light phase curve of the cloudless Earth expanded
+            to spherical harmonic degree $l = 25$, viewed along the
+            ecliptic. The main plot shows the phase curve over the course of
+            one year.
+            The images at the top show the corresponding progression of
+            the phases of the Earth, from new phase to full phase and back
+            to new phase. Below each image we show a normalized 24-hour
+            segment of the light curve at that phase (blue).
+            Orange dots correspond
+            to the flux computed from brute force numerical integration on
+            a grid of
+            ${\sim}10^6$ points.
             \label{fig:earthphase}
         }
     \end{centering}
 \end{figure}
 
-Figure~\ref{fig:earthmoon} shows a sample application of the algorithm
-developed in this paper. The figure shows two mock occultation light curves
-of the cloudless Earth as the Moon is seen to transit its disk, both computed
-using \starry from an $l=25$ expansion of the map of the Earth.
-The top panel shows an occultation in emitted light and is a reproduction of
-Figure~7 in \citet{Luger2019}. The bottom panel shows a light curve for the
-same occultation geometry, but seen instead in reflected light, with the
-Sun to the top left and slightly out of the page.
-The black curves correspond to the analytical solution, and the orange dots
-to the brute force numerical solution, obtained by discretizing the disk
-on a grid of ${\sim}10^6$ points. The solutions agree to within the
+Figure~\ref{fig:earthphase} shows a sample application of the algorithm
+developed in this paper: a reflected light phase curve of the
+Earth over the course of one year. The model is computed using the
+methodology in Appendix~\ref{sec:solution-no-occ} from an $l=25$
+spherical harmonic expansion of the cloudless Earth, where the oceans
+are given an albedo of zero and the continents an albedo of unity
+(note, however, that since the light curve is normalized, the model does
+not depend on the value of the latter).
+The Earth is assumed to be a perfect Lambertian scatterer,
+so effects like the phase dependence of Rayleigh scattering and
+specular reflection (glint) from the oceans are neglected
+(but see \S\ref{sec:extensions} for an extension of the model to
+non-Lambertian scatterers).
+The observer is assumed to be along
+the ecliptic, so the illumination source is along the $x-z$ plane of a
+right-handed Cartesian coordinate system, with $\hat{z}$ pointing toward the
+observer and $\hat{x}$ pointing to the right on the sky. The axis of rotation
+of the Earth is therefore tilted clockwise away from
+$\hat{y}$ by $23.5^\circ$.
+The images at the top show snapshots of the disk of the Earth throughout
+the observation; below each one, we plot in blue the normalized phase curve
+at that phase over a single rotation. The orange dots correspond to a
+brute force numerical solution, obtained by discretizing the disk
+on a grid of ${\sim}10^6$ points and summing over the dayside.
+The models agree to within the
 numerical precision of the brute force solution (about 100 ppm of the
 planetary flux in this case).
 
-\begin{figure}[p!]
+While the dominant signal in the phase curve is the sine-like envelope
+due to the changing phases of the Earth, the local behavior of the light
+curve at each phase is complex and varies significantly over the course
+of the year. Unlike phase curves in thermal light, which primarily encode
+low-order spatial information (since the region of integration is always
+the full disk), phase curves in reflected light encode information at
+different scales depending on the phase. At crescent phase, the region of the
+disk contributing to the total flux is a narrow lune; these measurements
+therefore encode information primarily about high-$l$ modes. At full
+phase, the region of integration is the full disk, so these measurements
+encode information about low-$l$ modes. Furthermore, because of the obliquity
+of the Earth,
+the orientation of the crescent lune changes relative to features on the
+surface over the course of one orbit, changing the relative contribution of
+different portions of the surface to the flux and increasing the
+overall information content of the observation.
+As we will show in \S\ref{sec:information}, the information content of
+reflected light phase curves is overwhelmingly higher than that of
+phase curves in thermal light, particularly for planets with significant
+obliquity.
+
+%
+
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/earthmoon_emitted.pdf}
         \includegraphics[width=\linewidth]{figures/earthmoon.pdf}
@@ -162,7 +206,31 @@ planetary flux in this case).
     \end{centering}
 \end{figure}
 
-Figure~\ref{fig:earthsun} shows
+Figure~\ref{fig:earthmoon} shows another light curve of the rotating
+Earth, but this time taken during an occultation by the Moon. The map
+of the Earth is the same as before, but the observer is now in the
+equatorial frame of the Earth.
+The top panel is a reproduction of
+Figure~7 in \citet{Luger2019} for the case of thermal light,
+where the Moon is seen to travel across the
+disk of the Earth from southwest to northeast, progressively occulting
+South America (dip), the Atlantic (peak), and Africa (dip).
+As before,
+the blue curve is the analytic solution and the orange dots correspond
+to the numerical solution.
+
+The bottom panel of the figure shows a light curve for the
+same occultation geometry, but seen instead in reflected light, with the
+Sun to the top left and slightly out of the page, corresponding to
+some point during northern summer. Note the same dip-peak-dip pattern,
+albeit with significantly different amplitudes. In particular, the
+transit across South America is deeper, since it occurs close to local
+noon, when the illumination is highest; conversely, the transit across
+Africa occurs close to local dusk, when the illumination is close to zero.
+As before, the light curves computed using \starry agree to within the
+numerical precision of the brute force solution.
+
+%
 
 \begin{figure}[p!]
     \begin{centering}
@@ -170,8 +238,10 @@ Figure~\ref{fig:earthsun} shows
         \includegraphics[width=\linewidth]{figures/earthsun.pdf}
         \includegraphics[width=\linewidth]{figures/earthsun_diff.pdf}
         \oscaption{earthsun}{%
-            Mock secondary eclipse light curves of the
-            cloudless Earth expanded to spherical harmonic degree $l = 25$.
+            Mock secondary eclipse ingress light curves of the
+            cloudless Earth expanded to spherical harmonic degree $l = 25$,
+            viewed from an orientation where the Earth is occulted behind
+            a solar latitude of $30^\circ$.
             Black curves show the analytic solution; orange dots correspond
             to brute force numerical integration on a grid of
             ${\sim}10^6$ points.
@@ -180,46 +250,118 @@ Figure~\ref{fig:earthsun} shows
             The middle panel (this work) shows the same light curve in
             reflected light.
             The bottom panel shows the difference between the
-            normalized reflected and normalized emitted light curves.
+            normalized reflected and emitted light curves.
             \label{fig:earthsun}
         }
     \end{centering}
 \end{figure}
 
-% DEBUG
-\pagebreak
+Our last sample light curve is Figure~\ref{fig:earthsun}, which shows
+a secondary eclipse light curve of the Earth as it is occulted by the
+Sun. The model for the Earth is the same as above, and the observer is
+now close to the ecliptic, but slightly misaligned so that the
+Earth is occulted behind a solar latitude of $30^\circ$ (i.e., at
+a solar impact parameter of $0.5$). The observation takes place at the
+June solstice, so the Earth is tilted by $23.5^\circ$ out of the page.
+As before, the top panel shows the light curve in thermal light; this
+is similar to the top panel of Figure~13 in \citet{Luger2019}. The orange
+dots again correspond to the numerical solution.
+%
+The center panel shows the same light curve in reflected light.
+Because the observation occurs very close to full phase, the normalized
+light curves look very similar to each other.
+The bottom panel shows the difference between the two
+(reflected minus thermal), which is only on the order of a few percent.
+%
+In fact, because
+the illumination profile is proportional to the cosine of the viewing
+angle, $\mu$, and the reflection is assumed to be isotropic, the
+(normalized) secondary eclipse light curve in reflected light is to
+good approximation equal
+to a limb-darkened thermal occultation light curve with
+linear limb darkening coefficient $u_1 = 1$. As we will see later, for very
+close-in planets this approximation breaks down, since the illumination
+phases at secondary eclipse ingress and egress are sufficiently different
+from full phase.
+
+%
 
 \subsection{Performance}
 \label{sec:performance}
 
-Figure~\ref{fig:speed}
+As we discuss in the Appendix, the model for phase curves and
+occultation light curves in reflected light may be expressed
+analytically in terms of purely algebraic and trigonometric functions
+and in some cases incomplete elliptic integrals of the first, second,
+and third kinds. We have derived efficient and numerically stable
+recursion relations to compute the relevant expressions and their
+derivatives. At times, these involve the evaluation of certain
+expressions numerically, especially when doing so
+leads to either a speed-up or a significant gain in numerical precision.
+In particular, as we discuss in Appendix~\ref{sec:which-case}, the
+integration boundaries during an occultation sometimes depend on the
+solution to a quartic equation. While this can be solved in closed form,
+the analytic solution can often be very unstable. We therefore solve
+the quartic numerically, attaining a precision for the roots within a
+few orders of magnitude of machine (double) precision.
 
-\begin{figure}[ht!]
+Figures~\ref{fig:speed_no_occ} and \ref{fig:speed} summarize
+the precision and computation time of the \starry algorithm for
+two typical scenarios: a phase curve evaluation
+(Figure~\ref{fig:speed_no_occ}) and an occultation evaluation
+(Figure~\ref{fig:speed}).
+
+\begin{figure}[p!]
     \begin{centering}
-        \includegraphics[width=\linewidth]{figures/speed.pdf}
+        \includegraphics[width=\linewidth]{figures/speed_no_occ.pdf}
         \oscaption{speed}{%
             Evaluation time (vertical axis)
             and numerical precision (point size)
-            for a single flux evaluation as a function of spherical
+            for a single phase curve evaluation as a function of spherical
             harmonic degree for different methods.
-            In orange we show results for the emitted light
+            In purple we show results for the emitted light
             \starry algorithm from \citet{Luger2019} (solid: no gradient,
             dashed: with gradient), and in blue we show results for
             the reflected
             light algorithm from this paper (solid: no gradient,
-            dashed: with gradient). For comparison, in purple we show
+            dashed: with gradient). For comparison, in orange we show
             results for discrete integration on a grid (solid) and
             numerical integration using two-dimensional Gaussian
             quadrature (dashed); neither of these include gradient
-            evaluations. The reflected light algorithm is around one
-            order of magnitude slower and less precise than the emitted
-            light algorithm, but still ${\sim}4$ orders of magnitude faster
+            evaluations. The reflected light algorithm is
+            comparable in efficiency and precision to the emitted
+            light algorithm. It is ${\sim}5$ orders of magnitude faster
+            and ${\sim}10$ orders of magnitude more precise than numerical
+            integration.
+            \label{fig:speed_no_occ}
+        }
+    \end{centering}
+\end{figure}
+
+\begin{figure}[p!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/speed.pdf}
+        \oscaption{speed}{%
+            Same as Figure~\ref{fig:speed_no_occ}, but for an occultation
+            evaluation in which the occultor intersects the terminator
+            (case 6 in Appendix~\ref{sec:solution-occ}).
+            The reflected light algorithm is around one
+            order of magnitude slower and comparably precise to the emitted
+            light algorithm. It is ${\sim}4$ orders of magnitude faster
             and ${\sim}10$ orders of magnitude more precise than numerical
             integration.
             \label{fig:speed}
         }
     \end{centering}
 \end{figure}
+
+\subsection{Implementation and usage}
+\label{sec:usage}
+
+Hello.
+
+% DEBUG
+\clearpage
 
 \section{Extensions}
 \label{sec:extensions}
@@ -267,23 +409,50 @@ of the planet. Figure~\ref{fig:extended} shows...
 
 Figure~\ref{fig:kelt9b} shows...
 
-\begin{figure}[ht!]
+\begin{figure}[p!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/kelt9b.pdf}
         \oscaption{kelt9b}{%
-            Reflected light phase curve model (left) and
-            secondary eclipse model for Kelt-9b, assuming
+            Reflected light phase curve model for Kelt-9b, assuming
             a spherical albedo $A = 0.2$. The transit (phase zero)
             is not included. Blue is the \starry model
-            assuming a point source illumination; orange accounts for
-            the finite size of the star. The right panel shows
-            the normalized flux during secondary eclipse ingress
-            for the two \starry models and for two approximations:
-            a surface with uniform intensity (solid purple)
-            and a surface whose intensity falls as the cosine of the
-            viewing angle from the center of the planet disk
-            (dashed purple).
+            assuming a point source illumination; purple accounts for
+            the finite size of the star.
+            The left panel shows the two models in parts per million
+            of the stellar flux; the right panel shows the models
+            normalized so their maximum value is unity.
+            The primary effect of the extended source size is to
+            increase the planet flux near full phase, since the stellar
+            surface is on average slightly closer to the planet, and
+            to change the overall curvature of the phase curve.
+            The shape of secondary eclipse, however, is relatively
+            insensitive to the point source approximation
+            (see Figure~\ref{fig:kelt9b_eclipse}).
             \label{fig:kelt9b}
+        }
+    \end{centering}
+\end{figure}
+
+\begin{figure}[p!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/kelt9b_eclipse.pdf}
+        \oscaption{kelt9b}{%
+            Normalized reflected light secondary eclipse model for Kelt-9b,
+            assuming a spherical albedo $A = 0.2$. Blue is the \starry model
+            assuming a point source illumination; purple accounts for
+            the finite size of the star. The orange curves show
+            approximate models computed using the \citet{MandelAgol2002}
+            model: a sphere of uniform intensity (solid orange)
+            and a sphere whose intensity falls as the cosine of the
+            viewing angle from the center of the planet disk
+            (dashed orange).
+            Because Kelt-9b is so close to its host star, the illumination
+            phase changes significantly from ingress to egress, and neither
+            approximation accurately captures the behavior of the light curve.
+            On the other hand, the point source approximation agrees well with
+            the extended source solution, modulo an overall amplitude
+            difference (see Figure~\ref{fig:kelt9b}).
+            \label{fig:kelt9b_eclipse}
         }
     \end{centering}
 \end{figure}
@@ -335,6 +504,9 @@ Just change $\mathbf{I}$. \citep{OrenNayar1994}.
     \end{centering}
 \end{figure}
 %
+
+\subsection{Information}
+\label{sec:information}
 
 \pagebreak
 

@@ -143,7 +143,7 @@ ax.set_xlabel("time [minutes]", fontsize=16)
 ax.set_ylabel("difference", fontsize=16, labelpad=0)
 for tick in ax.get_xticklabels() + ax.get_yticklabels():
     tick.set_fontsize(14)
-ax.set_ylim(-6, 6)
+ax.set_ylim(-6.5, 6.5)
 ax.set_yticks([-5, 0, 5])
 ax.set_yticklabels(["-5%", "0%", "5%"])
 fig.savefig("earthsun_diff.pdf", bbox_inches="tight", dpi=500)
