@@ -659,3 +659,78 @@
         \\
     \end{longtable}
 \end{center}
+
+\begin{center}
+    \begin{longtable}{W{c}{1cm} W{l}{11cm} W{l}{1cm}}
+        \caption{%
+            Tolerance parameters used in the code.
+        }
+        \label{tab:tolerance}
+        \\
+        %
+        \toprule
+        \multicolumn{1}{c}{\textbf{Symbol}}
+         &
+        \multicolumn{1}{c}{\textbf{Description}}
+         &
+        \multicolumn{1}{c}{\textbf{Value}}
+        \\
+        \midrule
+        \endhead
+        \bottomrule
+        %
+        \endfoot
+        %
+        $\epsilon_{0}$
+         & If $\xi$ is this close to $\frac{n\pi}{2}$, compute $\mathbb{t}_2$
+        in the limit $\xi = \frac{n\pi}{2}$
+         & \STARRYANGLETOL
+        \\
+        $\epsilon_{1}$
+         & If $|\sin\theta|$ or $|\cos\theta|$ are less than this value, set
+        to this value
+         & \STARRYTTOL
+        \\
+        $\epsilon_{2}$
+         & If $k^2$ is within this value of unity, nudge it away
+         & \STARRYKTWOONETOL
+        \\
+        $\epsilon_{3}$
+         & If $|b_o - r_o|$ is less than this value, nudge $b_o$
+        away from $r_o$
+         & \STARRYBOEQUALSROTOL
+        \\
+        $\epsilon_{4}$
+         & If $b_o$ is within this amount of $r_o - 1$, nudge it away
+         & \STARRYCOMPLETEOCCTOL
+        \\
+        $\epsilon_{5}$
+         & If $b_o$ is within this amount of $r_o + 1$, nudge it away
+         & \STARRYNOOCCTOL
+        \\
+        $\epsilon_{6}$
+         & If $|\sin\alpha|$ is less than this value, set to this value
+         & \STARRYMINSINALPHA
+        \\
+        $\epsilon_{7}$
+         & If $b$ is within this value of zero, nudge it away
+         & \STARRYBZEROTOL
+        \\
+        $\epsilon_{8}$
+         & If $b_o$ is within this amount of $1 - r_o$, nudge it away
+         & \STARRYGRAZINGTOL
+        \\
+        $\epsilon_{9}$
+         & If two quartic roots are this close, eliminate one of them
+         & \STARRYROOTTOLDUP
+        \\
+        $\epsilon_{10}$
+         & If $b$ is within this value of unity, set it to unity
+         & \STARRYBONETOL
+        \\
+        $\epsilon_{11}$
+         & If $\theta$ is within this amount of $\frac{\pi}{2}$ when $r_o = 1$,
+        nudge it away
+         & \STARRYTHETAUNITRADIUSTOL
+    \end{longtable}
+\end{center}

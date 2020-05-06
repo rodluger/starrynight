@@ -328,7 +328,7 @@ class Compare(object):
         kwargs = dict(xs=xs, ys=ys, zs=zs, xo=xo, yo=yo, ro=ro)
 
         # Vectorized params (for the starry computation)
-        # We perturb them close to the machine level, and compute
+        # HACK: We perturb them close to the machine level, and compute
         # the "error" as the max-min difference in the flux over
         # the interval. This is essentially a probe of the condition number
         # of the starry algorithm.
@@ -342,7 +342,7 @@ class Compare(object):
             ("starry: emitted", "C4", "-"),
             ("starry: emitted (grad)", "C4", "--"),
             ("grid", "C1", "-"),
-            ("dblquad", "C1", "--"),
+            ("dblquad", "C3", "-"),
         ]
 
         # Loop over all degrees
@@ -368,18 +368,26 @@ class Compare(object):
                 self.flux_quad, epsabs=epsabs, epsrel=epsrel, **kwargs
             )
 
-        # Zero-degree emitted light maps are limb-darkened maps,
+        # HACK: Zero-degree emitted light maps are limb-darkened maps,
         # so let's just set them equal to the l = 1 result for
         # simplicity
         teval[2, 0], value[2, 0], error[2, 0] = teval[2, 1], value[2, 1], error[2, 1]
         teval[3, 0], value[3, 0], error[3, 0] = teval[3, 1], value[3, 1], error[3, 1]
 
-        # Compute the error on the numerical solution
+        # HACK: If there's no occultation, the deriv with respect to the radius
+        # is trivially zero, so the computation time is really tiny. Starry
+        # computes derivatives *whenever* the flux is computed, so we'll
+        # just set the evaluation time to be that of the flux call.
+        if ro == 0:
+            teval[1] = teval[0]
+            teval[3] = teval[2]
+
+        # HACK: Compute the error on the numerical solution
         # assuming the starry solution is the ground truth
         error[4] = np.abs(value[4] - value[0])
         error[5] = np.abs(value[5] - value[0])
 
-        # Propagate the error to the starry-grad terms
+        # HACK: Propagate the error to the starry-grad terms
         # (identical by construction)
         error[1] = error[0]
         error[3] = error[2]

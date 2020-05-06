@@ -130,7 +130,7 @@ the paper to validating and demonstrating applications of our approach.
             Orange dots correspond
             to the flux computed from brute force numerical integration on
             a grid of
-            ${\sim}10^6$ points.
+            ${\sim}10^5$ points.
             \label{fig:earthphase}
         }
     \end{centering}
@@ -159,7 +159,7 @@ The images at the top show snapshots of the disk of the Earth throughout
 the observation; below each one, we plot in blue the normalized phase curve
 at that phase over a single rotation. The orange dots correspond to a
 brute force numerical solution, obtained by discretizing the disk
-on a grid of ${\sim}10^6$ points and summing over the dayside.
+on a grid of ${\sim}10^5$ points and summing over the dayside.
 The models agree to within the
 numerical precision of the brute force solution (about 100 ppm of the
 planetary flux in this case).
@@ -196,7 +196,7 @@ obliquity.
             cloudless Earth expanded to spherical harmonic degree $l = 25$.
             Black curves show the analytic solution; orange dots correspond
             to brute force numerical integration on a grid of
-            ${\sim}10^6$ points.
+            ${\sim}10^5$ points.
             The top panel shows the light curve in emitted light and is
             the same as in Figure~7 in \citet{Luger2019}.
             The bottom panel (this work) shows the same light curve in
@@ -244,7 +244,7 @@ numerical precision of the brute force solution.
             a solar latitude of $30^\circ$.
             Black curves show the analytic solution; orange dots correspond
             to brute force numerical integration on a grid of
-            ${\sim}10^6$ points.
+            ${\sim}10^5$ points.
             The top panel shows the light curve in emitted light and is
             similar to Figure~13 in \citet{Luger2019}.
             The middle panel (this work) shows the same light curve in
@@ -305,29 +305,24 @@ the analytic solution can often be very unstable. We therefore solve
 the quartic numerically, attaining a precision for the roots within a
 few orders of magnitude of machine (double) precision.
 
-Figures~\ref{fig:speed_no_occ} and \ref{fig:speed} summarize
-the precision and computation time of the \starry algorithm for
-two typical scenarios: a phase curve evaluation
-(Figure~\ref{fig:speed_no_occ}) and an occultation evaluation
-(Figure~\ref{fig:speed}).
-
 \begin{figure}[p!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/speed_no_occ.pdf}
         \oscaption{speed}{%
             Evaluation time (vertical axis)
             and numerical precision (point size)
-            for a single phase curve evaluation as a function of spherical
+            for a single flux evaluation in the absence of an occultor
+            as a function of spherical
             harmonic degree for different methods.
             In purple we show results for the emitted light
             \starry algorithm from \citet{Luger2019} (solid: no gradient,
             dashed: with gradient), and in blue we show results for
             the reflected
             light algorithm from this paper (solid: no gradient,
-            dashed: with gradient). For comparison, in orange we show
-            results for discrete integration on a grid (solid) and
+            dashed: with gradient). For comparison, in we also show
+            results for discrete integration on a grid (orange) and for
             numerical integration using two-dimensional Gaussian
-            quadrature (dashed); neither of these include gradient
+            quadrature (red); neither of these include gradient
             evaluations. The reflected light algorithm is
             comparable in efficiency and precision to the emitted
             light algorithm. It is ${\sim}5$ orders of magnitude faster
@@ -355,10 +350,120 @@ two typical scenarios: a phase curve evaluation
     \end{centering}
 \end{figure}
 
+Figures~\ref{fig:speed_no_occ} and \ref{fig:speed} summarize
+the precision and computation time of the \starry algorithm for
+two typical scenarios: a phase curve evaluation
+(Figure~\ref{fig:speed_no_occ}) and an occultation evaluation
+(Figure~\ref{fig:speed}).
+Blue points correspond to the reflected light algorithm developed
+in this paper, while purple points correspond to the thermal light
+algorithm from \citet{Luger2019} for the same occultation geometry,
+but without an illumination source.
+Solid and dashed lines correspond to evaluations without and
+with gradient propagation, respectively (see \S\ref{sec:usage}
+for details).
+The orange and red dots
+correspond to numerical evaluation of the flux:
+brute force integration by summation on a grid of ${\sim}10^6$ points
+(orange) and two-dimensional adaptive Gaussian quadrature using the
+\textsf{dblquad} function in \textsf{scipy} \citep{scipy} with
+both absolute and relative error tolerances set to $10^{-3}$ (red).
+%
+In both figures, the vertical axis corresponds to the evaluation
+time in seconds for a single flux computation, while the size of the
+points is proportional to the base-10 log of the relative error. For the
+\starry solutions, the latter is estimated as the max-min difference
+in the flux over one thousand evaluations in which the input parameters
+are perturbed within an order of magnitude of machine epsilon; this is
+therefore a probe of the condition number of the starry algorithm and
+captures only error due to numerical instabilities. For the numerical
+solutions, the error is estimated as the difference between the numerical
+flux and the \starry flux.
+
+For both phase curves and occultations, the \starry reflected
+light algorithm is 1--2 orders of
+magnitude slower than the emitted light algorithm, owing
+primarily to the increased complexity of the reflected light model.
+For phase curves (Figure~\ref{fig:speed_no_occ}),
+the thermal solution vector $\rTe$ (Equation~\ref{eq:rTA1Ry}) is a constant
+that can be pre-computed, while the analogous vector in the reflected
+light case, $\rT$ (Equation~\ref{eq:rTsoln}), must be evaluated
+recursively each time. For occultations (Figure~\ref{fig:speed}),
+the slower evaluation in the reflected light case is primarily due to
+the time spent solving the quartic equation for the points of intersection
+between the occultor and the day/night terminator of the illuminated
+body (Appendix~\ref{sec:solution-occ}). This contributes the
+same overhead at all map degrees $l$, resulting in a gentler scaling
+in $l$ than for the thermal case; for large $l$, the evaluation time
+for the two algorithms is within a factor of 2--3.
+%
+In terms of precision, the algorithms are comparable, particularly
+for occultations. For both phase curves and occultations, the numerical error up
+to $l=10$ is less than one part per trillion ($10^{-12}$) for both thermal
+and reflected light curves.
+
+Compared to either numerical evaluation method, the \starry reflected light
+solutions are
+\textbf{4--5 orders of magnitude faster} and about
+\textbf{10 orders of magnitude more precise}. While different
+grid sizes and different error settings for the numerical integration change
+the balance slightly between these numbers, the \starry solution is always
+many orders of magnitude faster and more precise than either method.
+In particular, because of the complicated integration boundaries
+(see, for example, Figure~\ref{fig:cases}), two-dimensional Gaussian quadrature
+struggles to reach adequate precision in a reasonable amount of time,
+while integration on a grid fails to capture the curvature of the
+integration boundaries. Moreover, neither method yields the gradient of the
+solution with respect to the input parameters, which can be extremely useful
+for optimization and inference problems (see \S\ref{sec:usage}) below.
+
+Note, importantly, that as we mentioned above, the reported error of the \starry
+solution is only the \emph{numerical} error of the algorithm: it does not
+capture any systematic error due to, say, an error in the derivation of
+the method. To this end, we rely on the Jupyter notebooks containing
+derivations and validations of the main equations in the Appendix, whose
+links \prooficon\, appear next to the equation labels.
+%
+We have also developed an extensive suite of
+\href{https://github.com/rodluger/starry/tree/master/tests}{unit tests}
+comparing the \starry solution to the numerical solution over a large
+grid of input parameter values, and verified that the solutions agree
+to within the precision of the numerical method.
+%
+That said, there are specific cases in which the algorithm presented in the
+Appendix suffers from numerical instabilities. These generally happen due
+to division by small numbers or catastrophic cancellation in the recursion,
+and often occur near configurations involving grazing occultations,
+near-total occultations, terminator semi-minor axis $b \approx 0$ or
+$b \approx 1$, etc. To mitigate these, we introduce various tolerance
+parameters in the code to either nudge the inputs away from these singular
+points or switch to a different evaluation method. These parameters are
+outlined in Table~\ref{tab:tolerance} at the end. In the vicinity of the cases
+described in that table, the precision of the \starry algorithm will be
+reduced to (roughly) the value of the tolerance parameter, which in
+extremely rare cases can be as high as $10^{-5}$.
+
 \subsection{Implementation and usage}
 \label{sec:usage}
 
-Hello.
+The algorithm presented in this paper has been implemented in the \Python
+package \starry, which can be installed from
+\href{https://github.com/rodluger/starry}{GitHub} or via the Python package
+manager \textsf{pip}. The algorithm is coded in a mixture of \textsf{C++}
+with forward automatic differentation using the \textsf{Eigen} library
+\citep{eigen} and \Python with backward differentiation using
+just-in-time compiled \textsf{theano}
+operations \citep{theano}. The user interface, however, is purely in
+\Python. The \textsf{theano} backend facilitates integration with the
+\textsf{exoplanet} modeling package \citep{exoplanet} and in particular
+with \textsf{pymc3} \citep{pymc3} for inference with gradient-based
+Markov Chain Monte Carlo (MCMC) schemes.
+%
+Complete \href{https://rodluger.github.io/starry}{documentation} and an
+extensive library of tutorials is available online.
+The links next to each
+of the figures \codeicon\, point to the \Python scripts used to generate
+them and may also help in learning how to use \starry.
 
 % DEBUG
 \clearpage
@@ -473,7 +578,7 @@ Just change $\mathbf{I}$. \citep{OrenNayar1994}.
             panel shows the corresponding phase curves for a sphere
             of unit spherical albedo illuminated by a point source
             at $r_s = 1$, computed
-            analytically from a degree \STARRYQUADPOINTS expansion
+            analytically from a degree \STARRYORENNAYARDEG expansion
             of the scattering law. Dots
             correspond to the intensity computed numerically directly
             from Equation~(30) in \citet{OrenNayar1994}.
