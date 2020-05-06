@@ -76,11 +76,13 @@ Lambert's law as
 %
 \begin{align}
     \label{eq:LambertsLaw}
-    \mathcal{I}(\phi) = \mathcal{I}_0 \, \text{max}\big( 0, \cos\phi \big)
+    \mathcal{I}(\vartheta_i) = \mathcal{I}_0 \, \text{max}\big( 0, \cos\vartheta_i \big)
     \quad,
 \end{align}
 %
-where $\mathcal{I}_0$ is the peak illumination (at the sub-source point).
+where $\mathcal{I}_0$ is the peak illumination (at the sub-source point)
+and $\vartheta_i$ is the angle between the incident radiation and the surface
+normal.
 %
 
 The piecewise nature of the illumination function at the day/night terminator
@@ -275,7 +277,7 @@ The bottom panel shows the difference between the two
 %
 In fact, because
 the illumination profile is proportional to the cosine of the viewing
-angle, $\mu$, and the reflection is assumed to be isotropic, the
+angle, $\upmu$, and the reflection is assumed to be isotropic, the
 (normalized) secondary eclipse light curve in reflected light is to
 good approximation equal
 to a limb-darkened thermal occultation light curve with
@@ -465,36 +467,61 @@ The links next to each
 of the figures \codeicon\, point to the \Python scripts used to generate
 them and may also help in learning how to use \starry.
 
-% DEBUG
-\clearpage
-
 \section{Extensions}
 \label{sec:extensions}
 
+The algorithm discussed above and derived in the Appendix computes light
+curves in the limit that (1) the body is illuminated by a point source
+and (2) the body is an ideal Lambertian scatterer. Both of these
+assumptions can be relaxed within \starry, and below we discuss modifications
+to the code to allow for this.
+
 \subsection{Extended illumination source}
 \label{sec:extended}
-Planets to consider: 55 Cnc e, Kelt-9b.
-Assuming $R_\star > R_p$, the angular extent of the terminator
-past $\nicefrac{\pi}{2}$ is
+
+In the limit that the angular size of the star as seen from the planet is
+small, the illumination profile on the surface of the planet will
+decrease as the cosine of the angle between the surface normal and the star,
+reaching zero at the day/night terminator, an angle $\nicefrac{\pi}{2}$
+away from the sub-stellar point. However, if the star is sufficiently large
+and the planet is sufficiently close-in, rays originating from near the limb
+of the star will reach points on the planet surface beyond this angle.
+It is straightforward to show that, provided the stellar radius $R_\star$
+is larger than the planet radius $R_p$, the angular extent of the true
+day/night terminator past $\nicefrac{\pi}{2}$ is given by
 %
 \begin{proof}{}
     \label{eq:tau}
-    \tau &= \arcsin\left( \frac{R_\star - R_p}{d} \right)
+    \tau &= \arcsin\left( \frac{1 - \nicefrac{R_p}{R_\star}}{\nicefrac{a}{R_\star}} \right)
 \end{proof}
 %
-where $R_\star$ is the radius of the star,
-$R_p$ is the radius of the planet, and $d$ is the separation of their
-centers.
-
-For Kelt-9b, $\nicefrac{R_p}{R_\star} = 0.083$ and
-$\nicefrac{a}{R_\star} = 3.16$, where $a$ is the semi-major axis of the
+where $a$ the semi-major axis of the orbit (where we implictly assume
+the eccentricity is zero).
+For planets like the Earth, this quantity is only about $0.26^\circ$,
+resulting in a negligible effect on the planet's light curve. However,
+for very close-in planets, the effect can be significant. For instance,
+the hot Jupiter Kelt-9b has $\nicefrac{R_p}{R_\star} = 0.083$ and
+$\nicefrac{a}{R_\star} = 3.16$
 planet \citep{Wong2019}. Asssuming zero eccentricity and ignoring any
 stellar oblateness
-\citep[see][]{Ahlers2020}, we find that
+\citep[see][]{Ahlers2020},
 the day/night terminator extends $\tau \approx 17^\circ$ past the limb
-of the planet. Figure~\ref{fig:extended} shows...
+of that planet. Figure~\ref{fig:extended} shows the illumination profile
+of this planet in a Mollweide projection, with the sub-stellar point at
+the center, for the point source approximation (left) and accounting for
+the finite size of the star (right). In addition to the
+displaced day/night terminator, the main difference between
+the two profiles is the sub-stellar intensity, which is significantly higher
+in the extended source case. This is due to the simple fact that in the point
+source case the illumination source is placed at the center of the star,
+which is one stellar radius farther from the planet than the point closest
+to the planet (the sub-planetary point) in the extended source case.
+Once accounting for this difference, the fractional change in the intensity
+on the planet away from the sub-stellar point is similar in both cases,
+and the intensity anywhere beyond $\nicefrac{\pi}{2}$ is less than one-tenth
+the peak value.
 
-\begin{figure}[ht!]
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/extended.pdf}
         \oscaption{extended}{%
@@ -512,7 +539,26 @@ of the planet. Figure~\ref{fig:extended} shows...
     \end{centering}
 \end{figure}
 
-Figure~\ref{fig:kelt9b} shows...
+The illumination profile in the extended source case may be computed as the
+two-dimensional integral of the point source illumination profile over
+the visible portion of the stellar disk. While this integral may in theory be
+computed analytically, the resulting profile on the planet surface
+will not in general be exactly expressible in terms of spherical harmonics, a
+necessary condition for the \starry algorithm.
+For simplicity, we therefore compute the illumination profile for
+extended sources by averaging the contribution of \textsf{source\_npts} point
+sources uniformly distributed across the projected disk corresponding to
+the portion of the stellar surface
+visible from the planet, where \textsf{source\_npts} is a user-supplied
+value. In the limit $R_p \ll R_\star$, this is a spherical cap centered at
+the sub-planet point with radius $R_\star \cos\tau$. In
+Figure~\ref{fig:extended} we set
+\textsf{source\_npts} = 300, but in practice we find that ${\sim}30$
+points are sufficient for even the most extreme cases such as Kelt-9b.
+%
+Note, importantly, that while this method allows one to account for the
+effect of stellar limb darkening on the illumination profile of the planet,
+this has not been implemented in \starry.
 
 \begin{figure}[p!]
     \begin{centering}
@@ -538,6 +584,22 @@ Figure~\ref{fig:kelt9b} shows...
     \end{centering}
 \end{figure}
 
+Figure~\ref{fig:kelt9b} shows the practical implications of the finite
+stellar size for the phase curve of Kelt-9b. The left panel shows the
+reflected light phase curve of the planet in parts per million, assuming
+a spherical albedo of 0.2, for the point source approximation
+(blue) and including the effect of the extended source with
+\textsf{source\_npts} = 300 (purple). The increased
+illumination at the sub-stellar point results in a ${\sim}30$ increase
+in the value of the phase curve close to full phase ($\pm\nicefrac{1}{2}$).
+Close to a phase of zero, the extended source results in decreased
+flux, since the portion of the star illuminating the planet (the region
+close to the limb) is slightly
+\emph{farther} away, by a factor of
+$\sqrt{1 + (\nicefrac{a}{R_\star})^{-2}}$. This results in a steeper
+phase curve, which can be seen in the right panel, where the light curves
+have been normalized to their maximum value.
+
 \begin{figure}[p!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/kelt9b_eclipse.pdf}
@@ -555,16 +617,56 @@ Figure~\ref{fig:kelt9b} shows...
             phase changes significantly from ingress to egress, and neither
             approximation accurately captures the behavior of the light curve.
             On the other hand, the point source approximation agrees well with
-            the extended source solution, modulo an overall amplitude
-            difference (see Figure~\ref{fig:kelt9b}).
+            the extended source solution, modulo the difference in
+            the depth (see Figure~\ref{fig:kelt9b}).
             \label{fig:kelt9b_eclipse}
         }
     \end{centering}
 \end{figure}
 
+While modeling the extended size of the star is essential to
+getting the shape of the phase curve correct, the same is not true
+for secondary eclipse. Figure~\ref{fig:kelt9b_eclipse} shows
+the normalized secondary eclipse model for Kelt-9b under the point
+source approximation (blue) and the extended source model (purple).
+Neglecting the fact that the \emph{depth} of secondary eclipse is
+significantly different between the two models (see the left panel
+of Figure~\ref{fig:kelt9b}), the difference in \emph{shape} between
+the two curves is almost negligible.
+%
+For reference, the figure shows
+two additional models one might consider using to fit a secondary
+eclipse light curve: a uniform (unilluminated) disk (solid orange)
+and a disk whose intensity falls as $\upmu$, the cosine of the
+viewing angle (dashed orange). Both can be computed using the
+classical \citet{MandelAgol2002} transit model; the latter corresponds
+to a linearly limb-darkened sphere and is functionally equivalent to
+a Lambertian sphere seen at full phase.
+However, neither approximation is particularly good, since Kelt-9b
+changes illumination phase significantly from ingress to egress
+owing to its proximity to the star.
+
 \subsection{Non-Lambertian scatterers}
 \label{sec:nonlambertian}
-Just change $\mathbf{I}$. \citep{OrenNayar1994}.
+
+The second assumption we now seek to relax is that of Lambertian
+scattering. A perfect Lambert sphere reflects light isotropically, so
+the measured intensity at a point on the surface is strictly
+proportional to the product of the cosine of the angle of incidence
+and the cosine of the viewing angle. While this is convenient
+from a modeling standpoint, it is hardly ever true in practice.
+For planets and moons in particular, there is often a strong phase
+dependence in the scattering. Rayleigh scattering in planetary
+atmospheres is preferentially in the forward/backward direction,
+while clouds and oceans can contribute strong specular reflection.
+Moreover, rough surfaces can have complex scattering behavior due
+to changes in the orientation of the surface normal on small scales
+and effects such as multiple reflections and self-shading.
+
+In principle, any of these processes can be accounted for in
+the \starry algorithm by modiying the illumination matrix
+$\mathbf{I}$ (Equation~\ref{eq:Imat}).
+\xxx{TODO} \citep{OrenNayar1994}.
 
 \begin{figure}[p!]
     \begin{centering}
@@ -588,9 +690,6 @@ Just change $\mathbf{I}$. \citep{OrenNayar1994}.
 \end{figure}
 %
 
-\section{Applications}
-\label{sec:applications}
-
 \begin{figure}[p!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/io_europa.pdf}
@@ -610,8 +709,18 @@ Just change $\mathbf{I}$. \citep{OrenNayar1994}.
 \end{figure}
 %
 
-\subsection{Information}
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Information theory}
 \label{sec:information}
+
+\xxx{TODO.}
+
+\section{Conclusions}
+\label{sec:conclusionss}
+
+\xxx{TODO.}
 
 \pagebreak
 
@@ -828,9 +937,9 @@ spherical albedo of the surface, $A$.
 Second, we must explicitly model the illumination of the body. We assume the
 body is illuminated by a point-like source whose flux measured by the observer
 is unity. In this case, the observed intensity at any
-point on the surface is proportional to the cosine of the angle $\phi$ between
+point on the surface is proportional to the cosine of the angle $\vartheta_i$ between
 the incident light and the surface normal. Points for which
-$\phi \ge \nicefrac{\pi}{2}$ are unilluminated and
+$\vartheta_i \ge \nicefrac{\pi}{2}$ are unilluminated and
 therefore have an intensity of zero.
 %
 If the point-like illumination source is placed at sky coordinates

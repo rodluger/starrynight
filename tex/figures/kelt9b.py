@@ -92,21 +92,27 @@ ax = [fig.add_axes([0, 0, 0.5 - eps, 1]), fig.add_axes([0.5 + eps, 0, 0.5 - eps,
 t = t_sec * 60 * 24
 idx = t <= t_ingress[-1] * 60 * 24
 tmid = 0.5 * t_egress[-1] * 60 * 24
-ax[0].plot(t[idx] - tmid, flux_ref[idx] / flux_ref[0], "C0-", label="point source")
+ax[0].plot(t[idx] - tmid, flux_ref[idx] / np.max(flux_ref), "C0-", label="point source")
 ax[0].plot(
-    t[idx] - tmid, flux_ref_fin[idx] / flux_ref_fin[0], "C4-", label="extended source"
+    t[idx] - tmid,
+    flux_ref_fin[idx] / np.max(flux_ref_fin),
+    "C4-",
+    label="extended source",
 )
-ax[0].plot(t[idx] - tmid, flux_em[idx] / flux_em[0], "C1-", label="uniform")
-ax[0].plot(t[idx] - tmid, flux_ld[idx] / flux_ld[0], "C1--", label="cosine")
+ax[0].plot(t[idx] - tmid, flux_em[idx] / np.max(flux_em), "C1-", label="uniform")
+ax[0].plot(t[idx] - tmid, flux_ld[idx] / np.max(flux_ld), "C1--", label="cosine")
 
 # Plot egress
 idx = t >= t_egress[0] * 60 * 24
-ax[1].plot(t[idx] - tmid, flux_ref[idx] / flux_ref[0], "C0-", label="point source")
+ax[1].plot(t[idx] - tmid, flux_ref[idx] / np.max(flux_ref), "C0-", label="point source")
 ax[1].plot(
-    t[idx] - tmid, flux_ref_fin[idx] / flux_ref_fin[0], "C4-", label="extended source"
+    t[idx] - tmid,
+    flux_ref_fin[idx] / np.max(flux_ref_fin),
+    "C4-",
+    label="extended source",
 )
-ax[1].plot(t[idx] - tmid, flux_em[idx] / flux_em[0], "C1-", label="uniform")
-ax[1].plot(t[idx] - tmid, flux_ld[idx] / flux_ld[0], "C1--", label="cosine")
+ax[1].plot(t[idx] - tmid, flux_em[idx] / np.max(flux_em), "C1-", label="uniform")
+ax[1].plot(t[idx] - tmid, flux_ld[idx] / np.max(flux_ld), "C1--", label="cosine")
 ax[1].legend(loc="lower right", fontsize=13)
 
 # Make broken axis
