@@ -69,7 +69,8 @@ is given by the dot product
     \quad.
 \end{align}
 %
-The flux measured from this body is the surface integral over the visible
+The flux measured from this body is proportional to the surface integral
+over the visible
 portion of the body's projected disk of the albedo $A$
 times the illumination profile $\mathcal{I}$ of the surface, given by
 Lambert's law as
@@ -663,10 +664,95 @@ Moreover, rough surfaces can have complex scattering behavior due
 to changes in the orientation of the surface normal on small scales
 and effects such as multiple reflections and self-shading.
 
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=0.5\linewidth]{figures/scattering.pdf}
+        \oscaption{scattering}{%
+            Scattering geometry for non-Lambertian reflection. Based on
+            Figure~3 of \citet{OrenNayar1994}. The incident radiation
+            is labeled $\mathbf{s}$ and the outgoing radiation is
+            labeled $\mathbf{v}$. The shaded region is a small patch
+            of surface, oriented so that the normal vector points along
+            $\hat{z}$. The four angles relevant to the computation of
+            the emergent intensity are also indicated.
+            \label{fig:scattering}
+        }
+    \end{centering}
+\end{figure}
+
 In principle, any of these processes can be accounted for in
-the \starry algorithm by modiying the illumination matrix
-$\mathbf{I}$ (Equation~\ref{eq:Imat}).
-\xxx{TODO} \citep{OrenNayar1994}.
+the \starry algorithm by modifying the linear operator
+$\mathbf{I}$ (Equation~\ref{eq:Imat}), which in the Lambertian
+case simply weights the spherical harmonic expansion of the albedo
+by the cosine-like illumination profile to obtain the observed
+intensity at a point on the surface
+(see Equations~\ref{eq:sTA2IA1RRy} and \ref{eq:rTIA1RRy}).
+For non-Lambertian scattering, this matrix must also account for
+the phase dependence of the reflection: in particular, it will depend
+not only on the angle between the surface normal and the incident
+radiation, $\vartheta_i$, but also on the angle between the surface
+normal and the reflected radiation (i.e., the direction toward the
+observer), $\vartheta_r$. It may also depend on the azimuthal angles
+of the incident and reflected rays, $\phi_i$ and $\phi_r$, respectively.
+These four angles are shown in Figure~\ref{fig:scattering}, showing
+the incoming radiation (source) vector $\mathbf{s}$ and the outgoing
+radiation (viewer) vector $\mathbf{v}$ in a frame in which the $z$-axis
+points along the surface normal.
+
+Treatment of a generalized, flexible scattering model is beyond the scope
+of this paper. However, as an example of how a scattering model may be
+incorporated
+into the \starry algorithm, we consider in detail the case of the rough surface
+scattering model of \citet{OrenNayar1994}, commonly used in computer
+graphics applications and solar system body modeling
+\citep[e.g.,][]{Morgado2019}. In this model, the surface is treated as a
+collection of a large number of Lambertian facets oriented at random
+angles relative to the average surface normal, whose net contribution to
+the total intensity can depart significantly from the Lambertian case.
+While the general model accounts for interreflections, shadowing, and
+an arbitrary distribution of facet orientations, in its simplest form
+the intensity observed at a point $(x, y)$ on the (projected) surface of a
+body of unit radius and unit spherical albedo may be approximated as
+%
+\begin{align}
+    \mathcal{I} & = \frac{1}{\pi r_s^2}
+    \text{max}\Big(0 \, ,
+    \cos \vartheta_i\Big)
+    \bigg\{ c_0 + c_1 \, \text{max}\Big( 0, \, \cos(\phi_r - \phi_i) \Big)
+    \sin \alpha \tan \beta
+    \bigg\}
+\end{align}
+%
+where%
+%
+\\
+\begin{minipage}{.5\linewidth}
+    \begin{align}
+        c_0 & = 1 - 0.5 \left(\frac{\sigma^2}{\sigma^2 + 0.33}\right)
+        \nonumber                                                     \\
+        c_1 & = 0.45 \left(\frac{\sigma^2}{\sigma^2 + 0.09}\right)
+        \nonumber
+    \end{align}
+\end{minipage}%
+\begin{minipage}{.49\linewidth}
+    \begin{align}
+        \alpha & = \text{max}\Big( \vartheta_r, \, \vartheta_i \Big)
+        \nonumber                                                    \\
+        \beta  & = \text{min}\Big( \vartheta_r, \, \vartheta_i \Big)
+    \end{align}
+\end{minipage}
+\\[1em]
+%
+and $r_s$ is the distance to the illumination source, whose flux measured by
+the observer is unity.
+The expression above is based on Equation~(30) in \citet{OrenNayar1994}. At
+a given point on the surface, this intensity is a function of a single
+parameter, $\sigma$, defined as the standard deviation in radians of the
+distribution of facet angles (which is assumed to be a zero-mean Gaussian).
+The angles $\vartheta_i$, $\vartheta_r$, $\phi_i$, $\phi_r$ are all
+implicit functions of $x$, $y$, and the source position.
+\xxx{TODO.}
+
 
 \begin{figure}[p!]
     \begin{centering}
@@ -722,6 +808,7 @@ $\mathbf{I}$ (Equation~\ref{eq:Imat}).
 
 \xxx{TODO.}
 
+\vfill
 \pagebreak
 
 % Bibliography
@@ -974,7 +1061,11 @@ where
 %
 \begin{proof}{}
     \label{eq:illum_poly}
-    I(b, \theta, r_s; x, y) &= \frac{1}{\pi r_s^2}
+    I(b, \theta, r_s; x, y) &=
+    \frac{1}{\pi r_s^2}
+    \cos \vartheta_i
+    \nonumber \\
+    &= \frac{1}{\pi r_s^2}
     \bigg(
     -b_c\sin\theta x + b_c\cos\theta y - bz(x, y)
     \bigg)
