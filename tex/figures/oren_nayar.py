@@ -10,8 +10,8 @@ map = starry.Map(reflected=True)
 # Settings
 res = 300
 theta_im = np.linspace(0, 360, 9)[1:-1] * np.pi / 180
-theta_lr = np.linspace(0, 360, 100) * np.pi / 180
 theta_hr = np.linspace(0, 360, 1000) * np.pi / 180
+theta_lr = theta_hr[5::10]
 rs = [0, 15, 30, 45]
 
 # Set up the figure
@@ -79,10 +79,9 @@ for i, roughness in enumerate(rs):
         ax_im[i, j].axis("off")
 
     # Plot the analytic light curve
+    flux = map.flux(xs=np.sin(theta_hr), ys=0, zs=-np.cos(theta_hr))
     ax_lc.plot(
-        theta_hr / (2 * np.pi),
-        map.flux(xs=np.sin(theta_hr), ys=0, zs=-np.cos(theta_hr)),
-        color="C{}".format(i),
+        theta_hr / (2 * np.pi), flux, color="C{}".format(i),
     )
 
     # Render the exact Oren-Nayar image and compute
@@ -90,13 +89,14 @@ for i, roughness in enumerate(rs):
     img = map.render(
         xs=np.sin(theta_lr), ys=0, zs=-np.cos(theta_lr), res=res, on94_exact=True,
     )
+    flux_num = np.nansum(img, axis=(1, 2)) * 4 / res ** 2
     ax_lc.plot(
-        theta_lr / (2 * np.pi),
-        np.nansum(img, axis=(1, 2)) * 4 / res ** 2,
-        "o",
-        ms=2,
-        color="C{}".format(i),
+        theta_lr / (2 * np.pi), flux_num, "o", ms=2, color="C{}".format(i),
     )
+
+    # Print the difference
+    diff = flux[5::10] - flux_num
+    print("std = {:.0f} ppm".format(np.std(diff) * 1e6))
 
 ax_lc.set_xlabel("illumination phase", fontsize=18)
 ax_lc.set_ylabel("observed intensity", fontsize=18)

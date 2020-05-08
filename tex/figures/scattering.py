@@ -5,9 +5,6 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 
 
-plt.switch_backend("MacOSX")
-
-
 class Arrow3D(FancyArrowPatch):
     """
     From https://stackoverflow.com/a/22867877.

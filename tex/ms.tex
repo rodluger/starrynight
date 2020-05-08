@@ -70,10 +70,9 @@ is given by the dot product
 \end{align}
 %
 The flux measured from this body is proportional to the surface integral
-over the visible
-portion of the body's projected disk of the albedo $A$
-times the illumination profile $\mathcal{I}$ of the surface, given by
-Lambert's law as
+over the projected disk
+of the albedo $A$ times the illumination profile $\mathcal{I}$ of the surface,
+given by Lambert's law as
 %
 \begin{align}
     \label{eq:LambertsLaw}
@@ -81,10 +80,20 @@ Lambert's law as
     \quad,
 \end{align}
 %
-where $\mathcal{I}_0$ is the peak illumination (at the sub-source point)
-and $\vartheta_i$ is the angle between the incident radiation and the surface
-normal.
+where $\vartheta_i$ is the angle between the incident radiation and the surface
+normal and $\mathcal{I}_0$ is the peak illumination. We show in
+Appendix~\ref{sec:adapting-starry} that in the case of, say, a planet
+illuminated by its host star,
 %
+\begin{align}
+    \mathcal{I}_0 = \frac{f_s}{\pi r_s^2}
+\end{align}
+%
+where $r_s$ is the distance between the planet and the star (in units
+of the planet's radius) and $f_s$ is the stellar flux measured at the observer
+(in arbitrary units). Following the convention in \citet{Luger2019}, we assume
+throughout this paper that $f_s = 1$, so all fluxes are defined as a fraction of
+the flux of the illumination source.
 
 The piecewise nature of the illumination function at the day/night terminator
 makes the problem of computing the visible flux particularly difficult; most
@@ -712,16 +721,17 @@ the total intensity can depart significantly from the Lambertian case.
 While the general model accounts for interreflections, shadowing, and
 an arbitrary distribution of facet orientations, in its simplest form
 the intensity observed at a point $(x, y)$ on the (projected) surface of a
-body of unit radius and unit spherical albedo may be approximated as
+body of unit spherical albedo may be approximated as
+\citep[c.f. Equation~30 in][]{OrenNayar1994}
 %
-\begin{align}
-    \mathcal{I} & = \frac{1}{\pi r_s^2}
-    \text{max}\Big(0 \, ,
-    \cos \vartheta_i\Big)
+\begin{proof}{OrenNayar}
+    \label{eq:OrenNayar}
+    \mathcal{I} & =
+    \mathcal{I}_\text{Lamb}
     \bigg\{ c_0 + c_1 \, \text{max}\Big( 0, \, \cos(\phi_r - \phi_i) \Big)
     \sin \alpha \tan \beta
     \bigg\}
-\end{align}
+\end{proof}
 %
 where%
 %
@@ -735,26 +745,24 @@ where%
     \end{align}
 \end{minipage}%
 \begin{minipage}{.49\linewidth}
-    \begin{align}
+    \begin{proof}{OrenNayar}
         \alpha & = \text{max}\Big( \vartheta_r, \, \vartheta_i \Big)
         \nonumber                                                    \\
         \beta  & = \text{min}\Big( \vartheta_r, \, \vartheta_i \Big)
-    \end{align}
+    \end{proof}
 \end{minipage}
 \\[1em]
+and the angles $\vartheta_i$, $\vartheta_r$, $\phi_i$, and $\phi_r$ are all
+implicit functions of $x$, $y$, and the illumination source position.
+The term $\mathcal{I}_\text{Lamb}$ is the Lambertian illumination profile,
+given by Equation~(\ref{eq:LambertsLaw}).
 %
-and $r_s$ is the distance to the illumination source, whose flux measured by
-the observer is unity.
-The expression above is based on Equation~(30) in \citet{OrenNayar1994}. At
-a given point on the surface, this intensity is a function of a single
+At a given point on the surface, and for a given source position,
+the intensity $\mathcal{I}$ is therefore a function of a single
 parameter, $\sigma$, defined as the standard deviation in radians of the
 distribution of facet angles (which is assumed to be a zero-mean Gaussian).
-The angles $\vartheta_i$, $\vartheta_r$, $\phi_i$, $\phi_r$ are all
-implicit functions of $x$, $y$, and the source position.
-\xxx{TODO.}
 
-
-\begin{figure}[p!]
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/oren_nayar.pdf}
         \oscaption{oren_nayar}{%
@@ -764,8 +772,7 @@ implicit functions of $x$, $y$, and the source position.
             roughness coefficients ranging from $\sigma = 0^\circ$
             (the Lambertian case) to $\sigma = 45^\circ$. The bottom
             panel shows the corresponding phase curves for a sphere
-            of unit spherical albedo illuminated by a point source
-            at $r_s = 1$, computed
+            of unit spherical albedo illuminated by a point source, computed
             analytically from a degree \STARRYORENNAYARDEG expansion
             of the scattering law. Dots
             correspond to the intensity computed numerically directly
@@ -774,9 +781,55 @@ implicit functions of $x$, $y$, and the source position.
         }
     \end{centering}
 \end{figure}
-%
 
-\begin{figure}[p!]
+In order to incorporate this scattering model into \starry, we must weight
+the spherical harmonic expansion of the albedo, $\mathbf{y}$, by
+Equation~(\ref{eq:OrenNayar}) instead of Equation~(\ref{eq:LambertsLaw}).
+Weighting by Equation~(\ref{eq:LambertsLaw}) is (relatively) straightforward,
+since $\mathcal{I}_\text{Lamb}$ is a piecewise function of the $l=1$ spherical
+harmonics (see Appendix~\ref{sec:adapting-starry}).
+The function we must integrate when computing fluxes is therefore
+exactly expressible in terms of spherical harmonics and thus
+\starry-integrable. However, Equation~(\ref{eq:OrenNayar}) cannot be expressed
+exactly in terms of spherical harmonics, so we must instead approximate it.
+To this end, we evaluate Equation~(\ref{eq:OrenNayar}) on a
+grid of $x$ and $y$ spanning the unit disk, as well as the illumination phase,
+parametrized by $b$, the semi-minor axis of the elliptical segment defining
+the day/night terminator (see Appendix~\ref{sec:adapting-starry}).
+We then fit to this a polynomial of total degree \STARRYORENNAYARDEG
+in $x$, $y$, and $z \equiv \sqrt{1 - x^2 - y^2}$ and degree
+\STARRYORENNAYARNB in $b$ and degree \STARRYORENNAYARNBC in
+$b_c \equiv \sqrt{1 - b^2}$.
+%
+Then, for a given value of $b$ and $b_c$, we construct the operator
+$\mathbf{I}$ out of the polynomial coefficients in the same way as we
+constructed the Lambertian operator in Appendix~\ref{sec:adapting-starry}.
+%
+More details about our approximation can be found in the Jupyter notebook
+accompanying Equation~(\ref{eq:OrenNayar}).
+
+Figure~\ref{fig:oren_nayar} shows spheres of unit albedo
+with different surface roughness
+coefficients $\sigma$ and their corresponding phase curves.
+The sphere in the top row is perfectly Lambertian; its phase curve (blue)
+peaks at a value of $\nicefrac{2}{3}$, equal to the geometric albedo
+of a Lambert sphere. Increasing the surface roughness results in a greater
+relative contribution of flux from the limb of the object near full
+phase, since there now exist facets reflecting light directly back toward the
+observer (remaining rows and curves in the phase curve plot).
+Conversely, less light is scattered
+back to the observer at the
+sub-illumination point. These competing effects lead to phase curves that
+peak at a super-Lambertian value for small roughness
+coefficients ($\sigma = 15^\circ$, orange) and at a sub-Lambertian value for
+large roughness coefficients ($\sigma = 45^\circ$, red).
+%
+We validate our calculations by computing the phase curves by numerically
+integrating the \citet{OrenNayar1994} model over the visible disk; these
+are shown as the small dots in the figure, which agree to within
+$350$ ppm of the body's flux for $\sigma = 45^\circ$.
+
+\begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/io_europa.pdf}
         \oscaption{io_europa}{%
@@ -785,7 +838,7 @@ implicit functions of $x$, $y$, and the source position.
             The blue line is the \starry model, based of an
             $l=15$ spherical harmonic fit to the
             Galileio global color mosaic of Io \citep{Becker2005},
-            an $l=\STARRYQUADPOINTS$ expansion of the
+            an $l=\STARRYORENNAYARDEG$ expansion of the
             \citet{OrenNayar1994} scattering law, and orbital
             information from the JPL Horizons \xxx{(cite)} database.
             See text for details.
@@ -793,7 +846,36 @@ implicit functions of $x$, $y$, and the source position.
         }
     \end{centering}
 \end{figure}
+
+Our implementation of the scattering model extends just as easily
+to occultations and to cases where the surface does not have uniform albedo.
+Figure~\ref{fig:io_europa} shows a visible-light observation of the
+occultation of Io by Europa on 04 Dec 2009 taken by the PHEMU09
+campaign \citep{Arlot2014}. The trajectory of Europa relative to Io,
+computed from the JPL Horizons databse \xxx{(cite)}
+is shown at the top. We fit to this data a \starry occultation model
+with the scattering law discussed above.
+For simplicity, we set the surface map equal too
+an $l=15$ spherical harmonic expansion of the Galileo global color mosaic
+of Io \citep{Becker2005} and use ephemerides from the JPL Horizons
+database, allowing for a small static $x-y$ offset between Europa and Io as
+in \citep{Arlot2014} due to the uncertainty in the database. In total,
+we fit for five parameters: the two Cartesian offset terms,
+the flux contribution from Europa, the average
+albedo of Io, and the average surface roughness of Io, $\sigma$. The model
+is displayed in blue and closely matches the data.
 %
+Note, however, that this is meant simply as a demonstration of the \starry
+algorithm, as our model for the surface is approximate at best, given
+differences in the wavelength band between the Galileo observations and
+those of the PHEMU09 campaign, changes in the albedo of Io since the Galileo
+measurements, and the fact that the orientation and extent of any shadows
+due to volcanoes on the surface are likely different between the Galileo
+and PHEMU09 observations. Furthermore,
+proper modeling would entail the
+joint analysis of all light curves of Io taken in a given season, for which
+we can afford to simultaneously fit for the surface map without risk of
+overfitting (Bartoli\'c, Luger, et al., in prep).
 
 \section{Discussion}
 \label{sec:discussion}
@@ -801,10 +883,15 @@ implicit functions of $x$, $y$, and the source position.
 \subsection{Information theory}
 \label{sec:information}
 
-\xxx{TODO.}
+\xxx{A few notes here on how constraining reflected light curves can be.}
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\xxx{Limitations of the model: can't capture shadowing. Unstable above degree 20 or so.}
 
 \section{Conclusions}
-\label{sec:conclusionss}
+\label{sec:conclusions}
 
 \xxx{TODO.}
 
@@ -1082,7 +1169,8 @@ the body is seen at full phase, so $b = -1$, $b_c = 0$, and
 \end{proof}
 %
 Integrating this over the full disk, we obtain the reflected flux measured
-by the observer if the body has unit spherical albedo,
+by the observer (as a fraction of the flux of the illumination source)
+if the body has unit spherical albedo,
 %
 \begin{proof}{}
     \mathcal{f}_\text{full} &=
