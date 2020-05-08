@@ -14,7 +14,11 @@
 \begin{document}
 
 % Title
-\title{Analytic Occultation Light Curves in Reflected Light}
+\title{%
+    Analytic Light Curves in Reflected Light:%
+    \\%
+    Phase Curves, Occultations, and Non-Lambertian Scattering
+}
 
 % Author list
 \author[0000-0002-0296-3826]{Rodrigo Luger}
@@ -35,15 +39,19 @@
 \xxx{A few paragraphs of introduction here. \citet{Russell1906}.}
 
 Our goal in this paper is to derive analytic expressions for the
-flux received by a distant observer from a non-uniform Lambert sphere
+flux received by a distant observer from a sphere of non-uniform albedo
 illuminated by a monochromatic source that may or may not be
 occulted by a (possibly different) spherical body. This applies, for example,
-to the
-case of exoplanet phase curves, exoplanet secondary
-eclipse (occultation) light curves, or exoplanet-moon and exoplanet-exoplanet
-occultations, all seen in reflected light. We explicitly assume the reflecting
-body is Lambertian, i.e., it scatters light isotropically, although with an
-intensity that varies across the surface according to a spatially-dependent
+to the case of planetary phase curves, secondary
+eclipse (occultation) light curves, and moon-moon, planet-moon, and
+planet-planet occultations (in the Solar System or not),
+all seen in reflected light. We derive all expressions in
+the limit that the reflecting
+body is Lambertian, i.e., it scatters light isotropically, but we relax
+this assumption in later sections.
+We model the general case of an
+intensity that varies across the surface of the body according to a
+spatially-dependent
 albedo $A$. Throughout this paper, we will take $A$ to mean the \emph{spherical}
 albedo, the fraction of power incident on a body at a given wavelength
 that is scattered back out to space (in all directions).
@@ -93,7 +101,7 @@ where $r_s$ is the distance between the planet and the star (in units
 of the planet's radius) and $f_s$ is the stellar flux measured at the observer
 (in arbitrary units). Following the convention in \citet{Luger2019}, we assume
 throughout this paper that $f_s = 1$, so all fluxes are defined as a fraction of
-the flux of the illumination source.
+the flux of the illumination source at the observer.
 
 The piecewise nature of the illumination function at the day/night terminator
 makes the problem of computing the visible flux particularly difficult; most
@@ -884,6 +892,31 @@ overfitting (Bartoli\'c, Luger, et al., in prep).
 \label{sec:information}
 
 \xxx{A few notes here on how constraining reflected light curves can be.}
+
+\begin{figure}[t!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/inference.pdf}
+        \oscaption{inference}{%
+            Example of an inference problem for a thermal phase curve
+            (center left) and a reflected phase curve (center right).
+            In both cases,
+            a mock phase curve is generated from an $l=20$ expansion
+            of the cloudless Earth (top) with 1,000 evenly spaced points
+            over the course of one year and an extremely small
+            photometric uncertainty of 1 ppm. The observer sits along the
+            ecliptic and the obliquity of the Earth is set to $23.5^\circ$.
+            Data is shown as the black points, and the maximum likelihood
+            \starry model is shown in blue. While both models fit the
+            data equally well, the same is not true of the inferred
+            surface maps (bottom row): only in the reflected case are the
+            continental outlines recovered.
+            The thermal phase curve problem is
+            extremely ill-conditioned, but the analogous problem in reflected
+            light is much better posed.
+            \label{fig:inference}
+        }
+    \end{centering}
+\end{figure}
 
 \subsection{Limitations}
 \label{sec:limitations}
