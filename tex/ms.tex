@@ -38,7 +38,8 @@
 %
 \xxx{A few paragraphs of introduction here.
     Papers to cite: \citet{Russell1906}, \citet{Cowan2009},
-    \citet{Kawahara2010}, \citet{Kawahara2011}, \citet{Fujii2012}}
+    \citet{Kawahara2010}, \citet{Kawahara2011}, \citet{Fujii2012},
+    \citet{Farr2018}, \citet{Louden2018}.}
 
 Our goal in this paper is to derive analytic expressions for the
 flux received by a distant observer from a sphere of non-uniform albedo
@@ -472,7 +473,7 @@ The algorithm presented in this paper has been implemented in the \Python
 package \starry, which can be installed from
 \href{https://github.com/rodluger/starry}{GitHub} or via the Python package
 manager \textsf{pip}. The algorithm is coded in a mixture of \textsf{C++}
-with forward automatic differentation using the \textsf{Eigen} library
+with forward automatic differentiation using the \textsf{Eigen} library
 \citep{eigen} and \Python with backward differentiation using
 just-in-time compiled \textsf{theano}
 operations \citep{theano}. The user interface, however, is purely in
@@ -522,7 +523,7 @@ resulting in a negligible effect on the planet's light curve. However,
 for very close-in planets, the effect can be significant. For instance,
 the hot Jupiter Kelt-9b has $\nicefrac{R_p}{R_\star} = 0.083$ and
 $\nicefrac{a}{R_\star} = 3.16$
-planet \citep{Wong2019}. Asssuming zero eccentricity and ignoring any
+planet \citep{Wong2019}. Assuming zero eccentricity and ignoring any
 stellar oblateness
 \citep[see][]{Ahlers2020},
 the day/night terminator extends $\tau \approx 17^\circ$ past the limb
@@ -847,7 +848,7 @@ $350$ ppm of the body's flux for $\sigma = 45^\circ$.
             on 04 Dec 2009 by the PHEMU09 campaign \citep{Arlot2014}.
             The blue line is the \starry model, based of an
             $l=15$ spherical harmonic fit to the
-            Galileio global color mosaic of Io \citep{Becker2005},
+            Galileo global color mosaic of Io \citep{Becker2005},
             an $l=\STARRYORENNAYARDEG$ expansion of the
             \citet{OrenNayar1994} scattering law, and orbital
             information from the JPL Horizons \xxx{(cite)} database.
@@ -862,7 +863,7 @@ to occultations and to cases where the surface does not have uniform albedo.
 Figure~\ref{fig:io_europa} shows a visible-light observation of the
 occultation of Io by Europa on 04 Dec 2009 taken by the PHEMU09
 campaign \citep{Arlot2014}. The trajectory of Europa relative to Io,
-computed from the JPL Horizons databse \xxx{(cite)}
+computed from the JPL Horizons database \xxx{(cite)}
 is shown at the top. We fit to this data a \starry occultation model
 with the scattering law discussed above.
 For simplicity, we set the surface map equal too
@@ -885,7 +886,7 @@ and PHEMU09 observations. Furthermore,
 proper modeling would entail the
 joint analysis of all light curves of Io taken in a given season, for which
 we can afford to simultaneously fit for the surface map without risk of
-overfitting (Bartoli\'c, Luger et al., in prep).
+overfitting (Bartoli\'c, Luger et al., \emph{in prep}).
 
 \section{Discussion}
 \label{sec:discussion}
@@ -893,8 +894,116 @@ overfitting (Bartoli\'c, Luger et al., in prep).
 \subsection{Linearity}
 \label{sec:linearity}
 
-\xxx{The starry problem is linear. We compute fluxes but can easily
-    compute design matrices instead.}
+In the Appendix we derive closed-form expressions for the flux
+as a function of the spherical harmonic expansion of the albedo,
+$\mathbf{y}$: Equation~(\ref{eq:sTA2IA1RRy}) for occultations and
+Equation~(\ref{eq:rTA1Ry}) for phase curves. Inspection of those
+equations reveals that they are both \emph{linear} in $\mathbf{y}$:
+the flux is simply the dot product of several matrices and the
+vector of spherical harmonic coefficients. We may therefore write
+both expressions in the form
+%
+\begin{align}
+    f = \mathbf{x}^\top \mathbf{y}
+\end{align}
+%
+where $f$ is a scalar representing the model for the flux at a particular
+point in time and $\mathbf{x}^\top$ is a row vector equal to
+$\sT\mathbf{A_2}\mathbf{I}\mathbf{A_1}\mathbf{R'}\mathbf{R}$
+(in the case of an occultation)
+or
+$\rT\mathbf{I}\mathbf{A_1}\mathbf{R''}\mathbf{R}$
+(in the case of a phase curve; see Appendix~\ref{sec:adapting-starry}
+for details on what each of the terms represent). Now, if we let $\mathbf{f}$
+be the vector of values of $f$ for each point in the timeseries and
+construct the matrix $\mathbf{X}$ out of the stacked row vectors
+$\mathbf{x}^\top$, we may write our model for the entire timeseries as
+the dot product
+%
+\begin{align}
+    \mathbf{f} = \mathbf{X} \mathbf{y}
+    \quad.
+\end{align}
+%
+The linearity of the \starry model is useful in several ways. For one,
+it can be exploited to cheaply compute the same model for different
+input vectors $\mathbf{y}$. This is useful for multi-band light curves,
+where the same matrix $\mathbf{X}$ dots into several vectors $\mathbf{y}$,
+one for each observation band, or for time-dependent models, in which
+the model for the flux might be the Taylor series
+%
+\begin{align}
+    \mathbf{f} =
+    \mathbf{X}
+    \bigg(
+    \mathbf{y}(t)\bigg|_{t=t_0} +
+    \frac{\dd\mathbf{y'}(t)}{\dd t}\bigg|_{t=t_0} t +
+    \frac{1}{2}\frac{\dd^2\mathbf{y'}(t)}{\dd t^2}\bigg|_{t=t_0} t^2 +
+    \cdots
+    \bigg)
+    \quad,
+\end{align}
+%
+where $\mathbf{y}(t)$ is a time-dependent representation of the surface
+map, which we expand about $t=t_0$ \citep[see][]{Luger2019b}.
+But perhaps even more importantly, linear
+models are particularly useful for inference, since under Gaussian
+noise properties the posterior is analytic. In particular, if
+our light curve measurements are given by the data vector $\mathbf{d}$
+whose noise model is specified by the covariance matrix $\pmb{\Sigma}$,
+and we place a Gaussian prior on $\mathbf{y}$ with mean $\pmb{\mu}$ and
+covariance $\pmb{\Lambda}$, the posterior mean may be written
+%
+\begin{align}
+    \label{eq:posterior_mu}
+    \hat{\bvec{y}} & =
+    \bvec{C}
+    \left(
+    \mathbf{X}^\top
+    \pmb{\Sigma}^{-1}
+    \bvec{d}
+    +
+    \pmb{\Lambda}^{-1}
+    \pmb{\mu}
+    \right)
+    \quad,
+\end{align}
+%
+where $\bvec{C}$ is the posterior covariance, given by
+%
+\begin{align}
+    \label{eq:posterior_cov}
+    \bvec{C} & =
+    \left(
+    \mathbf{X}^\top
+    \pmb{\Sigma}^{-1}
+    \mathbf{X}
+    +
+    \pmb{\Lambda}^{-1}
+    \right)^{-1}
+    \quad.
+\end{align}
+%
+Because of this linearity, and the analyticity of the \starry
+model, inference on datasets comprising thousands of points and
+spherical harmonic degree $l \leq 20$ takes a
+\emph{fraction of a second} on a typical computer.
+\textbf{Full posterior inference with \starry is thus faster than
+    the numerical evaluation of a single forward model}
+(c.f. Figure~\ref{fig:speed}).
+
+It is important to note, however, that the \starry model is linear
+only in the map coefficients $\mathbf{y}$. In any real application,
+there will be uncertainty in the inputs of $\mathbf{X}$, such
+as the orbital parameters, the occultor parameters, the scattering
+law, etc. These parameters must typically be sampled over, since the model
+is a nonlinear function of them. However, the analyticity---and in particular,
+the differentiability---of the \starry model makes sampling via
+gradient-based MCMC easy. Moreover, the linearity of the model
+with respect to $\mathbf{y}$ allows one to efficiently marginalize over
+those parameters when sampling over the nonlinear parameters.
+Tutorials on how to do this can be found in the
+\starry \href{https://rodluger.github.io/starry}{documentation}.
 
 \subsection{The information content of reflected light curves}
 \label{sec:information}
@@ -946,7 +1055,8 @@ expansion of the Earth (top) with 1,000 points over the course of one year
 with an exquisite photometric precision of 1 ppm. The Earth is given
 an obliquity of $23.5^\circ$ on the plane of the sky but is viewed
 along the ecliptic, rotating edge-on with an inclination of $90^\circ$.
-The data are shown in black, and in blue is our least-squares fit,
+The data are shown in black, and in blue is the posterior mean model
+(Equation~\ref{eq:posterior_mu}),
 in which we assume a prior variance of $10^{-3}$ for all spherical
 harmonic coefficients (and zero covariance). The corresponding surface
 map is shown at the bottom. As expected, this looks nothing like the
@@ -968,7 +1078,7 @@ particular, the facts that (1) the Earth is seen at different phases and
 (2) the terminator is inclined relative to the rotational axis mean
 that the region of the surface contributing to the phase curve is
 always changing, resulting in a complex light curve that encodes
-signficicantly more information than its thermal counterpart.
+significantly more information than its thermal counterpart.
 %
 The result is an inferred map that is largely faithful to the
 true map (bottom). While the continental outlines are somewhat fuzzy and some
@@ -1057,7 +1167,135 @@ in the toolbox.
 \subsection{Limitations}
 \label{sec:limitations}
 
-\xxx{Limitations of the model: can't capture shadowing. Unstable above degree 20 or so.}
+There are several limitations to the \starry model that are important
+to bear in mind. The primary limitation concerns the maximum spherical
+harmonic degree of the model. While the expressions derived here are
+valid at arbitrary degree, we find that their numerical stability begins
+to degrade above $l \sim 20-25$ for occultations and $l \sim 35-40$ for phase
+curves. The same is true for the model in thermal light \citep{Luger2019},
+and is due to (1) the large condition number of the change-of-basis matrix
+from spherical harmonics to polynomials and (2) instabilities in the
+many recursion relations used to evaluate the solution vectors
+$\sT$ and $\rT$.
+In principle, one could improve the numerical stability by evaluating
+all expressions at higher floating-point precision, but in practice
+the computational cost of this becomes quickly prohibitive.
+However, it is important to keep in mind that our current best image
+of an exoplanet is the $l=1$ map of HD189733b
+\citep{Knutson2007,Majeau2012,deWit2012}. Next-generation facilities
+such as JWST may allow us to probe surface modes as small as $l=5$
+for some planets (Luger et al., \emph{in prep}), but even with future
+telescopes such as LUVOIR it is extremely unlikely we will do better than
+$l=20$. If we are ever able to probe resolutions smaller than
+$180^\circ / 20 = 9^\circ$ on the surface, the \starry algorithm
+will have to be revisited.
+
+The second limitation involves a potential failure of the \starry
+algorithm. The \starry code includes a large suite of unit tests that compare
+the flux computations to numerical models and to various benchmarks
+for a wide variety of inputs. While we have done our best to
+develop tests over the full range of occultation configurations,
+there may be edge cases in which the \starry algorithm fails and returns
+the wrong flux. This could happen, for instance, if the quartic root
+solver (\S\ref{sec:which-case}) fails to find the points of intersection
+between the occultor and the day/night terminator, leading to
+an incorrect case identification (Figure~\ref{fig:cases}) and thus the
+wrong value for the flux. In the development of the algorithm, these cases
+would occasionally show up as a single, obvious outlier in a light curve
+model. All such cases we encountered
+have been fixed by adding consistency
+checks in the root solver and switching to alternate evaluation methods
+near known singularities. However, it is possible that there may still be
+rare cases in which this happens, in which case we ask that users
+raise an \href{https://github.com/rodluger/starry/issues}{issue} on
+GitHub so that we can provide a fix.
+
+The third limitation concerns the flexibility of the \starry model.
+While we presented ways to capture non-Lambertian scattering
+in \starry (\S\ref{sec:nonlambertian}), there are certain aspects
+of light curves in reflected light that cannot be captured by the model.
+One example of this is shadowing. Craters on the moon or
+volcanoes on Io can cast large shadows visible from space, particularly
+if viewed near crescent phase. Unfortunately, there is no way to model
+this within the \starry framework. Another example is specular reflection,
+or ``glint'', which is a pronounced signal for the Earth due its
+oceans \citep{Robinson2014} and on Titan due to
+its hydrocarbon lakes \citep{Barnes2011}. In principle, glint could be
+modeled in the same way as non-Lambertian sccattering, by constructing the
+linear operator $\mathbf{I}$ in such a way as to downweight portions of the
+projected disk where $\vartheta_i \neq \vartheta_r$. In practice, however,
+if the size of the glint spot is small (which is typically the case),
+an expansion at extremely high $l$ ($l \sim 360$ in the case of the Earth)
+would be required, which would not work for the reasons above.
+Instead, it may be possible to combine the \starry algorithm with the
+formalism of \citet{Haggard2018}, who derived analytic expressions for
+phase curves of delta function maps ($\delta$-map), to model glint.
+As discussed in \citet{LustigYaeger2018}, glint mapping is an extremely
+powerful way to not only map terrestrial planets but also to confirm
+their habitability via the presence of an ocean.
+
+Finally, we would like to emphasize that while spherical harmonics are
+a convenient basis for the purpose of computing light curves, they
+have a significant drawback when it comes to modeling real planetary
+surfaces: it can be difficult to strictly enforce physical
+values of the albedo everywhere on the surface map when doing inference.
+That is because there is no analytic way to determine whether a
+spherical harmonic representation is positive-valued
+(or restricted to a given range) everywhere on the sphere.
+Instead, this must be checked numerically, by evaluating the function on a
+discrete grid. This makes it somewhat cumbersome to implement positivity as a prior
+when doing inference; in particular, this prior cannot be expressed as
+a Gaussian, so the analytic expression for the posterior
+discussed in \S\ref{sec:linearity} will generally have nonzero support for
+negative albedo values. This is particularly problematic when the data is
+not very constraining and the posterior is prior-dominated, as
+positivity can be an \emph{extremely} informative prior
+\citep[e.g.,][]{Fienup1978}.
+We therefore recommend that in such cases
+users of the \starry algorithm use MCMC to do inference, either
+(1) sampling over the spherical
+harmonic coefficients $\mathbf{y}$ and imposing a uniform prior in the range
+$[0, 1]$ on the albedo values $\mathbf{a}$
+evaluated on a discrete grid on the sphere or
+(2) sampling over the albedo values $\mathbf{a}$ with the same uniform prior,
+but using $\mathbf{y}$ to compute the actual light curve model. In both
+cases, there exists a linear operator that transforms between
+$\mathbf{y}$ and $\mathbf{a}$:
+%
+\begin{align}
+    \label{eq:Py}
+    \mathbf{a} = \mathbf{P} \mathbf{y}
+\end{align}
+%
+and
+%
+\begin{align}
+    \label{eq:PInvy}
+    \mathbf{y} = \mathbf{P}^+ \mathbf{a}
+    \quad,
+\end{align}
+%
+where
+%
+\begin{align}
+    \label{eq:PInv}
+    \mathbf{P}^+ =
+    (\mathbf{P}^\top \mathbf{P} + \lambda \mathbf{I})^{-1} \mathbf{P}^\top
+\end{align}
+%
+is the pseudoinverse of $\mathbf{P}$, with (small) regularization parameter
+$\lambda$ and where $\mathbf{I}$ is the identity matrix.
+%
+Each row of the matrix $\mathbf{P}$ is constructed from the value
+of each of the spherical harmonics at the corresponding point on the
+grid; both $\mathbf{P}$ and its inverse may be pre-computed for
+efficiency. In both cases, the grid should be fine enough to ensure
+positivity over most of the sphere but not so fine as to throttle the
+computation; in practice, we find that grids with $2-5$ times as many pixels
+as spherical harmonic coefficients are ideal.
+%
+The \href{https://rodluger.github.io/starry}{documentation}
+includes tutorials on how to implement this in practice.
 
 \section{Conclusions}
 \label{sec:conclusions}
@@ -1915,7 +2153,7 @@ the terminator semi-minor
 axis $b$ and angle $\theta'$ in the frame $\mathcal{F}'$.
 Then, once the case is determined, we must
 identify the relevant integration boundaries, which depend on the points
-of intesection between the limb of the body, the limb of the occultor, and
+of intersection between the limb of the body, the limb of the occultor, and
 the terminator. We do so in the following sections.
 
 %
@@ -2092,7 +2330,7 @@ the solution is again trivial:
 %
 Conversely, case 3 corresponds to occultations in which the occultor blocks
 \emph{all} of the nightside of the body and \emph{some} of the dayside.
-Since the visible portion of the disk consistss only of dayside, we can
+Since the visible portion of the disk consists only of dayside, we can
 simply use the weighted solution in emitted light
 (Equation~\ref{eq:fI}):
 %
