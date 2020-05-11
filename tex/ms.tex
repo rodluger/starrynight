@@ -36,7 +36,9 @@
 \section{Introduction}
 \label{sec:intro}
 %
-\xxx{A few paragraphs of introduction here. \citet{Russell1906}.}
+\xxx{A few paragraphs of introduction here.
+    Papers to cite: \citet{Russell1906}, \citet{Cowan2009},
+    \citet{Kawahara2010}, \citet{Kawahara2011}, \citet{Fujii2012}}
 
 Our goal in this paper is to derive analytic expressions for the
 flux received by a distant observer from a sphere of non-uniform albedo
@@ -883,15 +885,35 @@ and PHEMU09 observations. Furthermore,
 proper modeling would entail the
 joint analysis of all light curves of Io taken in a given season, for which
 we can afford to simultaneously fit for the surface map without risk of
-overfitting (Bartoli\'c, Luger, et al., in prep).
+overfitting (Bartoli\'c, Luger et al., in prep).
 
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Information theory}
+\subsection{Linearity}
+\label{sec:linearity}
+
+\xxx{The starry problem is linear. We compute fluxes but can easily
+    compute design matrices instead.}
+
+\subsection{The information content of reflected light curves}
 \label{sec:information}
 
-\xxx{A few notes here on how constraining reflected light curves can be.}
+One of the fundamental difficulties with the mapping problem is that
+the process of inferring a two-dimensional map from a light curve
+is almost always ill-posed. This has been known since at least
+the turn of the last century, when \citet{Russell1906} discussed
+how, because of symmetry,
+all odd harmonics above $l = 1$ are in the null space for thermal
+phase curves of spherical bodies, meaning those terms do not contribute
+at all to the disk-integrated flux. As discussed in \citet{Luger2019},
+the problem is even more ill-posed than that: for any even
+degree $l > 0$, there are $2l + 1$ modes on the \emph{surface}
+(one for each value of $m$), but only $2$ Fourier modes in the
+\emph{light curve} (i.e., a sine and a cosine). Thus, for every
+mode that can be constrained from the light curve, there are far
+more modes that cannot, a problem that only gets worse as $l$
+increases.
 
 \begin{figure}[t!]
     \begin{centering}
@@ -917,6 +939,120 @@ overfitting (Bartoli\'c, Luger, et al., in prep).
         }
     \end{centering}
 \end{figure}
+
+The left panel of Figure~\ref{fig:inference} shows this issue in practice.
+We generate a mock thermal light curve (center left) from an $l = 20$
+expansion of the Earth (top) with 1,000 points over the course of one year
+with an exquisite photometric precision of 1 ppm. The Earth is given
+an obliquity of $23.5^\circ$ on the plane of the sky but is viewed
+along the ecliptic, rotating edge-on with an inclination of $90^\circ$.
+The data are shown in black, and in blue is our least-squares fit,
+in which we assume a prior variance of $10^{-3}$ for all spherical
+harmonic coefficients (and zero covariance). The corresponding surface
+map is shown at the bottom. As expected, this looks nothing like the
+true map of the Earth. For a body seen rotating edge-on, the information
+content of the light curve is strictly longitudinal. While the
+inferred map captures the average brightness of the Earth at each
+longitude fairly well, it is missing all latitudinal information.
+This is independent of the signal-to-noise or the cadence of the
+dataset---it is a fundamental limitation of phase curves in thermal light.
+
+The same is not true for the case of reflected light phase curves. In
+the right panel of Figure~\ref{fig:inference} we show the same
+mock light curve and perform the same inference step,
+but this time for observations in reflected light; the light curve
+is similar to that in Figure~\ref{fig:earthphase}. Because of the
+presence of a day-night terminator beyond which features on the surface
+contribute zero flux, none of the symmetry arguments above apply. In
+particular, the facts that (1) the Earth is seen at different phases and
+(2) the terminator is inclined relative to the rotational axis mean
+that the region of the surface contributing to the phase curve is
+always changing, resulting in a complex light curve that encodes
+signficicantly more information than its thermal counterpart.
+%
+The result is an inferred map that is largely faithful to the
+true map (bottom). While the continental outlines are somewhat fuzzy and some
+artifacts are present at high latitudes, it is clear that the
+inference problem is much less ill-posed in this case.
+
+Unlike thermal light curves, reflected light phase curves have the
+potential to robustly constrain two-dimensional maps of exoplanets.
+This result is
+not new, and has been discussed at length in the literature
+\citep[e.g.,][]{Fujii2012,Berdyugina2017,Luger2019b,Aizawa2020,Kawahara2020}.
+In particular, \citet{Kawahara2010} demonstrated the uniqueness of their
+inferred map from mock reflected light curves of the Earth. As we argued
+above, for specific geometrical configurations, the mapping problem
+in reflected light can actually be well-posed, meaning it has no
+null space up to a certain degree $l$. Reflected light phase curves of
+terrestrial planets with JWST and future direct imaging missions thus
+have the potential to reveal detailed information about their surfaces.
+
+\begin{figure}[p!]
+    \begin{centering}
+        \includegraphics[width=\linewidth]{figures/inference_occ.pdf}
+        \oscaption{inference_occ}{%
+            Similar to Figure~\ref{fig:inference}, but for 500 high
+            signal to noise observations taken
+            over ten days near quadrature.
+            At the top we show the thermal and reflected
+            phase curves and the corresponding inferred maps.
+            At the bottom, we show the same light curves but this
+            time including 7 equatorial occultations by
+            a (very) short period moon one-quarter the size of the planet.
+            %
+            The presence of the occultations significantly increases the
+            fidelity of the recovered maps near the equator (the path
+            of the occultor). While in the thermal case there is significant
+            overfitting at high latitudes, in the reflected case the map
+            accurately recovers features across the entire planet.
+            \label{fig:inference_occ}
+        }
+    \end{centering}
+\end{figure}
+
+Nevertheless, at finite signal to noise and for limited observation
+duration or cadence, there may still be significant degeneracies in
+the reflected phase curve problem. In \citet{Luger2019} we argued that
+occultations can be used to break many of these degeneracies, since they
+directly probe the surface at scales inaccessible to phase curves.
+The same is true in reflected light. Figure~\ref{fig:inference_occ}
+demonstrates this for mock observations of the same Earth-like
+planet as in Figure~\ref{fig:inference}, but this time taken
+over ten days near quadrature, when the disk of the planet is seen at
+half phase. The top rows show the thermal and reflected phase
+curves and the inferred maps, which look similar to those in
+the previous figure.
+At the bottom we show the same light curve, but this time including
+seven equatorial occultations by a moon one-quarter the size of the planet.
+The moon's period and occultation duration are unrealistically short, but
+the inferred maps at the bottom show the exquisite constraining power of these
+occultations.
+In the thermal case, the presence of the moon allows us to infer the
+two-dimensional distribution of surface features along its equatorial
+occultation path; however, there is little information
+in the light curve about features at higher latitudes, and the \starry model
+overfits. Conversely, in the reflected light case, there is information
+about all latitudes and longitudes, and the inferred map is
+largely faithful to the true map.
+
+It should be kept in mind that the kinds of observations
+mentioned above will be very challenging for exoplanets, even with
+next-generation observatories such as HabEx or LUVOIR. Observations of
+occultations of planets by moons, in particular, are likely several decades
+away at least. There is some hope that planet-planet occultations may
+be detectable in the near future for specific planetary
+systems such as TRAPPIST-1
+\citep{Luger2019b}, but at extremely limited signal-to-noise.
+Even phase curve observations will be difficult
+because of their limited signal-to-noise, and in practice many
+degeneracies will likely remain. Several studies have found
+that color information can greatly help in the interpretation of
+reflected phase curves \xxx{(cite)}, while others
+have explored in detail the best kinds of priors to assume
+\citep[e.g.,][]{Aizawa2020}. Future maps of exoplanets---particularly
+terrestrial ones in the habitable zone---will require every tool
+in the toolbox.
 
 \subsection{Limitations}
 \label{sec:limitations}

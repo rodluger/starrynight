@@ -7,13 +7,13 @@ starry.config.lazy = False
 np.random.seed(0)
 
 # Setup figure
-fig, ax = plt.subplots(3, 2, figsize=(13, 7))
+fig, ax = plt.subplots(3, 2, figsize=(13, 8))
 fig.subplots_adjust(hspace=0.4)
 ax[0, 0].set_visible(False)
 ax[0, 1].set_visible(False)
 ax[1, 0].set_ylabel("flux", fontsize=10)
-ax[1, 0].set_title("thermal", fontsize=12, fontweight="bold")
-ax[1, 1].set_title("reflected", fontsize=12, fontweight="bold")
+ax[1, 0].set_title("thermal phase curve", fontsize=12, fontweight="bold")
+ax[1, 1].set_title("reflected phase curve", fontsize=12, fontweight="bold")
 
 for axis in ax[1, :]:
     axis.tick_params(labelsize=8)
@@ -21,6 +21,7 @@ for axis in ax[1, :]:
 
 # Show the true map
 ax_top = fig.add_subplot(3, 1, 1)
+ax_top.set_title("input", fontsize=12, fontweight="bold")
 map = starry.Map(20)
 map.load("earth", sigma=0.1)
 map.show(ax=ax_top, projection="moll")
@@ -47,7 +48,7 @@ for i, reflected in enumerate([False, True]):
     # Starry settings
     map.obl = obl
     kwargs = {}
-    kwargs["theta"] = (time % prot) * 360
+    kwargs["theta"] = ((time % prot) / prot) * 360
     if reflected:
         kwargs["xs"] = np.sin(2 * np.pi * time / porb)
         kwargs["ys"] = 0
@@ -70,13 +71,16 @@ for i, reflected in enumerate([False, True]):
     map.solve(**kwargs)
 
     # Plot the light curve and the solution
-    ax[1, i].plot(time, flux, "k.", ms=2, alpha=0.5, label="data")
-    ax[1, i].plot(time, map.flux(**kwargs), "C0-", lw=0.5, alpha=0.25, label="model")
+    ax[1, i].plot(time, flux, "k.", ms=2, alpha=0.5, label="data", zorder=-2)
+    ax[1, i].plot(
+        time, map.flux(**kwargs), "C0-", lw=0.5, alpha=0.25, label="model", zorder=-1
+    )
     ax[1, i].legend(loc="best", fontsize=6)
     if reflected:
         map.show(ax=ax[2, i], projection="moll", illuminate=False)
     else:
         map.show(ax=ax[2, i], projection="moll")
     ax[1, i].set_xlabel("time [days]", fontsize=10)
+    ax[1, i].set_rasterization_zorder(0)
 
-fig.savefig("inference.pdf", bbox_inches="tight")
+fig.savefig("inference.pdf", bbox_inches="tight", dpi=300)
