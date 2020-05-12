@@ -1746,7 +1746,7 @@ the day/night terminator on the body is a half-ellipse
 of semi-major axis unity that is fully described by its (signed) semi-minor
 axis,
 %
-\begin{proof}{}
+\begin{proof}{illumination}
     \label{eq:b}
     b = -\frac{z_s}{r_s}
     \quad,
@@ -1757,9 +1757,9 @@ where $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$ is the distance to the source,
 and the angle by which its semi-major axis is rotated away from the
 $+x$-axis,
 %
-\begin{proof}{}
+\begin{proof}{illumination}
     \label{eq:theta}
-    \theta = \atantwo(y_s, x_s)
+    \theta = -\atantwo(x_s, y_s)
     \quad.
 \end{proof}
 %
@@ -1769,7 +1769,7 @@ it is straightforward to show that the illumination
 $\mathcal{I}$ at a point $(x, y)$ on the projected disk of the body is given
 by the function
 %
-\begin{proof}{}
+\begin{proof}{illumination}
     \label{eq:illum}
     \mathcal{I}(b, \theta, r_s; x, y)&=
     \text{max}\bigg( 0, I(b, \theta, r_s; x, y) \bigg)
@@ -1777,7 +1777,7 @@ by the function
 %
 where
 %
-\begin{proof}{}
+\begin{proof}{illumination}
     \label{eq:illum_poly}
     I(b, \theta, r_s; x, y) &=
     \frac{1}{\pi r_s^2}
@@ -1791,13 +1791,13 @@ where
 %
 with $b_c \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 The illumination $\mathcal{I}$ is a unitless quantity, normalized such that
-the integral of $\mathcal{I} A$ over the unit
+the integral of $A\mathcal{I}$ over the unit
 disk is equal to the flux measured
 by the observer as a fraction of the flux of the illumination source.
 In particular, if we place the illumination source along the $+z$-axis at
 $(0, 0, 1)$, the body is seen at full phase, so $b = -1$, $b_c = 0$, and
 %
-\begin{proof}{}
+\begin{proof}{illumination}
     \mathcal{I}_\text{full}(x, y) = \frac{\sqrt{1 - x^2 - y^2}}{\pi}
     \quad.
 \end{proof}
@@ -1806,7 +1806,7 @@ Multiplying this by the albedo and integrating over the unit disk,
 we obtain the reflected flux measured
 by the observer in units of the flux of the illumination source:
 %
-\begin{proof}{}
+\begin{proof}{illumination}
     \mathcal{f}_\text{full} &=
     \int_{-1}^{1}
     \int_{-\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
@@ -1823,6 +1823,8 @@ by the observer in units of the flux of the illumination source:
 %
 which is precisely the geometric albedo of a Lambert
 sphere of spherical albedo $A$ \citep[see, e.g.][]{Seager2010}.
+\xxx{Is this explanation sufficient? Why does it matter that this
+    is the geometric albedo of a Lambert sphere?}
 
 In principle, our task is now straightforward: weight each of the
 terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them
