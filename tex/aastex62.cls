@@ -1468,7 +1468,7 @@ the#1\endcsname}
 %%
 \fontdimen2\foo=1.5pt
 %%
-{\large \it Software: }
+{\textbf \it Software: }
 #2
 %% returning to original fontdimen
 \iftwelvepoint

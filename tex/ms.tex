@@ -26,8 +26,34 @@
 \affil{Center~for~Computational~Astrophysics, Flatiron~Institute, New~York, NY}
 %
 
+\keywords{methods: analytic --- techniques: photometric}
+
 \begin{abstract}
-    Abstract here.
+    We derive efficient, closed form, differentiable, and numerically stable
+    solutions for the flux measured from a planet or moon seen in reflected
+    light, either in our out of occultation.
+    %
+    Our expressions apply to the computation of scattered
+    light phase curves of exoplanets, secondary eclipse light curves in
+    the optical, or future measurements of planet-moon and planet-planet
+    occultations, as well as to photometry of solar system bodies.
+    %
+    We derive our solutions for Lambertian bodies illuminated by a point
+    source, but extend them to model illumination sources of finite
+    angular size and rough surfaces with phase-dependent scattering.
+    %
+    Our algorithm is implemented in \Python within the open-source
+    \starry mapping framework and is designed with efficient gradient-based
+    inference in mind.
+    %
+    The algorithm is ${\sim}4-5$ orders of magnitude faster than direct
+    numerical evaluation methods and ${\sim}10$ orders of magnitude more
+    precise.
+    %
+    We show how the techniques developed here may one day lead to the
+    construction of two-dimensional maps of terrestrial planet surfaces,
+    potentially enabling the detection of continents and oceans on
+    exoplanets in the habitable zone.
     %
     \href{https://github.com/rodluger/starrynight}{\color{linkcolor}\faGithub}
 \end{abstract}
@@ -36,10 +62,105 @@
 \section{Introduction}
 \label{sec:intro}
 %
-\xxx{A few paragraphs of introduction here.
-    Papers to cite: \citet{Russell1906}, \citet{Cowan2009},
-    \citet{Kawahara2010}, \citet{Kawahara2011}, \citet{Fujii2012},
-    \citet{Farr2018}, \citet{Louden2018}.}
+
+Despite recent advances in instrumentation and the dawn of
+thirty meter-class telescopes and kilometer-wide interferomer arrays,
+extrasolar planets will remain unresolved point sources for decades
+to come. Nevertheless, modulations in the light received from these distant
+bodies due to their rotation, changing illumination, and eclipses
+by their host stars or other bodies in the system can be harnessed to
+reconstruct two-dimensional views of their surfaces.
+In particular, next-generation space-based telescopes such as the
+Large UV/Optical/IR Surveyor (LUVOIR) may enable us to measure
+variations in the reflected light signature of terrestrial planets in
+the habitable zone, which can be used to map their surfaces and
+indirectly infer the presence of clouds, continents, oceans, and perhaps
+even life.
+
+There is a vast literature on techniques for mapping exoplanet surfaces
+based on their phase curves
+\citep[e.g.,][]{Russell1906,Lacis1972,Knutson2007,Cowan2008,Oakley2009,Berdyugina2017}
+and occultation light curves
+\citep[e.g.,][]{Williams2006,Rauscher2007,Majeau2012,deWit2012,Rauscher2018},
+both in thermal and reflected (scattered) light.
+In particular, much attention has been given to techniques for mapping
+Earth-like planets from visible-light reflected phase curves
+\citep[e.g.,][]{Ford2001,Kawahara2010,Kawahara2011,Fujii2012,Kawahara2020,Aizawa2020}.
+Unlike thermal phase curves, which primarily encode (often degenerate)
+information about longitudinal surface brightness variations
+\citep{Russell1906}, reflected light curves often contain information
+about the full two-dimensional surface albedo distribution
+\citep[e.g.,][]{Kawahara2010}.
+
+Occultation light curves in reflected light can encode even more information
+about the surface. Thus far, these have been studied primarily within our
+solar system. Mutual occultations among the Galilean moons of Jupiter
+have been studied to infer surface properties of Io \xxx{...more on this,
+    and add citations.}
+
+Many studies have analyzed real Earth reflected light curves to
+infer surface properties of our planet as an exercise in
+prepartion for the mapping of exoplanets.
+%
+\citet{Cowan2009} analyzed visible-light disk-integrated light curves
+of the Earth taken by the Deep Impact spacecraft to produce
+longitudinal maps of the surface, harnessing multi-band observations
+to disentangle static surface brightness features from temporally
+variable clouds. More recently, \citet{Jiang2018} and \citet{Fan2019}
+used data from the L1-stationed DSCOVR satellite to infer surface
+and cloud properties of the Earth, and \citet{Luger2019b} analyzed
+background scattered light in TESS photometry to reconstruct a cloud
+map of the Earth.
+
+On the open-source software front, \citet{Louden2018} developed
+\textsf{spiderman}, an efficient discretization scheme
+on the sphere that enables fast computation of exoplanet
+phase curves and occultation light curves in \Python.
+%
+\citet{Haggard2018} presented
+\textsf{EARL} (Exoplanet Analytic Reflected Lightcurves),
+a \textsf{Mathematica} code to compute analytic, closed form
+solutions for the phase curve of a Lambert sphere, i.e., one that
+scatters light isotropically, in the case that the surface albedo
+distribution is characterized by either a sum of delta functions
+or a sum of spherical harmonics.
+%
+\citet{Farr2018} released \textsf{exocartographer}, a Bayesian
+framework for doing inference on exoplanet phase curves based on
+a HEALPix \citep{healpix} discretization scheme.
+%
+Finally, \citet{Luger2019} introduced \starry, a light curve
+modeling package that computes thermal phase curves and occultation
+light curves, as well as their derivatives, analytically from a spherical
+harmonic expansion of the surface brightness.
+
+The present paper is an extension to the \starry algorithm,
+adapting it to model phase curves and occultation light curves
+in reflected light. The expressions
+we derive are analytic: they may all be expressed in closed form
+in terms of algebraic operations involving trigonometric functions
+and (at times) elliptic integrals. We derive numerically
+stable recursion relations for the efficient evaluation of all
+expressions and code them within an autodifferentiation framework
+to enable the computation of high precision derivatives for use in
+gradient-based inference and optimization schemes.
+Our code is fully
+\href{https://github.com/rodluger/starry}{open-source},
+comprehensively
+\href{https://dev.azure.com/rodluger/starry/_test/analytics?definitionId=4}{unit-tested},
+and supplemmented with an extensive
+\href{https://rodluger.github.io/starry}{API documentation}
+and suite of
+\href{https://rodluger.github.io/starry/latest/tutorials.html}{tutorials}.
+%
+As in \citet{Luger2019}, in the caption of each of the figures
+we provide links \codeicon\ to the exact \Python scripts that
+generated them. Next to many of the equations we also provide
+links \prooficon\ to \textsf{Jupyter} notebooks containing
+detailed derivations and/or validations.
+
+\section{Overview}
+\label{sec:overview}
 
 Our goal in this paper is to derive analytic expressions for the
 flux received by a distant observer from a sphere of non-uniform albedo
@@ -108,14 +229,16 @@ the flux of the illumination source at the observer.
 
 The piecewise nature of the illumination function at the day/night terminator
 makes the problem of computing the visible flux particularly difficult; most
-studies to date have tackled the problem numerically, by discretizing the surface
+studies to date have tackled the problem numerically, either
+via Monte Carlo integration \citep[e.g.,][]{Ford2001} or by discretizing the surface
 and computing the relevant integrals by summing over the visible
 pixels \xxx{(cite)}. Recently, \citet{Haggard2018} developed an analytic
 framework for computing light curves of unocculted bodies illuminated
 by a point source. In this paper, we re-derive their solution under the
 \starry framework and extend it for the first time to the case where
 the body is occulted by another spherical body, which may or may not be the
-illumination source.
+illumination source. We also extend the solution to the case of an extended
+illumination source and to non-Lambertian scattering.
 
 In \citet{Luger2019}, we reduced the problem of computing the flux from
 an occulted body in thermal (emitted) light to a series of efficient, analytical
@@ -131,6 +254,18 @@ The procedure for computing the flux is therefore significantly more complex.
 %
 We therefore defer all calculations to the Appendix, and devote the body of
 the paper to validating and demonstrating applications of our approach.
+
+This paper is organized as follows.
+In \S\ref{sec:validation} we present sample light curves computed
+using our algorithm, validate it against numerical integration, and
+discuss its performance in terms of computational speed and precision.
+In \S\ref{sec:extensions} we extend the model to apply to illumination
+sources of finite size and surfaces that scatter light anisotropically.
+We discuss implications, applications, and limitations of our model in
+\S\ref{sec:discussion} and summarize our findings in \S\ref{sec:conclusions}.
+For convenience, Tables~\ref{tab:symbols}--\ref{tab:matrices} at the end
+list all symbols and variables used in the text, with descriptions and
+links to the equations in which they are defined.
 
 \section{Reflected light curves in \starry}
 \label{sec:validation}
@@ -480,7 +615,9 @@ operations \citep{theano}. The user interface, however, is purely in
 \Python. The \textsf{theano} backend facilitates integration with the
 \textsf{exoplanet} modeling package \citep{exoplanet} and in particular
 with \textsf{pymc3} \citep{pymc3} for inference with gradient-based
-Markov Chain Monte Carlo (MCMC) schemes.
+Markov Chain Monte Carlo (MCMC) schemes
+such as Hamiltonian Monte Carlo \citep[HMC;][]{Duane1987}
+and No-U-Turn Sampling \citep[NUTS;][]{Hoffman2011}.
 %
 Complete \href{https://rodluger.github.io/starry}{documentation} and an
 extensive library of tutorials is available online.
@@ -1217,7 +1354,9 @@ of light curves in reflected light that cannot be captured by the model.
 One example of this is shadowing. Craters on the moon or
 volcanoes on Io can cast large shadows visible from space, particularly
 if viewed near crescent phase. Unfortunately, there is no way to model
-this within the \starry framework. Another example is specular reflection,
+this within the \starry framework. Another example is multiple scattering,
+as in optically thick atmospheres, for which a proper radiative transfer model
+must be used. There is also the case of specular reflection,
 or ``glint'', which is a pronounced signal for the Earth due its
 oceans \citep{Robinson2014} and on Titan due to
 its hydrocarbon lakes \citep{Barnes2011}. In principle, glint could be
@@ -1280,19 +1419,20 @@ where
 \begin{align}
     \label{eq:PInv}
     \mathbf{P}^+ =
-    (\mathbf{P}^\top \mathbf{P} + \lambda \mathbf{I})^{-1} \mathbf{P}^\top
+    (\mathbf{P}^\top \mathbf{P} + \lambda \boldsymbol{\mathsf{I}})^{-1} \mathbf{P}^\top
 \end{align}
 %
 is the pseudoinverse of $\mathbf{P}$, with (small) regularization parameter
-$\lambda$ and where $\mathbf{I}$ is the identity matrix.
+$\lambda$ and where $\boldsymbol{\mathsf{I}}$ is the identity matrix.
 %
 Each row of the matrix $\mathbf{P}$ is constructed from the value
 of each of the spherical harmonics at the corresponding point on the
 grid; both $\mathbf{P}$ and its inverse may be pre-computed for
 efficiency. In both cases, the grid should be fine enough to ensure
 positivity over most of the sphere but not so fine as to throttle the
-computation; in practice, we find that grids with $2-5$ times as many pixels
-as spherical harmonic coefficients are ideal.
+computation; as a rule of thumb, we find that grids with $2-5$ times
+as many pixels
+as spherical harmonic coefficients are sufficient.
 %
 The \href{https://rodluger.github.io/starry}{documentation}
 includes tutorials on how to implement this in practice.
@@ -1300,10 +1440,69 @@ includes tutorials on how to implement this in practice.
 \section{Conclusions}
 \label{sec:conclusions}
 
-\xxx{TODO.}
+We have presented an efficient, numerically stable,
+closed-form algorithm for computing phase curves
+and occultation light curves of spherical bodies in reflected
+(scattered) light.
+This algorithm is an extension of the algorithm presented
+in \citet{Luger2019} for light curves in thermal light and
+is generally applicable to exoplanetary phase
+curves, secondary eclipses, and occultations by moons and other planets,
+as well as to light curves of planets and moons in our solar system.
+We derive the solution for the case of a Lambert sphere illuminated by a
+point source, but extend it to the case of an extended illumination
+source and non-Lambertian scattering parametrized by a surface roughness
+coefficient.
+%
+The algorithm is ${\sim}4-5$ orders of magnitude faster
+and ${\sim}10$ orders of magnitude more precise than other numerical
+approaches for computing these light curves. The algorithm is
+also differentiable, enabling inference with efficient gradient-based samplers
+such as Hamiltonian Monte Carlo (HMC), and linear in the spherical
+harmonic coefficients describing the surface albedo, enabling fast,
+closed-form solutions for the albedo posterior distribution under a
+Gaussian noise model.
+%
+We implement the algorithm within the \starry software, an open-source \Python
+package for inferring surface maps of unresolved celestial bodies. The
+algorithm is coded in a combination of \cpp and \Python compiled using
+the \textsf{theano}. The interface was designed specifically for
+compatibility with the \textsf{exoplanet} modeling package
+\citep{exoplanet} and the \textsf{pymc3} inference suite \citep{pymc3}.
 
-\vfill
-\pagebreak
+Upcoming telescopes will enable measurements of exoplanet phase curves
+and secondary eclipses at unprecendented precision. While the
+James Webb Space Telescope (JWST) will be primarily sensitive to thermal
+emission from exoplanets (which can currently be modeled with \starry),
+next-generation direct imaging facilities such as the
+Large UV/Optical/IR Surveyor (LUVOIR)
+will enable measurements in reflected light, in particular for terrestrial
+planets in the habitable zone. Because of the changing illumination
+pattern over the course of an orbit of the planet, phase curves and
+occultation light curves in reflected
+light contain vastly more information about the two-dimension albedo
+distribution of the body than their thermal counterparts.
+With careful modeling, light curves in reflected light are likely to give us
+the first images of potentially habitable exoplanets, enabling the
+detection of clouds, continents, oceans, and perhaps even life.
+
+\vspace{1em}
+
+The software presented in this work is open source under the MIT License and
+is available at \url{https://github.com/rodluger/starry}, with documentation
+and tutorials hosted at \url{https://rodluger.github.io/starry}.
+A permanent version of the code used to generate the figures and results in
+this paper is archived at \xxx{https://doi.org/XX.XXXX/zenodo.XXXXXXX}.
+
+\software{
+    Eigen v3 \citep{eigen},
+    exoplanet \citep{exoplanet},
+    HEALPix \citep{healpix},
+    pybind11 \citep{pybind11},
+    pymc3 \citep{pymc3},
+    scipy \citep{scipy},
+    starry \citep{starry}.
+}
 
 % Bibliography
 \bibliography{bib}
@@ -1326,6 +1525,23 @@ To improve the readability of this paper,
 Tables~\ref{tab:symbols}--\ref{tab:matrices} at the end list the principal
 symbols and quantities used throughout the text, with links to the
 sections and equations in which they are defined.
+Because of the large number of symbols used in this paper, we adopt
+the following conventions: scalars are represented by regular lowercase or
+occasionally uppercase letters (i.e., $x$ or $X$), vectors are
+represented by boldface lowercase letters
+($\mathbf{x}$), and matrices and other linear operators are represented
+by boldface capital letters ($\mathbf{X}$).
+With a few exceptions,
+Greek letters are reserved for angular quantities and may be either
+scalars ($\alpha$) or vectors ($\pmb{\alpha}$).
+Script font is typically used to denote curves or frames of reference
+($\mathcal{F}$). Primes are used to
+distinguish between frames of reference ($x$ and $x'$ are used
+to denote the same quantity, but in frames $\mathcal{F}$ and $\mathcal{F}'$,
+respectively). Tildes are used to denote basis vectors ($\by$). Finally,
+blackboard vectors ($\mathbbb{x}$) correspond to solutions
+to the various ``primitive'' integrals that arise in the occultation
+problem.
 
 \subsection{Review of the \starry algorithm in emitted light}
 \label{sec:starry-review}
@@ -1370,11 +1586,11 @@ $\mathcal{F}$, in which the $x$-axis points to the right,
 the $y$-axis points up, and the $z$-axis points out of the sky
 toward the observer. Following \citet{Luger2019}, if
 an occultor of radius $r_o$ is located at sky position $(x_o, y_o)$,
-we compute the visible flux $f$ from
+we compute the visible thermal flux $f_T$ from
 %
 \begin{align}
     \label{eq:sTARRy}
-    f = \sTe \mathbf{A} \mathbf{R}' \mathbf{R} \mathbf{y}
+    f_T = \sTe \mathbf{A} \mathbf{R}' \mathbf{R} \mathbf{y}
     \quad,
 \end{align}
 %
@@ -1459,11 +1675,11 @@ the projected visible disk of the body for each term in $\bg$
 \citep[Equation~26 in][]{Luger2019}, with $b_o = \sqrt{x_o^2 + y_o^2}$.
 
 If instead no occultor is present, we compute the total
-visible flux $f_0$ from this body as
+visible thermal flux $f_{T_0}$ from this body as
 %
 \begin{align}
     \label{eq:rTA1Ry}
-    f_0 = \rTe \mathbf{A_1} \mathbf{R}'' \mathbf{R} \mathbf{y}
+    f_{T_0} = \rTe \mathbf{A_1} \mathbf{R}'' \mathbf{R} \mathbf{y}
     \quad,
 \end{align}
 %
@@ -1537,8 +1753,15 @@ axis,
 %
 where $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$ is the distance to the source,
 %
-and the angle $\theta$ by which its semi-major axis is rotated away from the
-$+x$-axis (a frame-dependent quantity, defined below).
+and the angle by which its semi-major axis is rotated away from the
+$+x$-axis,
+%
+\begin{proof}{}
+    \label{eq:theta}
+    \theta = \atantwo(y_s, x_s)
+    \quad.
+\end{proof}
+%
 Given this formulation, and assuming that
 $r_s \gg 1$,
 it is straightforward to show that the illumination
@@ -1566,35 +1789,39 @@ where
 \end{proof}
 %
 with $b_c \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
-A quick note on the normalization of Equation~(\ref{eq:illum_poly}):
-if we place the illumination source along the $+z$-axis at $(0, 0, 1)$,
-the body is seen at full phase, so $b = -1$, $b_c = 0$, and
+The illumination $\mathcal{I}$ is a unitless quantity, normalized such that
+the integral of $\mathcal{I} A$ over the unit
+disk is equal to the flux measured
+by the observer as a fraction of the flux of the illumination source.
+In particular, if we place the illumination source along the $+z$-axis at
+$(0, 0, 1)$, the body is seen at full phase, so $b = -1$, $b_c = 0$, and
 %
 \begin{proof}{}
     \mathcal{I}_\text{full}(x, y) = \frac{\sqrt{1 - x^2 - y^2}}{\pi}
     \quad.
 \end{proof}
 %
-Integrating this over the full disk, we obtain the reflected flux measured
-by the observer (as a fraction of the flux of the illumination source)
-if the body has unit spherical albedo,
+Multiplying this by the albedo and integrating over the unit disk,
+we obtain the reflected flux measured
+by the observer in units of the flux of the illumination source:
 %
 \begin{proof}{}
     \mathcal{f}_\text{full} &=
     \int_{-1}^{1}
     \int_{-\sqrt{1 - x^2}}^{\sqrt{1 - x^2}}
+    A
     \frac{\sqrt{1 - x^2 - y^2}}{\pi}
     \,
     \dd y
     \,
     \dd x
     \nonumber \\[0.5em]
-    &= \frac{2}{3}
+    &= \frac{2}{3}A
     \quad,
 \end{proof}
 %
 which is precisely the geometric albedo of a Lambert
-sphere \citep[see, e.g.][]{Seager2010}.
+sphere of spherical albedo $A$ \citep[see, e.g.][]{Seager2010}.
 
 In principle, our task is now straightforward: weight each of the
 terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them
@@ -1908,41 +2135,17 @@ lower integration limit of the inner integral. The lower limit is now
 the equation describing the terminator, which ensures we always exclude the
 nightside from the integration region.
 %
-For computational efficiency, in practice we compute the integral of the
-intensity-weighted basis directly,
-%
-\xxx{NO LONGER TRUE. FIX THIS DEFINITION.}
-%
-\begin{align}
-    \label{eq:rTI}
-    \overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(b, r_s) & \equiv
-    \rT(b) \mathbf{I}(b, \theta'', r_s)
-    \nonumber                                                        \\
-                                                            & =
-    \int_{-1}^{1}
-    \int_{b\sqrt{1 - x''^2}}^{\sqrt{1 - x''^2}}
-    \bp(x'', y'')
-    \mathbf{I}(b, 0, r_s)
-    \ \dd y'' \ \dd x''
-    \quad,
-\end{align}
-%
-recalling that in frame $\mathcal{F}''$, $\theta'' = 0$ by
-definition.
-%
-Equation~(\ref{eq:rTI}) may be solved analytically in terms of purely
+Equation~(\ref{eq:rT}) may be solved analytically in terms of purely
 trigonometric and algebraic functions of $b$.
-The component of $\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}$
+The component of $\rT$
 at index $n$ is given by
 %
 \begin{proof}{}
     \label{eq:rTsoln}
-    \overset{\quad\wedge}{\mathbb{r}}_n(b, r_s) & =
-    \frac{1}{\pi r_s^2}
+    \mathbb{r}_n(b) & =
     \begin{cases}
-        \frac{b_c\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
-        \mathbb{L}_{\frac{\mu}{2}, \frac{\nu + 2}{2}} -
-        b \mathbb{k}_\frac{\nu}{2}(b) \mathbb{M}_{\frac{\mu}{2}, \frac{\nu}{2}}
+        \frac{\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
+        \mathbb{L}_{\frac{\mu}{2}, \frac{\nu + 2}{2}}
         %
          &
         %
@@ -1951,24 +2154,7 @@ at index $n$ is given by
         %
         \\[1em]
         %
-        b_c
         \mathbb{k}_{\frac{\nu + 1}{2}}(b) \mathbb{M}_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
-        %
-        \\[0.5em]
-        \qquad
-        %
-        - \frac{b}{2} \bigg\{
-        \left(1 - b^{\frac{\nu + 1}{2}}\right)
-        \left(
-        \mathbb{L}_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}} -
-        \mathbb{L}_{\frac{\mu + 3}{2}, \frac{\nu - 1}{2}}
-        \right)
-        \\[0.5em]
-        \qquad\qquad
-        -
-        \left(1 - b^{\frac{\nu + 5}{2}}\right)
-        \mathbb{L}_{\frac{\mu - 1}{2}, \frac{\nu + 3}{2}}
-        \bigg\}
         %
          &
         %
@@ -2070,14 +2256,34 @@ we may compute all higher order terms from the recurrence relations
     \quad.
 \end{proof}
 %
-Once $\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}$ is known,
-the observed flux is computed from
-(c.f. Equation~\ref{eq:rTIA1RRy})
+Once $\rT$ is known,
+the observed total flux in reflected light
+is computed from (c.f. Equation~\ref{eq:rTIA1RRy})
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f0}
     f_0 & =
-    \overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(b, r_s)
+    \rT(b)
+    \mathbf{I}(b, \theta'', r_s)
+    \mathbf{A_1}
+    \mathbf{R}''(x_s, y_s)
+    \mathbf{R}(\text{I}, \Lambda, \Theta)
+    \mathbf{y}
+    \quad.
+\end{align}
+%
+Finally, for future reference, we can also compute what we will call the
+\emph{complement} of case 0:
+%
+\begin{proof}{}
+    \label{eq:f0hat}
+    \hat{f}_0 &=
+    \Big(
+    \mathbf{r}^\top
+    -
+    \rT(b)
+    \Big)
+    \mathbf{I}(b, \theta'', r_s)
     \mathbf{A_1}
     \mathbf{R}''(x_s, y_s)
     \mathbf{R}(\text{I}, \Lambda, \Theta)
@@ -2085,27 +2291,12 @@ the observed flux is computed from
     \quad.
 \end{proof}
 %
-Finally, for future reference, we can also compute what we will call the
-\emph{complement} of case 0:
-%
-\begin{proof}{}
-    \label{eq:f0hat}
-    \hat{f}_0 & =
-    -\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}(-b, r_s)
-    \mathbf{A_1}
-    \mathbf{R}''(-x_s, -y_s)
-    \mathbf{R}(\text{I}, \Lambda, \Theta)
-    \mathbf{y}
-    \quad,
-\end{proof}
-%
-\xxx{FIX THIS DEFINITION. NO LONGER HOW WE COMPUTE IT.}
-%
-This is the flux we would get if we placed a \emph{negative} illumination
-source at the antipode $(-x_s, -y_s, -z_s)$ of the true source, and
-will be useful in negating the unphysical negative contribution from our
-polynomial illumination function (Equation~\ref{eq:illum_poly}) in
-the following section.
+This is the flux contribution from the unphysical night side
+(if we were to integrate over it), where
+our polynomial illumination (Equation~\ref{eq:illum_poly}) function
+yields \emph{negative} intensities. This quantity
+will be useful in negating the unphysical contribution
+in the integrals of the following section.
 
 \section{The Solution: Occultation}
 \label{sec:solution-occ}

@@ -141,8 +141,8 @@
     \end{longtable}
 \end{center}
 
-\vfill
-\pagebreak
+%\vfill
+%\pagebreak
 
 \begin{center}
     \begin{longtable}{W{c}{1cm} W{l}{9cm} W{l}{2cm}}
@@ -178,7 +178,7 @@
         %
         \endfoot
         %
-        \endlastfoot
+        %\endlastfoot
         %
         %
         %
@@ -229,7 +229,10 @@
         $z$
          & Cartesian $z$ coordinate, $z = \sqrt{1 - x^2 - y^2}$
          & (\ref{eq:z})
+        %
         \\
+        \pagebreak % HACK
+        %
         \midrule
         \multicolumn{3}{c}{\emph{Geometrical parameters}}
         \\
@@ -316,38 +319,52 @@
         \\
         \midrule
         %
+        $a$
+         & orbital semi-major axis
+         & \S\ref{sec:extended}
+        \\
         $A$
          & albedo (spherical)
          & (\ref{eq:albedo})
         \\
         %
         $f$
-         & visible flux during an occultation
+         & reflected flux during an occultation
          & \S\ref{sec:solution-occ}
         \\
         %
         $f_0$
-         & visible flux outside of an occultation
+         & reflected flux outside of an occultation
          & (\ref{eq:f0})
         \\
         %
         $\hat{f}_0$
-         & complement of visible flux outside of an occultation
+         & complement of reflected flux outside of an occultation
          & (\ref{eq:f0hat})
         \\
         %
         $f_1$--$f_{4}$
-         & case-dependent visible flux during occultation
+         & case-dependent reflected flux during occultation
          & \S\ref{sec:solution-occ}
         \\
         %
         $f_I$
-         & visible flux during an occultation (polynomial intensity)
+         & intensity-weighted flux during an occultation
          & (\ref{eq:fI})
         \\
         %
+        $f_T$
+         & thermal flux during an occultation
+         & (\ref{eq:sTARRy})
+        \\
+        %
+        $f_{T_0}$
+         & thermal flux outside of an occultation
+         & (\ref{eq:rTA1Ry})
+        \\
+        %
         $f_S$
-         & flux over integration region $S$
+         & reflected flux over integration region $S$
          & (\ref{eq:fS})
         \\
         %
@@ -358,6 +375,38 @@
         $\mathcal{I}$
          & true intensity at a point on the surface
          & (\ref{eq:illum})
+        \\
+        $R_p$
+         & planet radius
+         & \S\ref{sec:extended}
+        \\
+        $R_\star$
+         & stellar radius
+         & \S\ref{sec:extended}
+        \\
+        $\vartheta_i$
+         & polar angle of incidence
+         & Figure~\ref{fig:scattering}
+        \\
+        $\vartheta_r$
+         & polar angle of reflection
+         & Figure~\ref{fig:scattering}
+        \\
+        $\sigma$
+         & Oren-Nayar surface roughness coefficient
+         & \S\ref{sec:nonlambertian}
+        \\
+        $\tau$
+         & Angular extent of terminator past $\nicefrac{\pi}{2}$
+         & (\ref{eq:tau})
+        \\
+        $\phi_i$
+         & azimuthal angle of incidence
+         & Figure~\ref{fig:scattering}
+        \\
+        $\phi_r$
+         & azimuthal angle of reflection
+         & Figure~\ref{fig:scattering}
         \\
         %
         %
@@ -402,7 +451,7 @@
         %
         \endfoot
         %
-        \endlastfoot
+        %\endlastfoot
         %
         %
         %
@@ -503,11 +552,6 @@
          & (\ref{eq:rT})
         \\
         %
-        $\overset{\quad\pmb{\wedge}}{\mathbbb{r}}{^\top}$
-         & intensity-weighted unocculted solution in reflected light
-         & (\ref{eq:rTI})
-        \\
-        %
         $\sT$
          & occultation solution in reflected light
          & (\ref{eq:sT})
@@ -533,14 +577,31 @@
         \\
         \midrule
         %
+        $\mathbf{a}$
+         & vector of albedo values on a discrete surface grid
+         & (\ref{eq:Py})
+        %
+        \\
+        %
+        $\mathbf{d}$
+         & data vector
+         & \S\ref{sec:linearity}
+        %
+        \\
+        %
+        $\mathbf{f}$
+         & vector of flux values
+         & \S\ref{sec:linearity}
+        %
+        \\
+        %
         $\mathbf{i}$
          & illumination profile in polynomial basis
          & (\ref{eq:ivec})
         \\
         %
-        %
-        $\mathbf{x}$
-         & solution to quartic
+        $\mathbf{x}''$
+         & solution to quartic in terminator frame
          & (\ref{eq:quartic})
         \\
         %
@@ -548,6 +609,11 @@
          & vector of spherical harmonic coefficients
          & \S\ref{sec:starry-review}
         \\
+        %
+        $\pmb{\mu}$
+         & prior mean
+         & \S\ref{sec:linearity}
+        %
     \end{longtable}
 \end{center}
 
@@ -588,7 +654,7 @@
         %
         \endfoot
         %
-        \endlastfoot
+        %\endlastfoot
         %
         %
         %
@@ -613,9 +679,25 @@
          & \S\ref{sec:adapting-starry}
         \\
         %
+        $\mathbf{C}$
+         & posterior covariance matrix
+         & \S\ref{sec:linearity}
+        %
+        \\
+        %
         $\mathbf{I}$
          & illumination operator
          & (\ref{eq:Imat})
+        \\
+        %
+        $\mathbf{P}$
+         & pixelization operator
+         & (\ref{eq:Py})
+        \\
+        %
+        $\mathbf{P}^+$
+         & inverse pixelization operator
+         & (\ref{eq:PInv})
         \\
         %
         $\mathbf{R}$
@@ -631,6 +713,20 @@
         $\mathbf{R''}$
          & rotation matrix: $\mathcal{F} \rightarrow \mathcal{F}''$
          & \S\ref{sec:starry-review}
+        \\
+        $\mathbf{X}$
+         & \starry design matrix
+         & \S\ref{sec:linearity}
+        %
+        \\
+        $\pmb{\Lambda}$
+         & prior covariance matrix
+         & \S\ref{sec:linearity}
+        \\
+        $\pmb{\Sigma}$
+         & data covariance matrix
+         & \S\ref{sec:linearity}
+        %
         \\
         %
         \midrule
