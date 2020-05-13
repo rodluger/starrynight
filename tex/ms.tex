@@ -2143,12 +2143,12 @@ trigonometric and algebraic functions of $b$.
 The component of $\rT$
 at index $n$ is given by
 %
-\begin{proof}{}
+\begin{proof}{PhaseCurve}
     \label{eq:rTsoln}
     \mathbb{r}_n(b) & =
     \begin{cases}
-        \frac{\left(1 - b^{\frac{\nu + 4}{2}}\right)}{2}
-        \mathbb{L}_{\frac{\mu}{2}, \frac{\nu + 2}{2}}
+        \frac{\left(1 - b^{\frac{\nu + 2}{2}}\right)}{2}
+        \mathbb{L}_{\frac{\mu}{2}, \frac{\nu}{2}}
         %
          &
         %
@@ -2157,7 +2157,7 @@ at index $n$ is given by
         %
         \\[1em]
         %
-        \mathbb{k}_{\frac{\nu + 1}{2}}(b) \mathbb{M}_{\frac{\mu - 1}{2}, \frac{\nu + 1}{2}}
+        \mathbb{k}_{\frac{\nu - 1}{2}}(b) \mathbb{M}_{\frac{\mu - 1}{2}, \frac{\nu - 1}{2}}
         %
          &
         %
@@ -2170,7 +2170,7 @@ at index $n$ is given by
 where the components of $\mathbbb{k}$, $\mathbbb{L}$, and $\mathbbb{M}$
 are given by
 %
-\begin{proof}{}
+\begin{proof}{PhaseCurve}
     \label{eq:HJK}
     \mathbb{k}_{j}(b) &= \int_b^1 a^j \sqrt{1 - a^2} \dd a
     \nonumber \\
@@ -2225,7 +2225,7 @@ Given initial conditions
     \end{align}
 \end{minipage}%
 \begin{minipage}{.33\linewidth}
-    \begin{proof}{}
+    \begin{proof}{PhaseCurve}
         \label{eq:IJK0}
         \mathbb{M}_{0,0} &= \frac{4}{3}
         %
@@ -2237,9 +2237,9 @@ Given initial conditions
 %
 we may compute all higher order terms from the recurrence relations
 %
-\begin{proof}{}
+\begin{proof}{PhaseCurve}
     \label{eq:IJKrec}
-    \mathbb{k}_{j}(b) &= \frac{b^n b_c^3 + (j - 1) \mathbb{k}_{j - 2}(b)}{j + 2}
+    \mathbb{k}_{j}(b) &= \frac{b^j b_c^3 + (j - 1) \mathbb{k}_{j - 2}(b)}{j + 2}
     %
     \nonumber \\
     %
@@ -2278,9 +2278,9 @@ is computed from (c.f. Equation~\ref{eq:rTIA1RRy})
 Finally, for future reference, we can also compute what we will call the
 \emph{complement} of case 0:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f0hat}
-    \hat{f}_0 &=
+    \hat{f}_0 & =
     \Big(
     \mathbf{r}^\top
     -
@@ -2292,7 +2292,7 @@ Finally, for future reference, we can also compute what we will call the
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad.
-\end{proof}
+\end{align}
 %
 This is the flux contribution from the unphysical night side
 (if we were to integrate over it), where
