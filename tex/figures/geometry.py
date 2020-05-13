@@ -1,4 +1,4 @@
-from code import visualize
+from support_code import visualize
 import numpy as np
 import matplotlib.pyplot as plt
 

@@ -2481,9 +2481,9 @@ straightforward to solve. In particular, we can use the original emitted
 light solution from \citet{Luger2019}, provided we weight the map by our
 polynomial illumination function:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:fI}
-    f_I &=
+    f_I & =
     \sTe(b_o, r_o)
     \mathbf{A_2}
     \mathbf{I}(b, \theta', r_s)
@@ -2492,7 +2492,7 @@ polynomial illumination function:
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
-\end{proof}
+\end{align}
 %
 where $\sTe(b_o, r_o)$ is the emitted light solution vector
 \citep[Equation~26 in][]{Luger2019}. The flux $f_I$ is the flux one would
@@ -2528,10 +2528,10 @@ Since the visible portion of the disk consists only of dayside, we can
 simply use the weighted solution in emitted light
 (Equation~\ref{eq:fI}):
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f3}
     f_3 = f_I
-\end{proof}
+\end{align}
 %
 Case 4 involves any occultation in which the occultor blocks \emph{only} the
 nightside of the body (regardless of whether or not it intersects with the
@@ -2541,7 +2541,7 @@ is also trivial, as the flux is equal to the flux in the no occultation case
 %
 \begin{align}
     \label{eq:f4}
-    f_2 = f_0
+    f_4 = f_0
     \quad.
 \end{align}
 %
@@ -2551,11 +2551,11 @@ intersects with the limb). We first compute the illumination-weighted flux
 $f_I$ as above, then negate the unphysical nightside contribution
 using Equation~(\ref{eq:f0hat}):
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f5}
     f_5 = f_I - \hat{f}_0
     \quad.
-\end{proof}
+\end{align}
 
 %
 
@@ -2637,11 +2637,11 @@ The total flux may
 be computed by subtracting the occulted flux $f_S$ from the total dayside
 flux $f_0$:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f6}
     f_6 = f_0 - f_S
     \quad.
-\end{proof}
+\end{align}
 %
 Cases 7--10 involve two points of intersection between the occultor limb and
 the terminator.
@@ -2658,20 +2658,20 @@ nightside contribution. We then remove this contribution by noting that it
 is equal to the total nightside contribution, $\hat{f}_0$, minus the
 occulted nightside flux, $f_S$:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f7}
     f_7 = f_I - (\hat{f}_0 - f_S)
     \quad.
-\end{proof}
+\end{align}
 %
-Case 8, on the other hand, is topologically equivalent to case 6, since
+Case 8, on the other hand, is equivalent to case 6, since
 the integration region consists of occulted dayside:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f8}
     f_8 = f_0 - f_S
     \quad.
-\end{proof}
+\end{align}
 %
 Cases 9 and 10 correspond to occultors that also block some nightside and some
 dayside, along with \emph{both} of the extrema of the ellipse; these are
@@ -2681,21 +2681,21 @@ nightside is visible. The total flux is the visible dayside plus unphysical
 nightside contribution, $f_I$, minus the nightside contribution, which we
 compute from Equation~(\ref{eq:fS}):
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f9}
     f_9 = f_I - f_S
     \quad.
-\end{proof}
+\end{align}
 %
 Conversely, case 10 involves occultations in which only a small lens-shaped
 region of the dayside is visible. In this case, we may compute the observed
 flux from Equation~(\ref{eq:fS}) directly:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f10}
     f_{10} = f_S
     \quad.
-\end{proof}
+\end{align}
 %
 
 \subsection{Cases 11--14}
@@ -2729,41 +2729,41 @@ $S_2$ are the
 occulted portion of the dayside, so the solution is similar to
 that of cases 6 and 8:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f11}
     f_{11} = f_0 - (f_{S_1} + f_{S_2})
     \quad,
-\end{proof}
+\end{align}
 %
 where $f_{S_1}$ and $f_{S_2}$ are computed from Equation~(\ref{eq:fS}) for
 each of the integration regions. Conversely, in case 12 the two regions
 are the occulted portion of the nightside, so the solution is similar to that
 of case 7:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f12}
     f_{12} = f_I - \big(\hat{f}_0 - (f_{S_1} + f_{S_2})\big)
     \quad,
-\end{proof}
+\end{align}
 %
 Finally, cases 13 and 14 involve four points of intersection between the
 terminator and the occultor limb. The regions of integration in case 13 are
 the visible portion of the nightside, so this case is equivalent to case 9:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f13}
     f_{13} = f_I - (f_{S_1} + f_{S_2})
     \quad.
-\end{proof}
+\end{align}
 %
 Conversely, the regions of integration in case 14 are the
 visible portion of the dayside, so this case is equivalent to case 10:
 %
-\begin{proof}{}
+\begin{align}
     \label{eq:f14}
     f_{14} = f_{S_1} + f_{S_2}
     \quad.
-\end{proof}
+\end{align}
 %
 
 \subsection{Computing the integrals $\sT$}
@@ -2884,7 +2884,7 @@ $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$ bounding a given closed surface 
 (see Figure~\ref{fig:geometry}). We may therefore express
 Equation~(\ref{eq:greens}) as
 %
-\begin{proof}{}
+\begin{proof}{Greens}
     \label{eq:sT}
     \sT & =
     \pT + \tT + \qT
@@ -2901,7 +2901,7 @@ where we define the primitive integrals%
     are different.
 }
 %
-\begin{proof}{}
+\begin{proof}{Greens}
     \label{eq:pT}
     \pT
     & =
@@ -2954,7 +2954,7 @@ in terms of $\varphi$ as follows:
 \end{minipage}
 %
 \begin{minipage}{0.3\linewidth}
-    \begin{proof}{}
+    \begin{proof}{Greens}
         \label{eq:xy_pqt}
         x'_q & =\cos\varphi
         \nonumber           \\
