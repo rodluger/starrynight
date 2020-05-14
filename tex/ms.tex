@@ -15,16 +15,29 @@
 
 % Title
 \title{%
-    Analytic Light Curves in Reflected Light:%
-    \\%
-    Phase Curves, Occultations, and Non-Lambertian Scattering
+    \textbf{
+        Analytic Light Curves in Reflected Light:%
+        \\%
+        Phase Curves, Occultations, and Non-Lambertian Scattering
+    }
 }
 
 % Author list
-\author[0000-0002-0296-3826]{Rodrigo Luger}
+\author[0000-0002-0296-3826]{Rodrigo Luger}\altaffiliation{Flatiron Fellow}
 \email{rluger@flatironinstitute.org}
 \affil{Center~for~Computational~Astrophysics, Flatiron~Institute, New~York, NY}
+\affil{Virtual~Planetary~Laboratory, University~of~Washington, Seattle, WA}
 %
+\author[0000-0002-0802-9145]{Eric Agol}
+\affil{Department~of~Astronomy, University~of~Washington, Seattle, WA}
+\affil{Virtual~Planetary~Laboratory, University~of~Washington, Seattle, WA}
+%
+\author[0000-0001-8630-9794]{Fran Bartoli\'c}
+\affil{Centre for Exoplanet Science, University of St. Andrews, St. Andrews, UK}
+\affil{Center~for~Computational~Astrophysics, Flatiron~Institute, New~York, NY}
+%
+\author[0000-0002-9328-5652]{Daniel Foreman-Mackey}
+\affil{Center~for~Computational~Astrophysics, Flatiron~Institute, New~York, NY}
 
 \keywords{methods: analytic --- techniques: photometric}
 
@@ -95,8 +108,8 @@ about the full two-dimensional surface albedo distribution
 Occultation light curves in reflected light can encode even more information
 about the surface. Thus far, these have been studied primarily within our
 solar system. Mutual occultations among the Galilean moons of Jupiter
-have been studied to infer surface properties of Io \xxx{...more on this,
-    and add citations.}
+have been studied to infer surface properties of Io
+\xxx{\textbf{Fran:}... more on this, and add citations.}
 
 Many studies have analyzed real Earth reflected light curves to
 infer surface properties of our planet as an exercise in
@@ -232,7 +245,8 @@ makes the problem of computing the visible flux particularly difficult; most
 studies to date have tackled the problem numerically, either
 via Monte Carlo integration \citep[e.g.,][]{Ford2001} or by discretizing the surface
 and computing the relevant integrals by summing over the visible
-pixels \xxx{(cite)}. Recently, \citet{Haggard2018} developed an analytic
+pixels \citep[e.g.,][]{Kawahara2010,Fujii2012}.
+Recently, \citet{Haggard2018} developed an analytic
 framework for computing light curves of unocculted bodies illuminated
 by a point source. In this paper, we re-derive their solution under the
 \starry framework and extend it for the first time to the case where
@@ -988,7 +1002,7 @@ $350$ ppm of the body's flux for $\sigma = 45^\circ$.
             Galileo global color mosaic of Io \citep{Becker2005},
             an $l=\STARRYORENNAYARDEG$ expansion of the
             \citet{OrenNayar1994} scattering law, and orbital
-            information from the JPL Horizons \xxx{(cite)} database.
+            information from the JPL Horizons database.
             See text for details.
             \label{fig:io_europa}
         }
@@ -1000,7 +1014,7 @@ to occultations and to cases where the surface does not have uniform albedo.
 Figure~\ref{fig:io_europa} shows a visible-light observation of the
 occultation of Io by Europa on 04 Dec 2009 taken by the PHEMU09
 campaign \citep{Arlot2014}. The trajectory of Europa relative to Io,
-computed from the JPL Horizons database \xxx{(cite)}
+computed from the \href{https://ssd.jpl.nasa.gov/horizons.cgi}{JPL Horizons database}
 is shown at the top. We fit to this data a \starry occultation model
 with the scattering law discussed above.
 For simplicity, we set the surface map equal too
@@ -1295,7 +1309,7 @@ Even phase curve observations will be difficult
 because of their limited signal-to-noise, and in practice many
 degeneracies will likely remain. Several studies have found
 that color information can greatly help in the interpretation of
-reflected phase curves \xxx{(cite)}, while others
+reflected phase curves \citep{Cowan2009,Kawahara2011,LustigYaeger2018,Kawahara2020}, while others
 have explored in detail the best kinds of priors to assume
 \citep[e.g.,][]{Aizawa2020}. Future maps of exoplanets---particularly
 terrestrial ones in the habitable zone---will require every tool
@@ -1492,10 +1506,13 @@ The software presented in this work is open source under the MIT License and
 is available at \url{https://github.com/rodluger/starry}, with documentation
 and tutorials hosted at \url{https://rodluger.github.io/starry}.
 The code used to generate the figures in this paper is hosted
-at \url{https://github.com/rodluger/starrynight}, with a permanent
-version archived at \xxx{https://doi.org/XX.XXXX/zenodo.XXXXXXX}.
+at \url{https://github.com/rodluger/starrynight}.
+% --- TODO ---
+% with a permanent
+% version archived at \url{https://doi.org/XX.YYYY/zenodo.ZZZZZZZ}.
 
 \software{
+    astroquery \citep{astroquery},
     Eigen v3 \citep{eigen},
     exoplanet \citep{exoplanet},
     HEALPix \citep{healpix},
@@ -1823,7 +1840,7 @@ by the observer in units of the flux of the illumination source:
 %
 which is precisely the geometric albedo of a Lambert
 sphere of spherical albedo $A$ \citep[see, e.g.][]{Seager2010}.
-\xxx{Is this explanation sufficient? Why does it matter that this
+\xxx{\textbf{Eric:} Is this explanation sufficient? Why does it matter that this
     is the geometric albedo of a Lambert sphere?}
 
 In principle, our task is now straightforward: weight each of the
