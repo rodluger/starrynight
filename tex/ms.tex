@@ -3846,7 +3846,7 @@ will corresponds to the point of intersection between the terminator and
 the limb of the occultor and/or the point of intersection between the
 terminator and the limb of the occulted body. The former is given by
 %
-\begin{proof}{}
+\begin{proof}{tT}
     \pmb{\xi_0} &=
     \atantwo\left(\sqrt{1 - {\mathbf{x''}}^2}, \mathbf{x''} \right)
 \end{proof}
@@ -3854,7 +3854,7 @@ terminator and the limb of the occulted body. The former is given by
 where $\mathbf{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
 The latter is given by
 %
-\begin{proof}{}
+\begin{proof}{tT}
     \xi_1 &=
     \begin{cases}
         0   & \qquad \qquad (1 - x_o'')^2 + {y_o''}^2 < r_o^2
@@ -3885,148 +3885,12 @@ projection of a point on the ellipse onto the unit circle
 (see Figure~\ref{fig:geometry}).
 
 The solution to Equation~(\ref{eq:tT}) involves repeated application
-of the binomial theorem. As before, we simply present the result, with
-validation links:
-%
-\begin{proof}{}
-    \mathbb{t}_n & =
-    \begin{cases}
-        %
-        %
-        b\cos\theta'
-        \sum\limits_{j=0}^{\frac{\nu}{2}}
-        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
-        (b, \theta') \,
-        \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
-        \\
-        \quad\quad\quad\quad
-        - \, \sin\theta'
-        \sum\limits_{j=0}^{\frac{\nu}{2}}
-        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
-        (b, \theta') \,
-        \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
-        %
-         & \qquad
-        \mathrel{\raisebox{1.25em}{$\mu, \nu, \, \text{even}$}}
-        %
-        %
-        \\[3em]
-        %
-        %
-        \frac{1}{3}
-        \Delta
-        \Big\{
-        \arctan\left( \frac{|b|\sin\vxi}{\cos\vxi} \right)
-        \\
-        \qquad\quad\quad
-        - \, \sgn\left({\sin\vxi}\right)
-        \left(
-        \arctan
-        \left(
-            \frac{
-                \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
-            }{2 |b| b_c}
-            \right)
-        + |b| b_c \cos\vxi
-        \right)
-        %
-         & \qquad \mu = \nu = 1
-        %
-        \\
-        \qquad\quad\quad
-        + \, \pmb{\delta}(b, \vxi)
-        \Big\}
-        %
-        \\[3em]
-        %
-        %
-        -b\sin\theta'
-        \sum\limits_{j=0}^{l-2}
-        Z^{0, l-2}_{0,k}
-        (b, \theta') \,
-        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
-        \\
-        \quad\quad\quad\quad
-        - \, \cos\theta'
-        \sum\limits_{j=0}^{l-2}
-        Z^{0, l-2}_{0,k}
-        (b, \theta') \,
-        \iH_{j, l + 2 - j}(\pmb{\xi})
-        %
-         & \qquad
-        \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{even}$}}
-        %
-        %
-        \\[3em]
-        %
-        %
-        -b\sin\theta'
-        \sum\limits_{j=0}^{l-3}
-        \bigg(
-        \sin\theta'
-        Z^{0, l-3}_{0,k}
-        (b, \theta') \,
-        \iH_{j + 2, l - j}(\pmb{\xi})
-        \\
-        \qquad\qquad\qquad
-        +
-        \, b\cos\theta'
-        Z^{0, l-3}_{0,k}
-        (b, \theta') \,
-        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
-        \bigg)
-        \\
-        \quad\quad\quad\quad
-        - \, \cos\theta'
-        \sum\limits_{j=0}^{l-3}
-        \bigg(
-        \sin\theta'
-        Z^{0, l-3}_{0,k}
-        (b, \theta') \,
-        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
-        %
-         & \qquad
-        \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{odd}$}}
-        %
-        \\
-        \qquad\qquad\qquad
-        +
-        \, b\cos\theta'
-        Z^{0, l-3}_{0,k}
-        (b, \theta') \,
-        \iH_{j, l + 2 - j}(\pmb{\xi})
-        \bigg)
-        %
-        %
-        %
-        \\[3em]
-        b\cos\theta'
-        \sum\limits_{j=0}^{\frac{\nu}{2}}
-        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
-        (b, \theta') \,
-        \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
-        \\
-        \quad\quad\quad\quad
-        - \, \sin\theta'
-        \sum\limits_{j=0}^{\frac{\nu}{2}}
-        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-        Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
-        (b, \theta') \,
-        \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
-        %
-         & \qquad
-        \mathrel{\raisebox{1.25em}{$\text{otherwise}$}}
-        %
-        %
-    \end{cases}
-\end{proof}
-%
+of the binomial theorem. The result is given on the following
+page in Equation~(\ref{eq:tn}) along with the usual validation link,
 where we define
 %
-\begin{proof}{}
+\begin{proof}{tT}
+    \label{eq:Zuvjk}
     Z^{u,v}_{j,k}(b, \theta') & =
     \binom{u}{j}
     \binom{v}{k}
@@ -4034,22 +3898,151 @@ where we define
     b^{u+v-j-k}
     \sin^{v+j-k}\theta'
     \cos^{u-j+k}\theta'
-\end{proof}
-%
-and
-%
-\begin{proof}{}
+    \nonumber
+    \\
+    \intertext{and}
+    %
     \delta(b, \xi) & =
     \begin{cases}
         0               & \qquad 0 \leq \xi < \frac{\pi}{2}     \\
         \pi             & \qquad \frac{\pi}{2} \leq \xi < \pi   \\
-        2 |b| b_c       & \qquad \pi < \xi \leq \frac{3\pi}{2}  \\
+        2 |b| b_c       & \qquad \pi \leq \xi < \frac{3\pi}{2}  \\
         \pi + 2 |b| b_c & \qquad \frac{3\pi}{2} \leq \xi < 2\pi
         \quad.
     \end{cases}
 \end{proof}
 %
-The components of the matrix $\viH$ are given by the integral
+\afterpage{
+    \begin{proof}{tT}
+        \label{eq:tn}
+        \tag{\ref*{eq:Zuvjk}*}
+        \mathbb{t}_n & =
+        \begin{cases}
+            %
+            %
+            b\cos\theta'
+            \sum\limits_{j=0}^{\frac{\nu}{2}}
+            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+            Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
+            (b, \theta') \,
+            \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
+            \\
+            \quad\quad\quad\quad
+            - \, \sin\theta'
+            \sum\limits_{j=0}^{\frac{\nu}{2}}
+            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+            Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
+            (b, \theta') \,
+            \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
+            %
+             & \qquad
+            \mathrel{\raisebox{1.25em}{$\mu, \nu, \, \text{even}$}}
+            %
+            %
+            \\[3em]
+            %
+            %
+            \frac{1}{3}
+            \Delta
+            \Big\{
+            \arctan\left( \frac{|b|\sin\vxi}{\cos\vxi} \right)
+            \\
+            \qquad\quad\quad
+            - \, \sgn\left({\sin\vxi}\right)
+            \left(
+            \arctan
+            \left(
+                \frac{
+                    \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
+                }{2 |b| b_c}
+                \right)
+            + |b| b_c \cos\vxi
+            \right)
+            %
+             & \qquad \mu = \nu = 1
+            %
+            \\
+            \qquad\quad\quad
+            + \, \pmb{\delta}(b, \vxi)
+            \Big\}
+            %
+            \\[3em]
+            %
+            %
+            -bb_c^3\sin\theta'
+            \sum\limits_{j=0}^{l-2}
+            Z^{0, l-2}_{0,j}
+            (b, \theta') \,
+            \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+            \\
+            \quad\quad\quad\quad
+            - \, b_c^3\cos\theta'
+            \sum\limits_{j=0}^{l-2}
+            Z^{0, l-2}_{0,j}
+            (b, \theta') \,
+            \iH_{j, l + 2 - j}(\pmb{\xi})
+            %
+             & \qquad
+            \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{even}$}}
+            %
+            %
+            \\[3em]
+            %
+            %
+            -bb_c^3\sin^2\theta'
+            \sum\limits_{j=0}^{l-3}
+            Z^{0, l-3}_{0,j}
+            (b, \theta') \,
+            \iH_{j + 2, l - j}(\pmb{\xi})
+            \\
+            \quad\quad\quad\quad
+            - \, b b_c^3\cos^2\theta'
+            \sum\limits_{j=0}^{l-3}
+            Z^{0, l-3}_{0,j}
+            (b, \theta') \,
+            \iH_{j, l + 2 - j}(\pmb{\xi})
+            %
+            %
+             & \qquad
+            \mathrel{\raisebox{0em}{$\nu \, \text{odd}, \mu = 1, l \, \text{odd}$}}
+            %
+            \\
+            \quad\quad\quad\quad
+            - \, b_c^5\sin\theta'\cos\theta'
+            \sum\limits_{j=0}^{l-3}
+            Z^{0, l-3}_{0,k}
+            (b, \theta') \,
+            \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+            %
+            %
+            %
+            \\[3em]
+            bb_c^3\cos\theta'
+            \sum\limits_{j=0}^{\frac{\nu}{2}}
+            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+            Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
+            (b, \theta') \,
+            \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
+            \\
+            \quad\quad\quad\quad
+            - \, b_c^3\sin\theta'
+            \sum\limits_{j=0}^{\frac{\nu}{2}}
+            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+            Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
+            (b, \theta') \,
+            \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
+            %
+             & \qquad
+            \mathrel{\raisebox{1.25em}{$\text{otherwise}$}}
+            %
+            %
+        \end{cases}
+    \end{proof}
+    \vfill
+}
+%
+The solution to Equation~(\ref{eq:tn}) depends on the matrix
+$\viH$, whose components are given by the integral
 %
 \begin{align}
     \label{eq:H}
@@ -4061,7 +4054,7 @@ The components of the matrix $\viH$ are given by the integral
     \quad.
 \end{align}
 %
-This integral is the same as that in Equation (D27)
+The $\viH$ integral is the same as that in Equation (D27)
 of \citet{Luger2019}, except for a change in the limits of integration.
 We can compute this integral recursively given four lower boundary conditions:
 %
