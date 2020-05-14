@@ -3080,21 +3080,6 @@ where the sign is chosen such that the point
 $(r_o\cos\phi_0, b_o + r_o\sin\phi_0)$ is on the dayside of the occulted body,
 and the latter (of which there may be multiple) is given by
 %
-% Introduce the function
-% %
-% \begin{proof}{}
-%     \textrm{\faAdjust}(x, y) &=
-%     \begin{cases}
-%         \textrm{\faCircleO} & \qquad -x \sin\theta' + y\cos\theta' \ge b \sqrt{1 - (x\cos\theta' + y\sin\theta') ^ 2}
-%         \\
-%         \textrm{\faCircle}  & \qquad \text{otherwise}
-%     \end{cases}
-% \end{proof}
-% %
-% which returns \faCircleO\ if point $(x, y)$ is on the dayside of the body and
-% \faCircle\ if it is on the nightside.
-%
-%
 \begin{proof}{pT}
     \pmb{\phi_1} & =
     \theta' +
@@ -4121,7 +4106,7 @@ The limits of integration $\vlambda$
 correspond to the point at which the terminator crosses from the dayside
 to the night side,
 %
-\begin{proof}{}
+\begin{proof}{qT}
     \lambda_0 &=
     \begin{cases}
         \theta'        & \qquad \qquad \cos^2\theta' + (\sin\theta' - b_o)^2 < r_o^2
@@ -4134,7 +4119,7 @@ to the night side,
 and the point of intersection between the limb of the occultor
 and the limb of the occulted body,
 %
-\begin{proof}{}
+\begin{proof}{qT}
     \lambda_1 & =
     \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 + b_o ^ 2}{2 b_o}\right) - \frac{\pi}{2}\right)
     \quad,
@@ -4154,7 +4139,7 @@ measured counter-clockwise from the $x'$-axis.
 
 Given $\vlambda$, the solution to Equation~(\ref{eq:qT}) is straightforward:
 %
-\begin{proof}{}
+\begin{proof}{qT}
     \mathbb{q}_n &=
     \begin{cases}
         \iH_{\frac{\mu + 4}{2}, \frac{\nu}{2}}(\vlambda)
