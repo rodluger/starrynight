@@ -2153,7 +2153,7 @@ at index $n$ is given by
          &
         %
         \qquad
-        \mu, \nu \ \text{even}
+        \frac{\mu}{2} \ \text{even}
         %
         \\[1em]
         %
@@ -2162,8 +2162,16 @@ at index $n$ is given by
          &
         %
         \qquad
-        \text{otherwise}
+        \frac{\mu - 1}{2} \ \text{even}
         %
+        \\[1em]
+        %
+        0
+        %
+         &
+        %
+        \qquad
+        \text{otherwise}
     \end{cases}
 \end{proof}
 %
@@ -2235,7 +2243,7 @@ Given initial conditions
 \end{minipage}
 \\[1em]
 %
-we may compute all higher order terms from the recurrence relations
+we may compute all the required higher order terms from the recurrence relations
 %
 \begin{proof}{PhaseCurve}
     \label{eq:IJKrec}
@@ -2719,7 +2727,7 @@ flux from Equation~(\ref{eq:fS}) directly:
 \end{figure}
 
 Cases 11--14 correspond to (rare) configurations involving three
-or four roots to Equation~\ref{eq:quartic} and are
+or four roots to Equation~(\ref{eq:quartic}) and are
 illustrated in Figure~\ref{fig:pathological}. All four involve integration over
 two disjoint regions (see the figure).
 %
@@ -3062,11 +3070,11 @@ of the occultor and the terminator of the occulted body.
 The former is given by
 \citep[c.f. Equation~24 in][]{Luger2019}
 %
-\begin{align}
+\begin{proof}{pT}
     \phi_0 & =
     \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
     \quad,
-\end{align}
+\end{proof}
 %
 where the sign is chosen such that the point
 $(r_o\cos\phi_0, b_o + r_o\sin\phi_0)$ is on the dayside of the occulted body,
@@ -3087,13 +3095,13 @@ and the latter (of which there may be multiple) is given by
 % \faCircle\ if it is on the nightside.
 %
 %
-\begin{align}
+\begin{proof}{pT}
     \pmb{\phi_1} & =
     \theta' +
     \atantwo
-    \left(b\sqrt{1 - {\mathbf{x''}}^2 - y''_o}, \mathbf{x''} - x''_o\right)
+    \left(b\sqrt{1 - {\mathbf{x''}}^2} - y''_o, \mathbf{x''} - x''_o\right)
     \quad
-\end{align}
+\end{proof}
 %
 where $\mathbf{x''}$ are the roots of the quartic (Equation~\ref{eq:quartic}).
 These angles are then wrapped to the range $[0, 2\pi)$
@@ -3114,7 +3122,7 @@ The algebra is long and tedious, so we merely present the result
 (alongside the usual validation links). The $n^\text{th}$ component
 of $\pT$ is
 %
-\begin{proof}{}
+\begin{proof}{pT}
     \label{eq:pTsoln}
     \mathbb{p}_n & =
     \resizebox{.8\hsize}{!}{$
@@ -3139,7 +3147,7 @@ of $\pT$ is
                     %    
                     V
                     \left(
-                    \frac{\mu + 2}{2},
+                    \frac{\mu + 2}{4},
                     \frac{\nu}{2},
                     0;
                     \viU
@@ -3185,7 +3193,7 @@ of $\pT$ is
                         \viJ
                         \right)
                         %
-                         & \qquad \quad
+                         & \qquad \quad  \enspace
                         l \, \text{even}
                         %
                         \\[1em]
@@ -3205,7 +3213,7 @@ of $\pT$ is
                         \viJ
                         \right)
                         %
-                         & \qquad \quad
+                         & \qquad \quad  \enspace
                         l \, \text{odd} \ne 1
                         %
                     \end{cases}
@@ -3260,19 +3268,19 @@ of $\pT$ is
 where $\beta = \left(1 - (b_o - r_o)^2\right)^\frac{3}{2}$
 and we define the Vieta operator
 %
-\begin{align}
+\begin{proof}{pT}
     \label{eq:V}
     V\left(u, v, w; \mathbf{x}\right) \equiv
     \sum_{i=0}^{u + v}
     \mathcal{A}_{u, v, i}
-    \mathbf{x}_{u + w + i}
-\end{align}
+    x_{u + w + i}
+\end{proof}
 %
 as the dot product of a vector $\mathbf{x}$ and
 the vector of Vieta's theorem coefficients, where
 \citep[c.f. Equation~D34 in][]{Luger2019}
 %
-\begin{align}
+\begin{proof}{pT}
     \label{eq:vieta}
     \mathcal{A}_{u,v,i} & =
     \sum_{j=\text{max}(0,u-i)}^{\text{min}(u+v-i,u)}
@@ -3280,7 +3288,7 @@ the vector of Vieta's theorem coefficients, where
     \binom{v}{u+v-i-j}
     (-1)^{u+j}\left(\frac{b_o-r_o}{2r_o}\right)^{u+v-i-j}
     \quad.
-\end{align}
+\end{proof}
 %
 The vectors $\viI$, $\viJ$,
 $\viU$, and $\viW$ are solutions
