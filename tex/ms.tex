@@ -18,7 +18,7 @@
     \textbf{
         Analytic Light Curves in Reflected Light:%
         \\%
-        Phase Curves, Occultations, and Non-Lambertian Scattering
+        Phase Curves, Occultations, and Non-Lambertian Scattering for Spherical Planets
     }
 }
 
@@ -43,7 +43,7 @@
 
 \begin{abstract}
     We derive efficient, closed form, differentiable, and numerically stable
-    solutions for the flux measured from a planet or moon seen in reflected
+    solutions for the flux measured from a spherical planet or moon seen in reflected
     light, either in our out of occultation.
     %
     Our expressions apply to the computation of scattered
@@ -90,7 +90,7 @@ the habitable zone, which can be used to map their surfaces and
 indirectly infer the presence of clouds, continents, oceans, and perhaps
 even life.
 
-There is a vast literature on techniques for mapping exoplanet surfaces
+There is an extensive literature on techniques for mapping spherical exoplanet surfaces
 based on their phase curves
 \citep[e.g.,][]{Russell1906,Lacis1972,Knutson2007,Cowan2008,Oakley2009,Berdyugina2017}
 and occultation light curves
@@ -115,11 +115,14 @@ Many studies have analyzed real Earth reflected light curves to
 infer surface properties of our planet as an exercise in
 prepartion for the mapping of exoplanets.
 %
-\citet{Cowan2009} analyzed visible-light disk-integrated light curves
+\citet{Cowan2009} and \citet{Cowan2011b} analyzed visible-light disk-integrated light curves
 of the Earth taken by the Deep Impact spacecraft to produce
 longitudinal maps of the surface, harnessing multi-band observations
 to disentangle static surface brightness features from temporally
-variable clouds. More recently, \citet{Jiang2018} and \citet{Fan2019}
+variable clouds.  A transit of Earth by the Moon was observed
+as well \citep{Livengood2011}, although this data has yet to be
+exploited for mapping purposes.
+More recently, \citet{Jiang2018} and \citet{Fan2019}
 used data from the L1-stationed DSCOVR satellite to infer surface
 and cloud properties of the Earth, and \citet{Luger2019b} analyzed
 background scattered light in TESS photometry to reconstruct a cloud
@@ -161,7 +164,7 @@ Our code is fully
 \href{https://github.com/rodluger/starry}{open-source},
 comprehensively
 \href{https://dev.azure.com/rodluger/starry/_test/analytics?definitionId=4}{unit-tested},
-and supplemmented with an extensive
+and supplemented with an extensive
 \href{https://rodluger.github.io/starry}{API documentation}
 and suite of
 \href{https://rodluger.github.io/starry/latest/tutorials.html}{tutorials}.
@@ -1385,7 +1388,9 @@ formalism of \citet{Haggard2018}, who derived analytic expressions for
 phase curves of delta function maps ($\delta$-map), to model glint.
 As discussed in \citet{LustigYaeger2018}, glint mapping is an extremely
 powerful way to not only map terrestrial planets but also to confirm
-their habitability via the presence of an ocean.
+their habitability via the presence of an ocean.  Finally, the presence
+of time-variable features, such as clouds, dust storms, or seasonal
+variations of vegetation are not accounted for in the model.
 
 Finally, we would like to emphasize that while spherical harmonics are
 a convenient basis for the purpose of computing light curves, they
@@ -2350,7 +2355,7 @@ and combine it with the formalism from \S\ref{sec:solution-no-occ} to
 compute the visible flux. These integrals may be over the unocculted dayside,
 the occulted dayside, the unocculted nightside, or the occulted nightside;
 in the case of the latter three, a bit of algebra
-(\S\ref{sec:cases-pathological}--\S\ref{sec:cases-pathological}) is needed
+(\S\ref{sec:cases-hard}--\S\ref{sec:cases-pathological}) is needed
 to relate these to the observed flux. Additionally, in some cases we can
 avoid computing new integrals entirely, as the solution can be obtained from
 a combination of the classical \starry solution vector $\sT$ and the
@@ -2487,10 +2492,10 @@ terminator ellipse (i.e., the section of the terminator on the far side
 of the body). After excluding the unphysical solutions, we are still left with
 anywhere between zero and four roots.
 
-Cases with zero roots (case 1 -- case 4) are treated in \S\ref{sec:cases-easy},
-while cases with one or two roots (case 5 -- case 8) are treated in
+Cases with zero roots (case 1 -- case 5) are treated in \S\ref{sec:cases-easy},
+while cases with one or two roots (case 6 -- case 10) are treated in
 \S\ref{sec:cases-hard}. Cases with three or four roots
-(case 9 -- case 10) are rarely encountered
+(case 11 -- case 14) are rarely encountered
 in practice, but are possible for some pathological configurations; these are
 treated in \S\ref{sec:cases-pathological}.
 
@@ -3718,7 +3723,8 @@ $\mathbb{p}_2$ ($\mu = \nu = 1$). As in \citet{Luger2019}, this is
 the integral of the linear limb darkening term,
 whose solution must be handled
 separately due to the fact that the corresponding antiderivative
-in Equation~(\ref{eq:G}) is not a polynomial in $x$, $y$, and $z(x, y)$.
+in Equation~(\ref{eq:G}) is not a polynomial in $x$, $y$, and $z(x, y)$;
+also see \citet{Agol2020}.
 The integral we must solve is
 %
 \begin{align}
