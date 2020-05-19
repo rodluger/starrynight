@@ -18,7 +18,8 @@
     \textbf{
         Analytic Light Curves in Reflected Light:%
         \\%
-        Phase Curves, Occultations, and Non-Lambertian Scattering for Spherical Planets
+        Phase Curves, Occultations, and Non-Lambertian Scattering for
+        Spherical Planets and Moons
     }
 }
 
@@ -108,8 +109,23 @@ about the full two-dimensional surface albedo distribution
 Occultation light curves in reflected light can encode even more information
 about the surface. Thus far, these have been studied primarily within our
 solar system. Mutual occultations among the Galilean moons of Jupiter
-have been studied to infer surface properties of Io
-\xxx{\textbf{Fran:}... more on this, and add citations.}
+have been extensively studied to infer surface properties of the moons and to refine
+their ephemerides
+\citep[e.g.,][]{Arlot1974,Aksnes1984,Arlot2014,deKleer2017,Saquet2018,Morgado2019}.
+Farther out in the solar system,
+mutual occultations of Pluto and Charon in the late 1980s
+were used to confirm Charon's existence
+\citep{Stern1992},
+establish the sizes and orbital parameters of the two bodies
+\citep{Tholen1990},
+and infer their surface properties
+\citep{Marcialis1990}.
+In particular, \citet{Dunbar1986} developed an efficient analytic
+algorithm to model Pluto-Charon occultation light curves in reflected light
+assuming uniform surfaces and used it to infer the two body's
+average geometrical albedos. Later, \citet{Reinsch1994} analyzed
+the complete mutual occultation dataset to infer longitudinal maps of Pluto's
+albedo.
 
 Many studies have analyzed real Earth reflected light curves to
 infer surface properties of our planet as an exercise in
@@ -1020,6 +1036,7 @@ Figure~\ref{fig:io_europa} shows a visible-light observation of the
 occultation of Io by Europa on 04 Dec 2009 taken by the PHEMU09
 campaign \citep{Arlot2014}. The trajectory of Europa relative to Io,
 computed from the \href{https://ssd.jpl.nasa.gov/horizons.cgi}{JPL Horizons database}
+using ephemerides from \citet{Folkner2014}
 is shown at the top. We fit to this data a \starry occultation model
 with the scattering law discussed above.
 For simplicity, we set the surface map equal too
@@ -1519,7 +1536,7 @@ at \url{https://github.com/rodluger/starrynight}.
 % version archived at \url{https://doi.org/XX.YYYY/zenodo.ZZZZZZZ}.
 
 \software{
-    astroquery \citep{astroquery},
+    astroquery \citep{astroquery1,astroquery2},
     Eigen v3 \citep{eigen},
     exoplanet \citep{exoplanet},
     HEALPix \citep{healpix},
@@ -1784,9 +1801,11 @@ $+x$-axis,
 \begin{proof}{illumination}
     \label{eq:theta}
     \theta = -\atantwo(x_s, y_s)
-    \quad.
+    \quad,
 \end{proof}
 %
+where $\atantwo(a, b)$ is the quadrant-aware arctangent of
+$\nicefrac{a}{b}$.
 Given this formulation, and assuming that
 $r_s \gg 1$,
 it is straightforward to show that the illumination
@@ -1847,8 +1866,8 @@ by the observer in units of the flux of the illumination source:
 %
 which is precisely the geometric albedo of a Lambert
 sphere of spherical albedo $A$ \citep[see, e.g.][]{Seager2010}.
-\xxx{\textbf{Eric:} Is this explanation sufficient? Why does it matter that this
-    is the geometric albedo of a Lambert sphere?}
+%\xxx{\textbf{Eric:} Is this explanation sufficient? Why does it matter that this
+%    is the geometric albedo of a Lambert sphere?}
 
 In principle, our task is now straightforward: weight each of the
 terms in the Green's basis (Equation~\ref{eq:bg}) and integrate them
