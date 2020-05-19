@@ -61,7 +61,7 @@
     %
     The algorithm is ${\sim}4-5$ orders of magnitude faster than direct
     numerical evaluation methods and ${\sim}10$ orders of magnitude more
-    precise.
+    accurate.
     %
     We show how the techniques developed here may one day lead to the
     construction of two-dimensional maps of terrestrial planet surfaces,
@@ -501,7 +501,7 @@ few orders of magnitude of machine (double) precision.
             evaluations. The reflected light algorithm is
             comparable in efficiency and precision to the emitted
             light algorithm. It is ${\sim}5$ orders of magnitude faster
-            and ${\sim}10$ orders of magnitude more precise than numerical
+            and ${\sim}10$ orders of magnitude more accurate than numerical
             integration.
             \label{fig:speed_no_occ}
         }
@@ -516,9 +516,9 @@ few orders of magnitude of machine (double) precision.
             evaluation in which the occultor intersects the terminator
             (case 6 in Appendix~\ref{sec:solution-occ}).
             The reflected light algorithm is around one
-            order of magnitude slower and comparably precise to the emitted
+            order of magnitude slower and comparably accurate to the emitted
             light algorithm. It is ${\sim}4$ orders of magnitude faster
-            and ${\sim}10$ orders of magnitude more precise than numerical
+            and ${\sim}10$ orders of magnitude more accurate than numerical
             integration.
             \label{fig:speed}
         }
@@ -580,10 +580,10 @@ and reflected light curves.
 Compared to either numerical evaluation method, the \starry reflected light
 solutions are
 \textbf{4--5 orders of magnitude faster} and about
-\textbf{10 orders of magnitude more precise}. While different
+\textbf{10 orders of magnitude more accurate}. While different
 grid sizes and different error settings for the numerical integration change
 the balance slightly between these numbers, the \starry solution is always
-many orders of magnitude faster and more precise than either method.
+many orders of magnitude faster and more accurate than either method.
 In particular, because of the complicated integration boundaries
 (see, for example, Figure~\ref{fig:cases}), two-dimensional Gaussian quadrature
 struggles to reach adequate precision in a reasonable amount of time,
@@ -1476,7 +1476,7 @@ source and non-Lambertian scattering parametrized by a surface roughness
 coefficient.
 %
 The algorithm is ${\sim}4-5$ orders of magnitude faster
-and ${\sim}10$ orders of magnitude more precise than other numerical
+and ${\sim}10$ orders of magnitude more accurate than other numerical
 approaches for computing these light curves. The algorithm is
 also differentiable, enabling inference with efficient gradient-based samplers
 such as Hamiltonian Monte Carlo (HMC), and linear in the spherical
