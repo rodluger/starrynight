@@ -44,9 +44,9 @@ for j, rmoon in enumerate([0, 0.25]):
 
         # Hack: these amplitudes give us unit median flux
         if reflected:
-            map.amp = 1.0 / 0.123
+            map.amp = 2.60
         else:
-            map.amp = 1.0
+            map.amp = 1.00
 
         # Light curve over 10 days wiith 7 occultations
         time = np.linspace(120.0, 130.0, 325)

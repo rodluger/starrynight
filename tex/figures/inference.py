@@ -38,7 +38,7 @@ for i, reflected in enumerate([False, True]):
 
     # Hack: these amplitudes give us unit maximum flux
     if reflected:
-        map.amp = 3.3958
+        map.amp = 1.0873
     else:
         map.amp = 0.7560
 
