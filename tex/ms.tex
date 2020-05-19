@@ -717,7 +717,9 @@ the peak value.
 The illumination profile in the extended source case may be computed as the
 two-dimensional integral of the point source illumination profile over
 the visible portion of the stellar disk. While this integral may in theory be
-computed analytically, the resulting profile on the planet surface
+computed analytically
+\citep[see, for instance,][who derived series solutions to this problem]{Kopal1954},
+the resulting profile on the planet surface
 will not in general be exactly expressible in terms of spherical harmonics, a
 necessary condition for the \starry algorithm.
 For simplicity, we therefore compute the illumination profile for
@@ -758,23 +760,7 @@ this has not been implemented in \starry.
         }
     \end{centering}
 \end{figure}
-
-Figure~\ref{fig:kelt9b} shows the practical implications of the finite
-stellar size for the phase curve of Kelt-9b. The left panel shows the
-reflected light phase curve of the planet in parts per million, assuming
-a spherical albedo of 0.2, for the point source approximation
-(blue) and including the effect of the extended source with
-\textsf{source\_npts} = 300 (purple). The increased
-illumination at the sub-stellar point results in a ${\sim}30$ increase
-in the value of the phase curve close to full phase ($\pm\nicefrac{1}{2}$).
-Close to a phase of zero, the extended source results in decreased
-flux, since the portion of the star illuminating the planet (the region
-close to the limb) is slightly
-\emph{farther} away, by a factor of
-$\sqrt{1 + (\nicefrac{a}{R_\star})^{-2}}$. This results in a steeper
-phase curve, which can be seen in the right panel, where the light curves
-have been normalized to their maximum value.
-
+%
 \begin{figure}[p!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/kelt9b_eclipse.pdf}
@@ -798,6 +784,22 @@ have been normalized to their maximum value.
         }
     \end{centering}
 \end{figure}
+
+Figure~\ref{fig:kelt9b} shows the practical implications of the finite
+stellar size for the phase curve of Kelt-9b. The left panel shows the
+reflected light phase curve of the planet in parts per million, assuming
+a spherical albedo of 0.2, for the point source approximation
+(blue) and including the effect of the extended source with
+\textsf{source\_npts} = 300 (purple). The increased
+illumination at the sub-stellar point results in a ${\sim}30$ increase
+in the value of the phase curve close to full phase ($\pm\nicefrac{1}{2}$).
+Close to a phase of zero, the extended source results in decreased
+flux, since the portion of the star illuminating the planet (the region
+close to the limb) is slightly
+\emph{farther} away, by a factor of
+$\sqrt{1 + (\nicefrac{a}{R_\star})^{-2}}$. This results in a steeper
+phase curve, which can be seen in the right panel, where the light curves
+have been normalized to their maximum value.
 
 While modeling the extended size of the star is essential to
 getting the shape of the phase curve correct, the same is not true

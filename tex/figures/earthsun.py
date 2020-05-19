@@ -104,7 +104,7 @@ for reflected in (True, False):
         ax_im[n].set_rasterization_zorder(0)
 
         # Compute the numerical flux by discretely summing over the unocculted region
-        x, y, z = map_e.ops.compute_ortho_grid(res)
+        (lat, lon), (x, y, z) = map_e.ops.compute_ortho_grid(res)
         if reflected:
             img = map_r.render(xs=xo[i], ys=yo[i], zs=zo[i], theta=theta, res=res)
         else:

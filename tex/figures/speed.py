@@ -224,7 +224,7 @@ class Compare(object):
     def flux_brute(self, xs, ys, zs, xo, yo, ro, res=999, **kwargs):
         # Compute the flux by brute force grid integration
         img = self.map_ref.render(xs=xs, ys=ys, zs=zs, res=res)
-        x, y, z = self.map_ref.ops.compute_ortho_grid(res)
+        (lat, lon), (x, y, z) = self.map_ref.ops.compute_ortho_grid(res)
         idx = (x - xo) ** 2 + (y - yo) ** 2 > ro ** 2
         return np.nansum(img.flat[idx]) * 4 / res ** 2, np.nan
 
@@ -267,7 +267,7 @@ class Compare(object):
         img = self.map_ref.render(xs=xs, ys=ys, zs=zs, res=res)
 
         # Mask the occultor
-        x, y, z = self.map_ref.ops.compute_ortho_grid(res)
+        (lat, lon), (x, y, z) = self.map_ref.ops.compute_ortho_grid(res)
         idx = (x - xo) ** 2 + (y - yo) ** 2 <= ro ** 2
         img.flat[idx] = HUGE
 

@@ -89,7 +89,7 @@ for n in range(nim):
 
     # Inset view of the phase curve: numerical
     theta_in = np.linspace(0, 360, 10)
-    x, y, z = map.ops.compute_ortho_grid(res)
+    (lat, lon), (x, y, z) = map.ops.compute_ortho_grid(res)
     img = map.render(theta=theta_in, xs=xs[i], ys=ys[i], zs=zs[i], res=res)
     F = np.nansum(img, axis=(1, 2)) * 4 / res ** 2
     F /= maxF
