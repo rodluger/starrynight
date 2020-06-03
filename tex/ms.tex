@@ -174,7 +174,7 @@ in terms of algebraic operations involving trigonometric functions
 and (at times) elliptic integrals. We derive numerically
 stable recursion relations for the efficient evaluation of all
 expressions and code them within an autodifferentiation framework
-to enable the computation of high precision derivatives for use in
+to enable the computation of accurate derivatives for use in
 gradient-based inference and optimization schemes.
 Our code is fully
 \href{https://github.com/rodluger/starry}{open-source},
@@ -567,7 +567,15 @@ points is proportional to the base-10 log of the relative error. For the
 in the flux over one thousand evaluations in which the input parameters
 are perturbed within an order of magnitude of machine epsilon; this is
 therefore a probe of the condition number of the starry algorithm and
-captures only error due to numerical instabilities. For the numerical
+captures only error due to numerical instabilities.
+It is worth emphasizing that this is a measurement of the precision of
+the algorithm, rather than the accuracy, because it would be computationally
+intractable to compute a solution more accurate than this using a different
+algorithm.
+We argue that this measurement can be interpreted to mean that the algorithm
+is also accurate, but detailed quantification of this difference is beyond the
+scope of this paper.
+For the numerical
 solutions, the error is estimated as the difference between the numerical
 flux and the \starry flux.
 
@@ -602,7 +610,7 @@ the balance slightly between these numbers, the \starry solution is always
 many orders of magnitude faster and more precise than either method.
 In particular, because of the complicated integration boundaries
 (see, for example, Figure~\ref{fig:cases}), two-dimensional Gaussian quadrature
-struggles to reach adequate precision in a reasonable amount of time,
+struggles to reach adequate accuracy in a reasonable amount of time,
 while integration on a grid fails to capture the curvature of the
 integration boundaries. Moreover, neither method yields the gradient of the
 solution with respect to the input parameters, which can be extremely useful
@@ -677,7 +685,7 @@ reaching zero at the day/night terminator, an angle $\nicefrac{\pi}{2}$
 away from the sub-stellar point. However, if the star is sufficiently large
 and the planet is sufficiently close-in, rays originating from near the limb
 of the star will reach points on the planet surface beyond this angle.
-It is straightforward to show that, provided the stellar radius $R_\star$
+If the stellar radius $R_\star$
 is larger than the planet radius $R_p$, the angular extent of the true
 day/night terminator past $\nicefrac{\pi}{2}$ is given by
 %
