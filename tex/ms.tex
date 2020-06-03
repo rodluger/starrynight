@@ -61,7 +61,7 @@
     %
     The algorithm is ${\sim}4-5$ orders of magnitude faster than direct
     numerical evaluation methods and ${\sim}10$ orders of magnitude more
-    accurate.
+    precise.
     %
     We show how the techniques developed here may one day lead to the
     construction of two-dimensional maps of terrestrial planet surfaces,
@@ -275,7 +275,7 @@ the paper to validating and demonstrating applications of our approach.
 This paper is organized as follows.
 In \S\ref{sec:validation} we present sample light curves computed
 using our algorithm, validate it against numerical integration, and
-discuss its performance in terms of computational speed and accuracy.
+discuss its performance in terms of computational speed and precision.
 In \S\ref{sec:extensions} we extend the model to apply to illumination
 sources of finite size and surfaces that scatter light anisotropically.
 We discuss implications, applications, and limitations of our model in
@@ -336,7 +336,7 @@ at that phase over a single rotation. The orange dots correspond to a
 brute force numerical solution, obtained by discretizing the disk
 on a grid of ${\sim}10^5$ points and summing over the dayside.
 The models agree to within the
-numerical accuracy of the brute force solution (about 100 ppm of the
+numerical precision of the brute force solution (about 100 ppm of the
 planetary flux in this case).
 
 While the dominant signal in the phase curve is the sine-like envelope
@@ -403,7 +403,7 @@ transit across South America is deeper, since it occurs close to local
 noon, when the illumination is highest; conversely, the transit across
 Africa occurs close to local dusk, when the illumination is close to zero.
 As before, the light curves computed using \starry agree to within the
-numerical accuracy of the brute force solution.
+numerical precision of the brute force solution.
 
 %
 
@@ -472,7 +472,7 @@ and third kinds. We have derived efficient and numerically stable
 recursion relations to compute the relevant expressions and their
 derivatives. At times, these involve the evaluation of certain
 expressions numerically, especially when doing so
-leads to either a speed-up or a significant gain in numerical accuracy.
+leads to either a speed-up or a significant gain in numerical precision.
 In particular, as we discuss in Appendix~\ref{sec:which-case}, the
 integration boundaries during an occultation sometimes depend on the
 solution to a quartic equation. While this can be solved in closed form,
@@ -485,7 +485,7 @@ few orders of magnitude of machine (double) precision.
         \includegraphics[width=\linewidth]{figures/speed_no_occ.pdf}
         \oscaption{speed}{%
             Evaluation time (vertical axis)
-            and numerical accuracy (point size)
+            and numerical precision (point size)
             for a single flux evaluation in the absence of an occultor
             as a function of spherical
             harmonic degree for different methods.
@@ -499,9 +499,9 @@ few orders of magnitude of machine (double) precision.
             numerical integration using two-dimensional Gaussian
             quadrature (red); neither of these include gradient
             evaluations. The reflected light algorithm is
-            comparable in efficiency and accuracy to the emitted
+            comparable in efficiency and precision to the emitted
             light algorithm. It is ${\sim}5$ orders of magnitude faster
-            and ${\sim}10$ orders of magnitude more accurate than numerical
+            and ${\sim}10$ orders of magnitude more precise than numerical
             integration.
             \label{fig:speed_no_occ}
         }
@@ -516,9 +516,9 @@ few orders of magnitude of machine (double) precision.
             evaluation in which the occultor intersects the terminator
             (case 6 in Appendix~\ref{sec:solution-occ}).
             The reflected light algorithm is around one
-            order of magnitude slower and comparably accurate to the emitted
+            order of magnitude slower and comparably precise to the emitted
             light algorithm. It is ${\sim}4$ orders of magnitude faster
-            and ${\sim}10$ orders of magnitude more accurate than numerical
+            and ${\sim}10$ orders of magnitude more precise than numerical
             integration.
             \label{fig:speed}
         }
@@ -526,7 +526,7 @@ few orders of magnitude of machine (double) precision.
 \end{figure}
 
 Figures~\ref{fig:speed_no_occ} and \ref{fig:speed} summarize
-the accuracy and computation time of the \starry algorithm for
+the precision and computation time of the \starry algorithm for
 two typical scenarios: a phase curve evaluation
 (Figure~\ref{fig:speed_no_occ}) and an occultation evaluation
 (Figure~\ref{fig:speed}).
@@ -551,7 +551,15 @@ points is proportional to the base-10 log of the relative error. For the
 in the flux over one thousand evaluations in which the input parameters
 are perturbed within an order of magnitude of machine epsilon; this is
 therefore a probe of the condition number of the starry algorithm and
-captures only error due to numerical instabilities. For the numerical
+captures only error due to numerical instabilities.
+It is worth emphasizing that this is a measurement of the precision of
+the algorithm, rather than the accuracy, because it would be computationally
+intractable to compute a solution more accurate than this using a different
+algorithm.
+We argue that this measurement can be interpreted to mean that the algorithm
+is also accurate, but detailed quantification of this difference is beyond the
+scope of this paper.
+For the numerical
 solutions, the error is estimated as the difference between the numerical
 flux and the \starry flux.
 
@@ -572,7 +580,7 @@ same overhead at all map degrees $l$, resulting in a gentler scaling
 in $l$ than for the thermal case; for large $l$, the evaluation time
 for the two algorithms is within a factor of 2--3.
 %
-In terms of accuracy, the algorithms are comparable, particularly
+In terms of precision, the algorithms are comparable, particularly
 for occultations. For both phase curves and occultations, the numerical error up
 to $l=10$ is less than one part per trillion ($10^{-12}$) for both thermal
 and reflected light curves.
@@ -580,10 +588,10 @@ and reflected light curves.
 Compared to either numerical evaluation method, the \starry reflected light
 solutions are
 \textbf{4--5 orders of magnitude faster} and about
-\textbf{10 orders of magnitude more accurate}. While different
+\textbf{10 orders of magnitude more precise}. While different
 grid sizes and different error settings for the numerical integration change
 the balance slightly between these numbers, the \starry solution is always
-many orders of magnitude faster and more accurate than either method.
+many orders of magnitude faster and more precise than either method.
 In particular, because of the complicated integration boundaries
 (see, for example, Figure~\ref{fig:cases}), two-dimensional Gaussian quadrature
 struggles to reach adequate accuracy in a reasonable amount of time,
@@ -603,7 +611,7 @@ We have also developed an extensive suite of
 \href{https://github.com/rodluger/starry/tree/master/tests}{unit tests}
 comparing the \starry solution to the numerical solution over a large
 grid of input parameter values, and verified that the solutions agree
-to within the accuracy of the numerical method.
+to within the precision of the numerical method.
 %
 That said, there are specific cases in which the algorithm presented in the
 Appendix suffers from numerical instabilities. These generally happen due
@@ -1476,7 +1484,7 @@ source and non-Lambertian scattering parametrized by a surface roughness
 coefficient.
 %
 The algorithm is ${\sim}4-5$ orders of magnitude faster
-and ${\sim}10$ orders of magnitude more accurate than other numerical
+and ${\sim}10$ orders of magnitude more precise than other numerical
 approaches for computing these light curves. The algorithm is
 also differentiable, enabling inference with efficient gradient-based samplers
 such as Hamiltonian Monte Carlo (HMC), and linear in the spherical
@@ -3579,7 +3587,7 @@ We evaluate the upper boundary condition $\iJ_{\vmax}$ by numerical
 integration of Equation~(\ref{eq:J}) via Gauss-Legendre quadrature with
 \STARRYQUADPOINTS points. While the lower boundary condition may be computed
 analytically from Equation~(\ref{eq:Jrec}),
-in practice we achieve better accuracy via numerical
+in practice we achieve better precision via numerical
 integration (as above), with negligible effects on computational performance.
 
 %
