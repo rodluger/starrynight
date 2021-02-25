@@ -17,6 +17,7 @@ visualize_simple(
     4.03591586925189,
     0.34988513192814663,
     0.7753986686719786,
+    res=3999,
 )
 axins0.axis("on")
 ax[1].set_visible(False)
@@ -45,6 +46,7 @@ visualize_simple(
     4.03591586925189 - np.pi,
     0.34988513192814663,
     0.7753986686719786,
+    res=3999,
 )
 axins1.axis("on")
 ax[3].set_visible(False)
