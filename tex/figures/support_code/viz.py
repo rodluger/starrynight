@@ -6,7 +6,7 @@ from matplotlib.patches import Arc
 import numpy as np
 
 
-def visualize_simple(ax, b, theta, bo, ro, res=4999):
+def visualize_simple(ax, b, theta, bo, ro, res=999):
 
     # Find angles of intersection
     kappa, lam, xi, code = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
@@ -197,7 +197,7 @@ def visualize_simple(ax, b, theta, bo, ro, res=4999):
         )
 
 
-def visualize(b, theta, bo, ro, res=4999):
+def visualize(b, theta, bo, ro, res=999):
 
     # Find angles of intersection
     kappa, lam, xi, code = get_angles(b, theta, np.cos(theta), np.sin(theta), bo, ro)
