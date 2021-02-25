@@ -22,7 +22,7 @@ jobs:
           auto-update-conda: true
           activate-environment: starrynight
           environment-file: environment.yml
-          python-version: "3.8"
+          python-version: "3.9"
 
       - name: Compile the paper
         shell: bash -l {0}
