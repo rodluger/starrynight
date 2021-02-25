@@ -174,11 +174,11 @@ map.inc, map.obl, kwargs = get_starry_args(time)
 map.load("data/io_mosaic.jpg")
 
 # Fitted params (see `io_europa.ipynb`)
-dx = 0.06476496696729728
-dy = 0.0057834182077649565
-amp = 1.5755520732349917
-europa_amp = 0.4686307909766523
-roughness = 55.73260017637845
+dx = 0.0647932578523498
+dy = 0.0058688258741125265
+amp = 4.949347231812881
+europa_amp = 0.4686696569790987
+roughness = 55.730510061534986
 
 # Compute the model
 map.roughness = roughness
