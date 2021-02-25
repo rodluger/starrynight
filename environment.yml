@@ -1,4 +1,4 @@
-name: starry
+name: starrynight
 channels:
   - conda-forge
   - defaults
