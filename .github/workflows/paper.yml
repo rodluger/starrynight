@@ -20,16 +20,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
+          activate-environment: starrynight
+          environment-file: environment.yml
           python-version: "3.8"
-
-      - name: Install dependencies
-        shell: bash -l {0}
-        run: |
-          conda install -y -q -c conda-forge tectonic
-          python -m pip install -U pip
-          python -m pip install -U astropy
-          python -m pip install -U astroquery
-          python -m pip install git+https://github.com/rodluger/starry
 
       - name: Compile the paper
         shell: bash -l {0}

@@ -1,0 +1,17 @@
+name: starry
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - astropy>=4.0.1post1
+  - astroquery>=0.4.1
+  - matplotlib>=3.2.2
+  - mkl-service>=2.3.0
+  - numpy>=1.19.2
+  - openblas>=0.3.6
+  - pip>=20.3.3
+  - python>=3.8.3
+  - scipy>=1.5.0
+  - tectonic>=0.1.11
+  - pip:
+    - git+git://github.com/rodluger/starry.git#master

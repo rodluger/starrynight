@@ -128,10 +128,9 @@ class Compare(object):
                 obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
                 f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
                 return self.map_ref.ops.flux_point_source(
-                    theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha, 0.0
+                    theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, 0.0
                 )
 
             self._flux = theano.function(
@@ -154,11 +153,10 @@ class Compare(object):
                 obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
                 f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
                 return theano.grad(
                     self.map_ref.ops.flux_point_source(
-                        theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, alpha, 0.0
+                        theta, xs, ys, zs, xo, yo, zo, ro, inc, obl, y, u, f, 0.0
                     )[0],
                     ro,
                 )
@@ -181,11 +179,8 @@ class Compare(object):
                 obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
                 f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
-                return self.map_emi.ops.flux(
-                    theta, xo, yo, zo, ro, inc, obl, y, u, f, alpha
-                )
+                return self.map_emi.ops.flux(theta, xo, yo, zo, ro, inc, obl, y, u, f)
 
             self._flux_emitted = theano.function(
                 [_xo, _yo, _ro], theano_code(_xo, _yo, _ro),
@@ -206,12 +201,9 @@ class Compare(object):
                 obl = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 u = tt.as_tensor_variable([-1.0]).astype(tt.config.floatX)
                 f = tt.as_tensor_variable([np.pi]).astype(tt.config.floatX)
-                alpha = tt.as_tensor_variable(0.0).astype(tt.config.floatX)
                 y = tt.as_tensor_variable(self.y).astype(tt.config.floatX)
                 return theano.grad(
-                    self.map_emi.ops.flux(
-                        theta, xo, yo, zo, ro, inc, obl, y, u, f, alpha
-                    )[0],
+                    self.map_emi.ops.flux(theta, xo, yo, zo, ro, inc, obl, y, u, f)[0],
                     ro,
                 )
 
