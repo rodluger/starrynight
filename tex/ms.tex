@@ -181,9 +181,9 @@ Our code is fully
 comprehensively
 \href{https://dev.azure.com/rodluger/starry/_test/analytics?definitionId=4}{unit-tested},
 and supplemented with an extensive
-\href{https://rodluger.github.io/starry}{API documentation}
+\href{https://starry.readthedocs.io}{API documentation}
 and suite of
-\href{https://rodluger.github.io/starry/latest/tutorials.html}{tutorials}.
+\href{https://starry.readthedocs.io/en/latest/tutorials/}{tutorials}.
 %
 As in \citet{Luger2019}, in the caption of each of the figures
 we provide links \codeicon\ to the exact \Python scripts that
@@ -660,7 +660,7 @@ Markov Chain Monte Carlo (MCMC) schemes
 such as Hamiltonian Monte Carlo \citep[HMC;][]{Duane1987}
 and No-U-Turn Sampling \citep[NUTS;][]{Hoffman2011}.
 %
-Complete \href{https://rodluger.github.io/starry}{documentation} and an
+Complete \href{https://starry.readthedocs.io}{documentation} and an
 extensive library of tutorials is available online.
 The links next to each
 of the figures \codeicon\, point to the \Python scripts used to generate
@@ -1184,7 +1184,7 @@ gradient-based MCMC easy. Moreover, the linearity of the model
 with respect to $\mathbf{y}$ allows one to efficiently marginalize over
 those parameters when sampling over the nonlinear parameters.
 Tutorials on how to do this can be found in the
-\starry \href{https://rodluger.github.io/starry}{documentation}.
+\starry \href{https://starry.readthedocs.io}{documentation}.
 
 \subsection{The information content of reflected light curves}
 \label{sec:information}
@@ -1418,7 +1418,7 @@ powerful way to not only map terrestrial planets but also to confirm
 their habitability via the presence of an ocean.  Lastly, the presence
 of time-variable features, such as clouds, dust storms, or seasonal
 variations of vegetation are not accounted for in the model, although
-the \href{https://rodluger.github.io/starry}{documentation} discusses
+the \href{https://starry.readthedocs.io}{documentation} discusses
 how one may approach the modeling of temporal features.
 
 Finally, we would like to emphasize that while spherical harmonics are
@@ -1482,7 +1482,7 @@ computation; as a rule of thumb, we find that grids with $2-5$ times
 as many pixels
 as spherical harmonic coefficients are sufficient.
 %
-The \href{https://rodluger.github.io/starry}{documentation}
+The \href{https://starry.readthedocs.io}{documentation}
 includes tutorials on how to implement this in practice.
 
 \section{Conclusions}
@@ -1538,7 +1538,7 @@ detection of clouds, continents, oceans, and perhaps even life.
 
 The software presented in this work is open source under the MIT License and
 is available at \url{https://github.com/rodluger/starry}, with documentation
-and tutorials hosted at \url{https://rodluger.github.io/starry}.
+and tutorials hosted at \url{https://starry.readthedocs.io}.
 The code used to generate the figures in this paper is hosted
 at \url{https://github.com/rodluger/starrynight}.
 % --- TODO ---
@@ -1549,12 +1549,17 @@ at \url{https://github.com/rodluger/starrynight}.
     astroquery \citep{astroquery1,astroquery2},
     Eigen v3 \citep{eigen},
     exoplanet \citep{exoplanet},
-    HEALPix \citep{healpix},
     pybind11 \citep{pybind11},
     pymc3 \citep{pymc3},
     scipy \citep{scipy},
     starry \citep{starry}.
 }
+
+\vspace{1em}
+
+We would like to thank Nicolas Cowan, Christina Hedges, and the
+Astronomical Data Group at the Center for Computational Astrophysics for
+many thought-provoking discussions that helped shape this paper.
 
 % Bibliography
 \bibliography{bib}
