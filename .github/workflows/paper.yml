@@ -27,6 +27,8 @@ jobs:
         run: |
           conda install -y -q -c conda-forge tectonic
           python -m pip install -U pip
+          python -m pip install -U astropy
+          python -m pip install https://github.com/astropy/astroquery/archive/master.zip
           python -m pip install git+https://github.com/rodluger/starry
 
       - name: Compile the paper
