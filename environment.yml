@@ -14,5 +14,5 @@ dependencies:
   - scipy>=1.5.0
   - tectonic>=0.1.11
   - pip:
-    - git+git://github.com/rodluger/starry.git#master
+    - starry==1.1.0
     - tqdm>=4.57.0

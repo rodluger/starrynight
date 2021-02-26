@@ -248,13 +248,13 @@
          & (\ref{eq:b})
         \\
         %
-        $b_c$
-         & complement of $b$, $b_c \equiv \sqrt{1 - b^2}$
+        $b_\mathrm{c}$
+         & complement of $b$, $b_\mathrm{c} \equiv \sqrt{1 - b^2}$
          & \S\ref{sec:adapting-starry}
         \\
         %
-        $b_o$
-         & occultor impact parameter, $b_o= \sqrt{x_o^2 + y_o^2}$
+        $b_\mathrm{o}$
+         & occultor impact parameter, $b_\mathrm{o}= \sqrt{x_\mathrm{o}^2 + y_\mathrm{o}^2}$
          & \S\ref{sec:starry-review}
         \\
         %
@@ -274,33 +274,33 @@
         %
         \\
         %
-        $r_o$
+        $r_\mathrm{o}$
          & occultor radius
          & \S\ref{sec:starry-review}
         \\
         %
-        $r_s$
-         & distance to illumination source, $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$
+        $r_\mathrm{s}$
+         & distance to illumination source, $r_\mathrm{s} = \sqrt{x_\mathrm{s}^2 + y_\mathrm{s}^2 + z_\mathrm{s}^2}$
          & \S\ref{sec:adapting-starry}
         \\
-        $x_o$
+        $x_\mathrm{o}$
          & occultor $x$ position
          & \S\ref{sec:starry-review}
         \\
-        $x_s$
+        $x_\mathrm{s}$
          & illumination source $x$ position
          & \S\ref{sec:adapting-starry}
         \\
         %
-        $y_o$
+        $y_\mathrm{o}$
          & occultor $y$ position
          & \S\ref{sec:starry-review}
         \\
-        $y_s$
+        $y_\mathrm{s}$
          & illumination source $y$ position
          & \S\ref{sec:adapting-starry}
         \\
-        $z_s$
+        $z_\mathrm{s}$
          & illumination source $z$ position
          & \S\ref{sec:adapting-starry}
         \\
@@ -353,22 +353,22 @@
          & \S\ref{sec:solution-occ}
         \\
         %
-        $f_I$
+        $f_\mathrm{I}$
          & intensity-weighted flux during an occultation
          & (\ref{eq:fI})
         \\
         %
-        $f_T$
+        $f_\mathrm{T}$
          & thermal flux during an occultation
          & (\ref{eq:sTARRy})
         \\
         %
-        $f_{T_0}$
+        $f_{\mathrm{T}_0}$
          & thermal flux outside of an occultation
          & (\ref{eq:rTA1Ry})
         \\
         %
-        $f_S$
+        $f_\mathrm{S}$
          & reflected flux over integration region $S$
          & (\ref{eq:fS})
         \\
@@ -381,7 +381,7 @@
          & true intensity at a point on the surface
          & (\ref{eq:illum})
         \\
-        $R_p$
+        $R_\mathrm{p}$
          & planet radius
          & \S\ref{sec:extended}
         \\
@@ -389,11 +389,11 @@
          & stellar radius
          & \S\ref{sec:extended}
         \\
-        $\vartheta_i$
+        $\vartheta_\mathrm{i}$
          & polar angle of incidence
          & Figure~\ref{fig:scattering}
         \\
-        $\vartheta_r$
+        $\vartheta_\mathrm{r}$
          & polar angle of reflection
          & Figure~\ref{fig:scattering}
         \\
@@ -405,11 +405,11 @@
          & Angular extent of terminator past $\nicefrac{\pi}{2}$
          & (\ref{eq:tau})
         \\
-        $\phi_i$
+        $\phi_\mathrm{i}$
          & azimuthal angle of incidence
          & Figure~\ref{fig:scattering}
         \\
-        $\phi_r$
+        $\phi_\mathrm{r}$
          & azimuthal angle of reflection
          & Figure~\ref{fig:scattering}
         \\
@@ -797,16 +797,16 @@
          & \STARRYKTWOONETOL
         \\
         $\epsilon_{3}$
-         & If $|b_o - r_o|$ is less than this value, nudge $b_o$
-        away from $r_o$
+         & If $|b_\mathrm{o} - r_\mathrm{o}|$ is less than this value, nudge $b_\mathrm{o}$
+        away from $r_\mathrm{o}$
          & \STARRYBOEQUALSROTOL
         \\
         $\epsilon_{4}$
-         & If $b_o$ is within this amount of $r_o - 1$, nudge it away
+         & If $b_\mathrm{o}$ is within this amount of $r_\mathrm{o} - 1$, nudge it away
          & \STARRYCOMPLETEOCCTOL
         \\
         $\epsilon_{5}$
-         & If $b_o$ is within this amount of $r_o + 1$, nudge it away
+         & If $b_\mathrm{o}$ is within this amount of $r_\mathrm{o} + 1$, nudge it away
          & \STARRYNOOCCTOL
         \\
         $\epsilon_{6}$
@@ -818,7 +818,7 @@
          & \STARRYBZEROTOL
         \\
         $\epsilon_{8}$
-         & If $b_o$ is within this amount of $1 - r_o$, nudge it away
+         & If $b_\mathrm{o}$ is within this amount of $1 - r_\mathrm{o}$, nudge it away
          & \STARRYGRAZINGTOL
         \\
         $\epsilon_{9}$
@@ -830,7 +830,7 @@
          & \STARRYBONETOL
         \\
         $\epsilon_{11}$
-         & If $\theta$ is within this amount of $\frac{\pi}{2}$ when $r_o = 1$,
+         & If $\theta$ is within this amount of $\frac{\pi}{2}$ when $r_\mathrm{o} = 1$,
         nudge it away
          & \STARRYTHETAUNITRADIUSTOL
     \end{longtable}

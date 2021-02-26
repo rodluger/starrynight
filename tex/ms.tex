@@ -91,9 +91,9 @@ the habitable zone, which can be used to map their surfaces and
 indirectly infer the presence of clouds, continents, oceans, and perhaps
 even life.
 
-There is an extensive literature on techniques for mapping spherical exoplanet surfaces
+There is an extensive literature on techniques for mapping exoplanet surfaces
 based on their phase curves
-\citep[e.g.,][]{Russell1906,Lacis1972,Knutson2007,Cowan2008,Oakley2009,Berdyugina2017}
+\citep[e.g.,][]{Russell1906,Lacis1972,Knutson2007,Cowan2008,Oakley2009,Berdyugina2017,PaperI,PaperII}
 and occultation light curves
 \citep[e.g.,][]{Williams2006,Rauscher2007,Majeau2012,deWit2012,Rauscher2018},
 both in thermal and reflected (scattered) light.
@@ -111,7 +111,7 @@ about the surface. Thus far, these have been studied primarily within our
 solar system. Mutual occultations among the Galilean moons of Jupiter
 have been extensively studied to infer surface properties of the moons and to refine
 their ephemerides
-\citep[e.g.,][]{Arlot1974,Aksnes1984,Arlot2014,deKleer2017,Saquet2018,Morgado2019}.
+\citep[e.g.,][]{Arlot1974,Aksnes1984,Arlot2014,deKleer2017,Saquet2018,Morgado2019,Bartolic2021}.
 Farther out in the solar system,
 mutual occultations of Pluto and Charon in the late 1980s
 were used to confirm Charon's existence
@@ -240,20 +240,20 @@ given by Lambert's law as
 %
 \begin{align}
     \label{eq:LambertsLaw}
-    \mathcal{I}(\vartheta_i) = \mathcal{I}_0 \, \text{max}\big( 0, \cos\vartheta_i \big)
+    \mathcal{I}(\vartheta_\mathrm{i}) = \mathcal{I}_0 \, \text{max}\big( 0, \cos\vartheta_\mathrm{i} \big)
     \quad,
 \end{align}
 %
-where $\vartheta_i$ is the angle between the incident radiation and the surface
+where $\vartheta_\mathrm{i}$ is the angle between the incident radiation and the surface
 normal and $\mathcal{I}_0$ is the peak illumination. We show in
 Appendix~\ref{sec:adapting-starry} that in the case of, say, a planet
 illuminated by its host star,
 %
 \begin{align}
-    \mathcal{I}_0 = \frac{f_s}{\pi r_s^2}
+    \mathcal{I}_0 = \frac{f_s}{\pi r_\mathrm{s}^2}
 \end{align}
 %
-where $r_s$ is the distance between the planet and the star (in units
+where $r_\mathrm{s}$ is the distance between the planet and the star (in units
 of the planet's radius) and $f_s$ is the stellar flux measured at the observer
 (in arbitrary units). Following the convention in \citet{Luger2019}, we assume
 throughout this paper that $f_s = 1$, so all fluxes are defined as a fraction of
@@ -399,8 +399,8 @@ obliquity.
 
 Figure~\ref{fig:earthmoon} shows another light curve of the rotating
 Earth, but this time taken during an occultation by the Moon. The map
-of the Earth is the same as before, but the observer is now in the
-equatorial frame of the Earth.
+of the Earth is the same as before, but the observer is now along the
+equatorial plane of the Earth.
 The top panel is a reproduction of
 Figure~7 in \citet{Luger2019} for the case of thermal light,
 where the Moon is seen to travel across the
@@ -686,12 +686,12 @@ away from the sub-stellar point. However, if the star is sufficiently large
 and the planet is sufficiently close-in, rays originating from near the limb
 of the star will reach points on the planet surface beyond this angle.
 If the stellar radius $R_\star$
-is larger than the planet radius $R_p$, the angular extent of the true
+is larger than the planet radius $R_\mathrm{p}$, the angular extent of the true
 day/night terminator past $\nicefrac{\pi}{2}$ is given by
 %
 \begin{proof}{tau}
     \label{eq:tau}
-    \tau &= \arcsin\left( \frac{1 - \nicefrac{R_p}{R_\star}}{\nicefrac{a}{R_\star}} \right)
+    \tau &= \arcsin\left( \frac{1 - \nicefrac{R_\mathrm{p}}{R_\star}}{\nicefrac{a}{R_\star}} \right)
 \end{proof}
 %
 where $a$ the semi-major axis of the orbit (where we implictly assume
@@ -699,7 +699,7 @@ the eccentricity is zero).
 For planets like the Earth, this quantity is only about $0.26^\circ$,
 resulting in a negligible effect on the planet's light curve. However,
 for very close-in planets, the effect can be significant. For instance,
-the hot Jupiter Kelt-9b has $\nicefrac{R_p}{R_\star} = 0.083$ and
+the hot Jupiter Kelt-9b has $\nicefrac{R_\mathrm{p}}{R_\star} = 0.083$ and
 $\nicefrac{a}{R_\star} = 3.16$
 planet \citep{Wong2019}. Assuming zero eccentricity and ignoring any
 stellar oblateness
@@ -751,7 +751,7 @@ extended sources by averaging the contribution of \textsf{source\_npts} point
 sources uniformly distributed across the projected disk corresponding to
 the portion of the stellar surface
 visible from the planet, where \textsf{source\_npts} is a user-supplied
-value. In the limit $R_p \ll R_\star$, this is a spherical cap centered at
+value. In the limit $R_\mathrm{p} \ll R_\star$, this is a spherical cap centered at
 the sub-planet point with radius $R_\star \cos\tau$. In
 Figure~\ref{fig:extended} we set
 \textsf{source\_npts} = 300, but in practice we find that ${\sim}30$
@@ -890,10 +890,10 @@ intensity at a point on the surface
 For non-Lambertian scattering, this matrix must also account for
 the phase dependence of the reflection: in particular, it will depend
 not only on the angle between the surface normal and the incident
-radiation, $\vartheta_i$, but also on the angle between the surface
+radiation, $\vartheta_\mathrm{i}$, but also on the angle between the surface
 normal and the reflected radiation (i.e., the direction toward the
-observer), $\vartheta_r$. It may also depend on the azimuthal angles
-of the incident and reflected rays, $\phi_i$ and $\phi_r$, respectively.
+observer), $\vartheta_\mathrm{r}$. It may also depend on the azimuthal angles
+of the incident and reflected rays, $\phi_\mathrm{i}$ and $\phi_\mathrm{r}$, respectively.
 These four angles are shown in Figure~\ref{fig:scattering}, showing
 the incoming radiation (source) vector $\mathbf{s}$ and the outgoing
 radiation (viewer) vector $\mathbf{v}$ in a frame in which the $z$-axis
@@ -919,7 +919,7 @@ body of unit spherical albedo may be approximated as
     \label{eq:OrenNayar}
     \mathcal{I} & =
     \mathcal{I}_\text{Lamb}
-    \bigg\{ c_0 + c_1 \, \text{max}\Big( 0, \, \cos(\phi_r - \phi_i) \Big)
+    \bigg\{ c_0 + c_1 \, \text{max}\Big( 0, \, \cos(\phi_\mathrm{r} - \phi_\mathrm{i}) \Big)
     \sin \alpha \tan \beta
     \bigg\}
 \end{proof}
@@ -937,13 +937,13 @@ where%
 \end{minipage}%
 \begin{minipage}{.49\linewidth}
     \begin{proof}{OrenNayar}
-        \alpha & = \text{max}\Big( \vartheta_r, \, \vartheta_i \Big)
+        \alpha & = \text{max}\Big( \vartheta_\mathrm{r}, \, \vartheta_\mathrm{i} \Big)
         \nonumber                                                    \\
-        \beta  & = \text{min}\Big( \vartheta_r, \, \vartheta_i \Big)
+        \beta  & = \text{min}\Big( \vartheta_\mathrm{r}, \, \vartheta_\mathrm{i} \Big)
     \end{proof}
 \end{minipage}
 \\[1em]
-and the angles $\vartheta_i$, $\vartheta_r$, $\phi_i$, and $\phi_r$ are all
+and the angles $\vartheta_\mathrm{i}$, $\vartheta_\mathrm{r}$, $\phi_\mathrm{i}$, and $\phi_\mathrm{r}$ are all
 implicit functions of $x$, $y$, and the illumination source position.
 The term $\mathcal{I}_\text{Lamb}$ is the Lambertian illumination profile,
 given by Equation~(\ref{eq:LambertsLaw}).
@@ -990,9 +990,9 @@ the day/night terminator (see Appendix~\ref{sec:adapting-starry}).
 We then fit to this a polynomial of total degree \STARRYORENNAYARDEG
 in $x$, $y$, and $z \equiv \sqrt{1 - x^2 - y^2}$ and degree
 \STARRYORENNAYARNB in $b$ and degree \STARRYORENNAYARNBC in
-$b_c \equiv \sqrt{1 - b^2}$.
+$b_\mathrm{c} \equiv \sqrt{1 - b^2}$.
 %
-Then, for a given value of $b$ and $b_c$, we construct the operator
+Then, for a given value of $b$ and $b_\mathrm{c}$, we construct the operator
 $\mathbf{I}$ out of the polynomial coefficients in the same way as we
 constructed the Lambertian operator in Appendix~\ref{sec:adapting-starry}.
 %
@@ -1067,7 +1067,7 @@ and PHEMU09 observations. Furthermore,
 proper modeling would entail the
 joint analysis of all light curves of Io taken in a given season, for which
 we can afford to simultaneously fit for the surface map without risk of
-overfitting (Bartoli\'c, Luger et al., \emph{in prep}).
+overfitting \citep{Bartolic2021}.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -1169,7 +1169,7 @@ Because of this linearity, and the analyticity of the \starry
 model, inference on datasets comprising thousands of points and
 spherical harmonic degree $l \leq 20$ takes a
 \emph{fraction of a second} on a typical computer.
-\textbf{Full posterior inference with \starry is thus faster than
+\textbf{Full posterior inference with \starry can thus be faster than
     the numerical evaluation of a single forward model}
 (c.f. Figure~\ref{fig:speed}).
 
@@ -1196,7 +1196,8 @@ the turn of the last century, when \citet{Russell1906} discussed
 how, because of symmetry,
 all odd harmonics above $l = 1$ are in the null space for thermal
 phase curves of spherical bodies, meaning those terms do not contribute
-at all to the disk-integrated flux. As discussed in \citet{Luger2019},
+at all to the disk-integrated flux. As discussed in \citet{Luger2019}
+and \citet{PaperI},
 the problem is even more ill-posed than that: for any even
 degree $l > 0$, there are $2l + 1$ modes on the \emph{surface}
 (one for each value of $m$), but only $2$ Fourier modes in the
@@ -1351,8 +1352,8 @@ in the toolbox.
 There are several limitations to the \starry model that are important
 to bear in mind. The primary limitation concerns the maximum spherical
 harmonic degree of the model. While the expressions derived here are
-valid at arbitrary degree, we find that their numerical stability begins
-to degrade above $l \sim 20-25$ for occultations and $l \sim 35-40$ for phase
+valid at arbitrary degree, we find that their numerical stability quickly
+degrades above $l \sim 20-25$ for occultations and $l \sim 35-40$ for phase
 curves. The same is true for the model in thermal light \citep{Luger2019},
 and is due to (1) the large condition number of the change-of-basis matrix
 from spherical harmonics to polynomials and (2) instabilities in the
@@ -1406,7 +1407,7 @@ oceans \citep{Robinson2014} and on Titan due to
 its hydrocarbon lakes \citep{Barnes2011}. In principle, glint could be
 modeled in the same way as non-Lambertian sccattering, by constructing the
 linear operator $\mathbf{I}$ in such a way as to downweight portions of the
-projected disk where $\vartheta_i \neq \vartheta_r$. In practice, however,
+projected disk where $\vartheta_\mathrm{i} \neq \vartheta_\mathrm{r}$. In practice, however,
 if the size of the glint spot is small (which is typically the case),
 an expansion at extremely high $l$ ($l \sim 360$ in the case of the Earth)
 would be required, which would not work for the reasons above.
@@ -1439,13 +1440,14 @@ not very constraining and the posterior is prior-dominated, as
 positivity can be an \emph{extremely} informative prior
 \citep[e.g.,][]{Fienup1978}.
 We therefore recommend that in such cases
-users of the \starry algorithm use MCMC to do inference, either
+users of the \starry algorithm use HMC/MCMC to do inference, either
 (1) sampling over the spherical
 harmonic coefficients $\mathbf{y}$ and imposing a uniform prior in the range
 $[0, 1]$ on the albedo values $\mathbf{a}$
 evaluated on a discrete grid on the sphere or
 (2) sampling over the albedo values $\mathbf{a}$ with the same uniform prior,
-but using $\mathbf{y}$ to compute the actual light curve model. In both
+but using $\mathbf{y}$ to compute the actual light curve model
+\citep{Bartolic2021}. In both
 cases, there exists a linear operator that transforms between
 $\mathbf{y}$ and $\mathbf{a}$:
 %
@@ -1478,7 +1480,7 @@ of each of the spherical harmonics at the corresponding point on the
 grid; both $\mathbf{P}$ and its inverse may be pre-computed for
 efficiency. In both cases, the grid should be fine enough to ensure
 positivity over most of the sphere but not so fine as to throttle the
-computation; as a rule of thumb, we find that grids with $2-5$ times
+computation; as a rule of thumb, we find that grids with ${\sim}4$ times
 as many pixels
 as spherical harmonic coefficients are sufficient.
 %
@@ -1514,7 +1516,7 @@ Gaussian noise model.
 We implement the algorithm within the \starry software, an open-source \Python
 package for inferring surface maps of unresolved celestial bodies. The
 algorithm is coded in a combination of \cpp and \Python compiled using
-the \textsf{theano}. The interface was designed specifically for
+the \textsf{theano} package \citep{theano}. The interface was designed specifically for
 compatibility with the \textsf{exoplanet} modeling package
 \citep{exoplanet} and the \textsf{pymc3} inference suite \citep{pymc3}.
 
@@ -1552,7 +1554,8 @@ at \url{https://github.com/rodluger/starrynight}.
     pybind11 \citep{pybind11},
     pymc3 \citep{pymc3},
     scipy \citep{scipy},
-    starry \citep{starry}.
+    starry \citep{starry},
+    theano \citep{theano}.
 }
 
 \vspace{1em}
@@ -1642,12 +1645,12 @@ An observer views the body from a large distance in the sky frame
 $\mathcal{F}$, in which the $x$-axis points to the right,
 the $y$-axis points up, and the $z$-axis points out of the sky
 toward the observer. Following \citet{Luger2019}, if
-an occultor of radius $r_o$ is located at sky position $(x_o, y_o)$,
-we compute the visible thermal flux $f_T$ from
+an occultor of radius $r_\mathrm{o}$ is located at sky position $(x_\mathrm{o}, y_\mathrm{o})$,
+we compute the visible thermal flux $f_\mathrm{T}$ from
 %
 \begin{align}
     \label{eq:sTARRy}
-    f_T = \sTe \mathbf{A} \mathbf{R}' \mathbf{R} \mathbf{y}
+    f_\mathrm{T} = \sTe \mathbf{A} \mathbf{R}' \mathbf{R} \mathbf{y}
     \quad,
 \end{align}
 %
@@ -1658,7 +1661,7 @@ given the body's inclination $\text{I}$, obliquity
 $\Lambda$, and rotational phase $\Theta$
 \citep[Appendix C in][]{Luger2019},
 %
-$\mathbf{R}' = \mathbf{R}'(x_o, y_o)$ rotates the body on the plane
+$\mathbf{R}' = \mathbf{R}'(x_\mathrm{o}, y_\mathrm{o})$ rotates the body on the plane
 of the sky into the integration frame $\mathcal{F}'$, in which the
 occultor lies along the $+y'$-axis,
 %
@@ -1727,16 +1730,16 @@ and
     \quad,
 \end{align}
 %
-and $\sTe = \sTe(b_o, r_o)$ is the vector of solutions to the integral over
+and $\sTe = \sTe(b_\mathrm{o}, r_\mathrm{o})$ is the vector of solutions to the integral over
 the projected visible disk of the body for each term in $\bg$
-\citep[Equation~26 in][]{Luger2019}, with $b_o = \sqrt{x_o^2 + y_o^2}$.
+\citep[Equation~26 in][]{Luger2019}, with $b_\mathrm{o} = \sqrt{x_\mathrm{o}^2 + y_\mathrm{o}^2}$.
 
 If instead no occultor is present, we compute the total
-visible thermal flux $f_{T_0}$ from this body as
+visible thermal flux $f_\mathrm{T_0}$ from this body as
 %
 \begin{align}
     \label{eq:rTA1Ry}
-    f_{T_0} = \rTe \mathbf{A_1} \mathbf{R}'' \mathbf{R} \mathbf{y}
+    f_\mathrm{T_0} = \rTe \mathbf{A_1} \mathbf{R}'' \mathbf{R} \mathbf{y}
     \quad,
 \end{align}
 %
@@ -1791,69 +1794,69 @@ spherical albedo of the surface, $A$.
 Second, we must explicitly model the illumination of the body. We assume the
 body is illuminated by a point-like source whose flux measured by the observer
 is unity. In this case, the observed intensity at any
-point on the surface is proportional to the cosine of the angle $\vartheta_i$ between
+point on the surface is proportional to the cosine of the angle $\vartheta_\mathrm{i}$ between
 the incident light and the surface normal. Points for which
-$\vartheta_i \ge \nicefrac{\pi}{2}$ are unilluminated and
+$\vartheta_\mathrm{i} \ge \nicefrac{\pi}{2}$ are unilluminated and
 therefore have an intensity of zero.
 %
 If the point-like illumination source is placed at sky coordinates
-$(x_s, y_s, z_s)$ in units of the radius of the illuminated body,
+$(x_\mathrm{s}, y_\mathrm{s}, z_\mathrm{s})$ in units of the radius of the illuminated body,
 the day/night terminator on the body is a half-ellipse
 of semi-major axis unity that is fully described by its (signed) semi-minor
 axis,
 %
 \begin{proof}{illumination}
     \label{eq:b}
-    b = -\frac{z_s}{r_s}
+    b = -\frac{z_\mathrm{s}}{r_\mathrm{s}}
     \quad,
 \end{proof}
 %
-where $r_s = \sqrt{x_s^2 + y_s^2 + z_s^2}$ is the distance to the source,
+where $r_\mathrm{s} = \sqrt{x_\mathrm{s}^2 + y_\mathrm{s}^2 + z_\mathrm{s}^2}$ is the distance to the source,
 %
 and the angle by which its semi-major axis is rotated away from the
 $+x$-axis,
 %
 \begin{proof}{illumination}
     \label{eq:theta}
-    \theta = -\atantwo(x_s, y_s)
+    \theta = -\atantwo(x_\mathrm{s}, y_\mathrm{s})
     \quad,
 \end{proof}
 %
 where $\atantwo(a, b)$ is the quadrant-aware arctangent of
 $\nicefrac{a}{b}$.
 Given this formulation, and assuming that
-$r_s \gg 1$,
+$r_\mathrm{s} \gg 1$,
 it is straightforward to show that the illumination
 $\mathcal{I}$ at a point $(x, y)$ on the projected disk of the body is given
 by the function
 %
 \begin{proof}{illumination}
     \label{eq:illum}
-    \mathcal{I}(b, \theta, r_s; x, y)&=
-    \text{max}\bigg( 0, I(b, \theta, r_s; x, y) \bigg)
+    \mathcal{I}(b, \theta, r_\mathrm{s}; x, y)&=
+    \text{max}\bigg( 0, I(b, \theta, r_\mathrm{s}; x, y) \bigg)
 \end{proof}
 %
 where
 %
 \begin{proof}{illumination}
     \label{eq:illum_poly}
-    I(b, \theta, r_s; x, y) &=
-    \frac{1}{\pi r_s^2}
-    \cos \vartheta_i
+    I(b, \theta, r_\mathrm{s}; x, y) &=
+    \frac{1}{\pi r_\mathrm{s}^2}
+    \cos \vartheta_\mathrm{i}
     \nonumber \\
-    &= \frac{1}{\pi r_s^2}
+    &= \frac{1}{\pi r_\mathrm{s}^2}
     \bigg(
-    -b_c\sin\theta x + b_c\cos\theta y - bz(x, y)
+    -b_\mathrm{c}\sin\theta x + b_\mathrm{c}\cos\theta y - bz(x, y)
     \bigg)
 \end{proof}
 %
-with $b_c \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
+with $b_\mathrm{c} \equiv \sqrt{1 - b^2}$ and $z(x, y) = \sqrt{1 - x^2 - y^2}$.
 The illumination $\mathcal{I}$ is a unitless quantity, normalized such that
 the integral of $A\mathcal{I}$ over the unit
 disk is equal to the flux measured
 by the observer as a fraction of the flux of the illumination source.
 In particular, if we place the illumination source along the $+z$-axis at
-$(0, 0, 1)$, the body is seen at full phase, so $b = -1$, $b_c = 0$, and
+$(0, 0, 1)$, the body is seen at full phase, so $b = -1$, $b_\mathrm{c} = 0$, and
 %
 \begin{proof}{illumination}
     \mathcal{I}_\text{full}(x, y) = \frac{\sqrt{1 - x^2 - y^2}}{\pi}
@@ -1903,13 +1906,13 @@ we may write
 %
 \begin{proof}{illumination}
     \label{eq:ivec}
-    \mathbf{i}(b, \theta, r_s) & =
-    \frac{1}{\pi r_s^2}
+    \mathbf{i}(b, \theta, r_\mathrm{s}) & =
+    \frac{1}{\pi r_\mathrm{s}^2}
     \begin{pmatrix}
-        0              \\
-        -b_c\sin\theta \\
-        -b             \\
-        b_c\cos\theta
+        0                       \\
+        -b_\mathrm{c}\sin\theta \\
+        -b                      \\
+        b_\mathrm{c}\cos\theta
     \end{pmatrix}
     \quad.
 \end{proof}
@@ -2026,19 +2029,19 @@ we can compose $\mathbf{I}$ out of these column vectors:
 %
 \begin{proof}{illumination}
     \label{eq:Imat}
-    \mathbf{I}(b, \theta, r_s) & =
-    \frac{1}{\pi r_s^2}
+    \mathbf{I}(b, \theta, r_\mathrm{s}) & =
+    \frac{1}{\pi r_\mathrm{s}^2}
     \begin{pmatrix}
-        0              & 0              & -b             & 0              & \cdots \\
-        -b_c\sin\theta & 0              & 0              & 0              & \cdots \\
-        -b             & 0              & 0              & 0              & \cdots \\
-        b_c\cos\theta  & 0              & 0              & 0              & \cdots \\
-        0              & -b_c\sin\theta & b              & 0              & \cdots \\
-        0              & -b             & -b_c\sin\theta & 0              & \cdots \\
-        0              & b_c\cos\theta  & 0              & -b_c\sin\theta & \cdots \\
-        0              & 0              & b_c\cos\theta  & -b             & \cdots \\
-        0              & 0              & b              & b_c\cos\theta  & \cdots \\
-        \vdots         & \vdots         & \vdots         & \vdots         & \ddots
+        0                       & 0                       & -b                      & 0                       & \cdots \\
+        -b_\mathrm{c}\sin\theta & 0                       & 0                       & 0                       & \cdots \\
+        -b                      & 0                       & 0                       & 0                       & \cdots \\
+        b_\mathrm{c}\cos\theta  & 0                       & 0                       & 0                       & \cdots \\
+        0                       & -b_\mathrm{c}\sin\theta & b                       & 0                       & \cdots \\
+        0                       & -b                      & -b_\mathrm{c}\sin\theta & 0                       & \cdots \\
+        0                       & b_\mathrm{c}\cos\theta  & 0                       & -b_\mathrm{c}\sin\theta & \cdots \\
+        0                       & 0                       & b_\mathrm{c}\cos\theta  & -b                      & \cdots \\
+        0                       & 0                       & b                       & b_\mathrm{c}\cos\theta  & \cdots \\
+        \vdots                  & \vdots                  & \vdots                  & \vdots                  & \ddots
     \end{pmatrix}
 \end{proof}
 %
@@ -2079,11 +2082,11 @@ is now given by
 \begin{align}
     \label{eq:sTA2IA1RRy}
     f & =
-    \sT(b, \theta', b_o, r_o)
+    \sT(b, \theta', b_\mathrm{o}, r_\mathrm{o})
     \mathbf{A_2}
-    \mathbf{I}(b, \theta', r_s)
+    \mathbf{I}(b, \theta', r_\mathrm{s})
     \mathbf{A_1}
-    \mathbf{R}'(x_o, y_o)
+    \mathbf{R}'(x_\mathrm{o}, y_\mathrm{o})
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
@@ -2093,7 +2096,7 @@ where
 %
 \begin{align}
     \label{eq:theta'}
-    \theta' = \atantwo(x_o, y_o) - \atantwo(x_s, y_s)
+    \theta' = \atantwo(x_\mathrm{o}, y_\mathrm{o}) - \atantwo(x_\mathrm{s}, y_\mathrm{s})
 \end{align}
 %
 is the angle of the terminator in the frame $\mathcal{F}'$.
@@ -2109,9 +2112,9 @@ Similarly, the flux when there is no occultation is now given by
     \label{eq:rTIA1RRy}
     f_0 & =
     \rT(b)
-    \mathbf{I}(b, \theta'', r_s)
+    \mathbf{I}(b, \theta'', r_\mathrm{s})
     \mathbf{A_1}
-    \mathbf{R}''(x_s, y_s)
+    \mathbf{R}''(x_\mathrm{s}, y_\mathrm{s})
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
@@ -2126,17 +2129,17 @@ where
 %
 is the angle of the terminator in the frame $\mathcal{F}''$, by
 construction. The transformation
-$\mathbf{R}'' = \mathbf{R}''(x_s, y_s)$ rotates
+$\mathbf{R}'' = \mathbf{R}''(x_\mathrm{s}, y_\mathrm{s})$ rotates
 the body
-through an angle $\atantwo(x_s, y_s)$
+through an angle $\atantwo(x_\mathrm{s}, y_\mathrm{s})$
 so the semi-major axis of the terminator is aligned
 with the $x''$-axis; as will become clear in \S\ref{sec:solution-no-occ} below,
 this greatly simplifies the integration step.
 
 Note that in both equations we replaced the integral vectors
-$\rTe$ and $\sTe(b_o, r_o)$
+$\rTe$ and $\sTe(b_\mathrm{o}, r_\mathrm{o})$
 with the vectors
-$\rT(b)$ and $\sT(b, \theta', b_o, r_o)$,
+$\rT(b)$ and $\sT(b, \theta', b_\mathrm{o}, r_\mathrm{o})$,
 respectively.
 As we mentioned above, we must modify the integration limits to exclude the
 nightside, where the weighting by $\mathbf{I}$ is unphysical.
@@ -2274,7 +2277,7 @@ Given initial conditions
         %
         \nonumber                                         \\
         %
-        \mathbb{k}_{1}(b) & = \frac{b_c^3}{3}
+        \mathbb{k}_{1}(b) & = \frac{b_\mathrm{c}^3}{3}
         %
         \nonumber
     \end{align}
@@ -2305,7 +2308,7 @@ we may compute all the required higher order terms from the recurrence relations
 %
 \begin{proof}{PhaseCurve}
     \label{eq:IJKrec}
-    \mathbb{k}_{j}(b) &= \frac{b^{j-1} b_c^3 + (j - 1) \mathbb{k}_{j - 2}(b)}{j + 2}
+    \mathbb{k}_{j}(b) &= \frac{b^{j-1} b_\mathrm{c}^3 + (j - 1) \mathbb{k}_{j - 2}(b)}{j + 2}
     %
     \nonumber \\
     %
@@ -2333,9 +2336,9 @@ is computed from (c.f. Equation~\ref{eq:rTIA1RRy})
     \label{eq:f0}
     f_0 & =
     \rT(b)
-    \mathbf{I}(b, \theta'', r_s)
+    \mathbf{I}(b, \theta'', r_\mathrm{s})
     \mathbf{A_1}
-    \mathbf{R}''(x_s, y_s)
+    \mathbf{R}''(x_\mathrm{s}, y_\mathrm{s})
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad.
@@ -2352,9 +2355,9 @@ Finally, for future reference, we can also compute what we will call the
     -
     \rT(b)
     \Big)
-    \mathbf{I}(b, \theta'', r_s)
+    \mathbf{I}(b, \theta'', r_\mathrm{s})
     \mathbf{A_1}
-    \mathbf{R}''(x_s, y_s)
+    \mathbf{R}''(x_\mathrm{s}, y_\mathrm{s})
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad.
@@ -2408,7 +2411,7 @@ occultor position.
 
 Before we discuss how to compute the occultation integrals, we must first
 develop a procedure to identify the relevant case given the occultor
-impact parameter $b_o = \sqrt{x_o^2 + y_o^2}$ and radius $r_o$ and
+impact parameter $b_\mathrm{o} = \sqrt{x_\mathrm{o}^2 + y_\mathrm{o}^2}$ and radius $r_\mathrm{o}$ and
 the terminator semi-minor
 axis $b$ and angle $\theta'$ in the frame $\mathcal{F}'$.
 Then, once the case is determined, we must
@@ -2461,15 +2464,15 @@ occultor are, respectively,
 \begin{proof}{quartic}
     y''_1(x'') & = b \sqrt{1 - x''^2}
     \nonumber                                               \\
-    y''_2(x'') & = y''_o \pm \sqrt{r_o^2 - (x'' - x''_o)^2}
+    y''_2(x'') & = y''_\mathrm{o} \pm \sqrt{r_\mathrm{o}^2 - (x'' - x''_\mathrm{o})^2}
 \end{proof}
 %
 where
 %
 \begin{proof}{quartic}
-    x''_o = b_o\sin\theta'
+    x''_\mathrm{o} = b_\mathrm{o}\sin\theta'
     \nonumber \\
-    y''_o = b_o\cos\theta'
+    y''_\mathrm{o} = b_\mathrm{o}\cos\theta'
 \end{proof}
 %
 are the coordinates of the occultor in $\mathcal{F}''$.
@@ -2491,22 +2494,22 @@ with coefficients
     \label{eq:quartic-coeffs}
     A &= (1 - b^2)^2
     \nonumber \\
-    B &= -4 x''_o (1 - b^2)
+    B &= -4 x''_\mathrm{o} (1 - b^2)
     \nonumber \\
     C &= -2 \bigg(
     b^4
-    + r_o^2
-    - 3 {x''_o}^2
-    - {y''_o}^2
-    - b^2 \big(1 + r_o^2 - {x''_o}^2 + {y''_o}^2\big)
+    + r_\mathrm{o}^2
+    - 3 {x''_\mathrm{o}}^2
+    - {y''_\mathrm{o}}^2
+    - b^2 \big(1 + r_\mathrm{o}^2 - {x''_\mathrm{o}}^2 + {y''_\mathrm{o}}^2\big)
     \bigg)
     \nonumber \\
-    D &= -4 x''_o (b^2 - r_o^2 + {x''_o}^2 + {y''_o}^2)
+    D &= -4 x''_\mathrm{o} (b^2 - r_\mathrm{o}^2 + {x''_\mathrm{o}}^2 + {y''_\mathrm{o}}^2)
     \nonumber \\
     E &=
     b^4
-    - 2 b^2 \big(r_o^2 - {x''_o}^2 + {y''_o}^2\big)
-    + \big(r_o^2 - {x''_o}^2 - {y''_o}^2\big)^2
+    - 2 b^2 \big(r_\mathrm{o}^2 - {x''_\mathrm{o}}^2 + {y''_\mathrm{o}}^2\big)
+    + \big(r_\mathrm{o}^2 - {x''_\mathrm{o}}^2 - {y''_\mathrm{o}}^2\big)^2
     \quad.
 \end{proof}
 %
@@ -2549,27 +2552,27 @@ polynomial illumination function:
 %
 \begin{align}
     \label{eq:fI}
-    f_I & =
-    \sTe(b_o, r_o)
+    f_\mathrm{I} & =
+    \sTe(b_\mathrm{o}, r_\mathrm{o})
     \mathbf{A_2}
-    \mathbf{I}(b, \theta', r_s)
+    \mathbf{I}(b, \theta', r_\mathrm{s})
     \mathbf{A_1}
-    \mathbf{R}'(x_o, y_o)
+    \mathbf{R}'(x_\mathrm{o}, y_\mathrm{o})
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad,
 \end{align}
 %
-where $\sTe(b_o, r_o)$ is the emitted light solution vector
-\citep[Equation~26 in][]{Luger2019}. The flux $f_I$ is the flux one would
+where $\sTe(b_\mathrm{o}, r_\mathrm{o})$ is the emitted light solution vector
+\citep[Equation~26 in][]{Luger2019}. The flux $f_\mathrm{I}$ is the flux one would
 measure from a body whose surface map is weighted by the illumination function
-$\mathbf{I}(b, \theta', r_s)$ during an occultation. Note that this is not
+$\mathbf{I}(b, \theta', r_\mathrm{s})$ during an occultation. Note that this is not
 necessarily the \emph{observed} flux, since this may include the unphysical
 negative contribution from the nightside. We must compute the actual
 observed flux on a case-by-case basis.
 
 Case 1 corresponds to any complete occultation of the body
-($b_o \le r_o - 1$), so the solution for the flux is trivial:
+($b_\mathrm{o} \le r_\mathrm{o} - 1$), so the solution for the flux is trivial:
 %
 \begin{align}
     \label{eq:f1}
@@ -2596,7 +2599,7 @@ simply use the weighted solution in emitted light
 %
 \begin{align}
     \label{eq:f3}
-    f_3 = f_I
+    f_3 = f_\mathrm{I}
 \end{align}
 %
 Case 4 involves any occultation in which the occultor blocks \emph{only} the
@@ -2614,12 +2617,12 @@ is also trivial, as the flux is equal to the flux in the no occultation case
 Finally, case 5 involves any occultation in which the occultor blocks
 \emph{only} the dayside of the body (regardless of whether or not it
 intersects with the limb). We first compute the illumination-weighted flux
-$f_I$ as above, then negate the unphysical nightside contribution
+$f_\mathrm{I}$ as above, then negate the unphysical nightside contribution
 using Equation~(\ref{eq:f0hat}):
 %
 \begin{align}
     \label{eq:f5}
-    f_5 = f_I - \hat{f}_0
+    f_5 = f_\mathrm{I} - \hat{f}_0
     \quad.
 \end{align}
 
@@ -2668,25 +2671,25 @@ Let $\sT$ be the integral of $\bg^\top$ over $S$:
 %
 \begin{align}
     \label{eq:sTint}
-    \sT(b, \theta', b_o, r_o) & =
-    \iint\limits_{S(b, \theta', b_o, r_o)}
+    \sT(b, \theta', b_\mathrm{o}, r_\mathrm{o}) & =
+    \iint\limits_{S(b, \theta', b_\mathrm{o}, r_\mathrm{o})}
     \bg^\top(x', y')
     \ \dd x' \ \dd y'
     \quad,
 \end{align}
 %
 We defer the solution to Equation~(\ref{eq:sTint}) to \S\ref{sec:sT} below,
-as it is quite lengthy. Given $\sT$, the flux $f_S$ over the integration
+as it is quite lengthy. Given $\sT$, the flux $f_\mathrm{S}$ over the integration
 region $S$ is computed from Equation~(\ref{eq:sTA2IA1RRy}):
 %
 \begin{align}
     \label{eq:fS}
-    f_S & =
-    \sT(b, \theta', b_o, r_o)
+    f_\mathrm{S} & =
+    \sT(b, \theta', b_\mathrm{o}, r_\mathrm{o})
     \mathbf{A_2}
-    \mathbf{I}(b, \theta', r_s)
+    \mathbf{I}(b, \theta', r_\mathrm{s})
     \mathbf{A_1}
-    \mathbf{R}'(x_o, y_o)
+    \mathbf{R}'(x_\mathrm{o}, y_\mathrm{o})
     \mathbf{R}(\text{I}, \Lambda, \Theta)
     \mathbf{y}
     \quad.
@@ -2700,12 +2703,12 @@ intersects the terminator at a single point. The integration region
 (see Figures~\ref{fig:cases} and \ref{fig:geometry}) is the occulted
 portion of the dayside, which is bounded by all three curves $\mathcal{P}$, $\mathcal{Q}$, and $\mathcal{T}$.
 The total flux may
-be computed by subtracting the occulted flux $f_S$ from the total dayside
+be computed by subtracting the occulted flux $f_\mathrm{S}$ from the total dayside
 flux $f_0$:
 %
 \begin{align}
     \label{eq:f6}
-    f_6 = f_0 - f_S
+    f_6 = f_0 - f_\mathrm{S}
     \quad.
 \end{align}
 %
@@ -2719,14 +2722,14 @@ intersection of the occultor limb and the terminator on the
 \emph{nightside}, while in case 8 this region is formed on the \emph{dayside}.
 %
 In case 7, we begin by computing the
-flux over the unocculted region, $f_I$, which includes the spurious
+flux over the unocculted region, $f_\mathrm{I}$, which includes the spurious
 nightside contribution. We then remove this contribution by noting that it
 is equal to the total nightside contribution, $\hat{f}_0$, minus the
-occulted nightside flux, $f_S$:
+occulted nightside flux, $f_\mathrm{S}$:
 %
 \begin{align}
     \label{eq:f7}
-    f_7 = f_I - (\hat{f}_0 - f_S)
+    f_7 = f_\mathrm{I} - (\hat{f}_0 - f_\mathrm{S})
     \quad.
 \end{align}
 %
@@ -2735,21 +2738,21 @@ the integration region consists of occulted dayside:
 %
 \begin{align}
     \label{eq:f8}
-    f_8 = f_0 - f_S
+    f_8 = f_0 - f_\mathrm{S}
     \quad.
 \end{align}
 %
 Cases 9 and 10 correspond to occultors that also block some nightside and some
 dayside, along with \emph{both} of the extrema of the ellipse; these are
-therefore exclusively for large occultors ($r_o > 1$). Case 9
+therefore exclusively for large occultors ($r_\mathrm{o} > 1$). Case 9
 involves occultations in which only a small lens-shaped region of the
 nightside is visible. The total flux is the visible dayside plus unphysical
-nightside contribution, $f_I$, minus the nightside contribution, which we
+nightside contribution, $f_\mathrm{I}$, minus the nightside contribution, which we
 compute from Equation~(\ref{eq:fS}):
 %
 \begin{align}
     \label{eq:f9}
-    f_9 = f_I - f_S
+    f_9 = f_\mathrm{I} - f_\mathrm{S}
     \quad.
 \end{align}
 %
@@ -2759,7 +2762,7 @@ flux from Equation~(\ref{eq:fS}) directly:
 %
 \begin{align}
     \label{eq:f10}
-    f_{10} = f_S
+    f_{10} = f_\mathrm{S}
     \quad.
 \end{align}
 %
@@ -2797,18 +2800,18 @@ that of cases 6 and 8:
 %
 \begin{align}
     \label{eq:f11}
-    f_{11} = f_0 - (f_{S_1} + f_{S_2})
+    f_{11} = f_0 - (f_{\mathrm{S}_1} + f_{\mathrm{S}_2})
     \quad,
 \end{align}
 %
-where $f_{S_1}$ and $f_{S_2}$ are computed from Equation~(\ref{eq:fS}) for
+where $f_{\mathrm{S}_1}$ and $f_{\mathrm{S}_2}$ are computed from Equation~(\ref{eq:fS}) for
 each of the integration regions. Conversely, in case 12 the two regions
 are the occulted portion of the nightside, so the solution is similar to that
 of case 7:
 %
 \begin{align}
     \label{eq:f12}
-    f_{12} = f_I - \big(\hat{f}_0 - (f_{S_1} + f_{S_2})\big)
+    f_{12} = f_\mathrm{I} - \big(\hat{f}_0 - (f_{\mathrm{S}_1} + f_{\mathrm{S}_2})\big)
     \quad,
 \end{align}
 %
@@ -2818,7 +2821,7 @@ the visible portion of the nightside, so this case is equivalent to case 9:
 %
 \begin{align}
     \label{eq:f13}
-    f_{13} = f_I - (f_{S_1} + f_{S_2})
+    f_{13} = f_\mathrm{I} - (f_{\mathrm{S}_1} + f_{\mathrm{S}_2})
     \quad.
 \end{align}
 %
@@ -2827,7 +2830,7 @@ visible portion of the dayside, so this case is equivalent to case 10:
 %
 \begin{align}
     \label{eq:f14}
-    f_{14} = f_{S_1} + f_{S_2}
+    f_{14} = f_{\mathrm{S}_1} + f_{\mathrm{S}_2}
     \quad.
 \end{align}
 %
@@ -2856,7 +2859,7 @@ integrals along the curves $\mathcal{P}$, $\mathcal{T}$, and $\mathcal{Q}$
 \footnote{%
     In this section, we deliberately drop the dependence of $\sT$ and
     the primitive
-    integrals on the geometrical parameters $b, \theta', b_o, r_o$
+    integrals on the geometrical parameters $b, \theta', b_\mathrm{o}, r_\mathrm{o}$
     for clarity.
 }
 %
@@ -2972,8 +2975,8 @@ where we define the primitive integrals%
     \pT
     & =
     \int\limits_{\pmb{\phi}}
-    \mathbf{G}^\top(x'_p, y'_p)
-    \cdot \dd \mathbf{r}(x'_p, y'_p)
+    \mathbf{G}^\top(x'_\mathrm{p}, y'_\mathrm{p})
+    \cdot \dd \mathbf{r}(x'_\mathrm{p}, y'_\mathrm{p})
     %
     \\
     %
@@ -2981,8 +2984,8 @@ where we define the primitive integrals%
     \tT
     & =
     \int\limits_{\pmb{\xi}}
-    \mathbf{G}^\top(x'_t, y'_t)
-    \cdot \dd \mathbf{r}(x'_t, y'_t)
+    \mathbf{G}^\top(x'_\mathrm{t}, y'_\mathrm{t})
+    \cdot \dd \mathbf{r}(x'_\mathrm{t}, y'_\mathrm{t})
     %
     \\
     %
@@ -2990,8 +2993,8 @@ where we define the primitive integrals%
     \qT
     & =
     \int\limits_{\pmb{\lambda}}
-    \mathbf{G}^\top(x'_q, y'_q)
-    \cdot \dd \mathbf{r}(x'_q, y'_q)
+    \mathbf{G}^\top(x'_\mathrm{q}, y'_\mathrm{q})
+    \cdot \dd \mathbf{r}(x'_\mathrm{q}, y'_\mathrm{q})
 \end{proof}
 %
 to be the line integrals of $\mathbf{G}$ along each of the curves
@@ -3003,18 +3006,18 @@ in terms of $\varphi$ as follows:
 %
 \begin{minipage}{0.3\linewidth}
     \begin{align}
-        x'_p & = r_o \cos\varphi
-        \nonumber                      \\
-        y'_p & = b_o + r_o \sin\varphi
+        x'_\mathrm{p} & = r_\mathrm{o} \cos\varphi
+        \nonumber                                                 \\
+        y'_\mathrm{p} & = b_\mathrm{o} + r_\mathrm{o} \sin\varphi
         \nonumber
     \end{align}
 \end{minipage}
 %
 \begin{minipage}{0.34\linewidth}
     \begin{align}
-        x'_t & = \cos\theta' \cos\varphi - b \sin\theta' \sin\varphi
-        \nonumber                                                    \\
-        y'_t & = \sin\theta' \cos\varphi + b \cos\theta' \sin\varphi
+        x'_\mathrm{t} & = \cos\theta' \cos\varphi - b \sin\theta' \sin\varphi
+        \nonumber                                                             \\
+        y'_\mathrm{t} & = \sin\theta' \cos\varphi + b \cos\theta' \sin\varphi
         \nonumber
     \end{align}
 \end{minipage}
@@ -3022,9 +3025,9 @@ in terms of $\varphi$ as follows:
 \begin{minipage}{0.3\linewidth}
     \begin{proof}{Greens}
         \label{eq:xy_pqt}
-        x'_q & =\cos\varphi
+        x'_\mathrm{q} & =\cos\varphi
         \nonumber           \\
-        y'_q & = \sin\varphi
+        y'_\mathrm{q} & = \sin\varphi
         \quad,
     \end{proof}
 \end{minipage}
@@ -3130,19 +3133,19 @@ The former is given by
 %
 \begin{proof}{pT}
     \phi_0 & =
-    \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 - b_o ^ 2}{2 b_o r_o}\right) - \frac{\pi}{2}\right)
+    \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_\mathrm{o} ^ 2 - b_\mathrm{o} ^ 2}{2 b_\mathrm{o} r_\mathrm{o}}\right) - \frac{\pi}{2}\right)
     \quad,
 \end{proof}
 %
 where the sign is chosen such that the point
-$(r_o\cos\phi_0, b_o + r_o\sin\phi_0)$ is on the dayside of the occulted body,
+$(r_\mathrm{o}\cos\phi_0, b_\mathrm{o} + r_\mathrm{o}\sin\phi_0)$ is on the dayside of the occulted body,
 and the latter (of which there may be multiple) is given by
 %
 \begin{proof}{pT}
     \pmb{\phi_1} & =
     \theta' +
     \atantwo
-    \left(b\sqrt{1 - {\mathbf{x''}}^2} - y''_o, \mathbf{x''} - x''_o\right)
+    \left(b\sqrt{1 - {\mathbf{x''}}^2} - y''_\mathrm{o}, \mathbf{x''} - x''_\mathrm{o}\right)
     \quad
 \end{proof}
 %
@@ -3157,7 +3160,7 @@ the lower integration limit $\phi_0 = 158.2^\circ$ corresponds to the
 point of intersection between the limbs of the two bodies and the upper
 integration limit $\phi_1 = 223.3^\circ$ corresponds to the
 limb-terminator intersection. Both angles are measured counter-clockwise
-from the line $x' = b_o$.
+from the line $x' = b_\mathrm{o}$.
 
 In order to evaluate the integral in Equation~(\ref{eq:pT}),
 we follow the reparametrization tricks of \S{D.2.3} in \citet{Luger2019}.
@@ -3171,7 +3174,7 @@ of $\pT$ is
     \resizebox{.8\hsize}{!}{$
             \begin{cases}
                 %
-                2(2r_o)^{l+2}
+                2(2r_\mathrm{o})^{l+2}
                 %
                 \begin{cases}
                     %
@@ -3214,7 +3217,7 @@ of $\pT$ is
                 %
                 \\[1.5em]
                 %
-                \beta (2r_o)^{l-1}
+                \beta (2r_\mathrm{o})^{l-1}
                 %
                 \begin{cases}
                     %
@@ -3308,7 +3311,7 @@ of $\pT$ is
         $}
 \end{proof}
 %
-where $\beta = \left(1 - (b_o - r_o)^2\right)^\frac{3}{2}$
+where $\beta = \left(1 - (b_\mathrm{o} - r_\mathrm{o})^2\right)^\frac{3}{2}$
 and we define the Vieta operator
 %
 \begin{proof}{pT}
@@ -3329,7 +3332,7 @@ the vector of Vieta's theorem coefficients, where
     \sum_{j=\text{max}(0,u-i)}^{\text{min}(u+v-i,u)}
     \binom{u}{j}
     \binom{v}{u+v-i-j}
-    (-1)^{u+j}\left(\frac{b_o-r_o}{2r_o}\right)^{u+v-i-j}
+    (-1)^{u+j}\left(\frac{b_\mathrm{o}-r_\mathrm{o}}{2r_\mathrm{o}}\right)^{u+v-i-j}
     \quad.
 \end{proof}
 %
@@ -3423,7 +3426,7 @@ where
 %
 \begin{align}
     \label{eq:k2}
-    k^2 & \equiv \frac{1 - r_o^2 - b_o^2 + 2 b_o r_o}{4 b_o r_o}
+    k^2 & \equiv \frac{1 - r_\mathrm{o}^2 - b_\mathrm{o}^2 + 2 b_\mathrm{o} r_\mathrm{o}}{4 b_\mathrm{o} r_\mathrm{o}}
     \quad.
 \end{align}
 %
@@ -3770,12 +3773,12 @@ The integral we must solve is
         \frac{1}{3}
         \left(
         \frac{
-            1 - z(r_o\cos\varphi, b_o + r_o\sin\varphi)^3
+            1 - z(r_\mathrm{o}\cos\varphi, b_\mathrm{o} + r_\mathrm{o}\sin\varphi)^3
         }{
-            1 - z(r_o\cos\varphi, b_o + r_o\sin\varphi)^2
+            1 - z(r_\mathrm{o}\cos\varphi, b_\mathrm{o} + r_\mathrm{o}\sin\varphi)^2
         }
         \right)
-        \left(r_o^2 + b_o r_o \sin\varphi\right)
+        \left(r_\mathrm{o}^2 + b_\mathrm{o} r_\mathrm{o} \sin\varphi\right)
     }
     \quad,
 \end{align}
@@ -3804,40 +3807,40 @@ where
     \Delta
     \Bigg\{
     -\atantwo\left(
-    -(b_o - r_o) \cos\valpha, (b_o + r_o) \sin\valpha
+    -(b_\mathrm{o} - r_\mathrm{o}) \cos\valpha, (b_\mathrm{o} + r_\mathrm{o}) \sin\valpha
     \right)
     + \valpha
     \nonumber \\
     &\qquad\enspace\enspace
-    - \frac{4}{3} b_o r_o
+    - \frac{4}{3} b_\mathrm{o} r_\mathrm{o}
     \sin\valpha \cos\valpha
-    \sqrt{1 - (b_o - r_o)^2 - 4 b_o r_o \sin^2\alpha}
+    \sqrt{1 - (b_\mathrm{o} - r_\mathrm{o})^2 - 4 b_\mathrm{o} r_\mathrm{o} \sin^2\alpha}
     \nonumber \\
     &\qquad\enspace\enspace
-    + \pmb{\delta}(b_o, r_o, \valpha)
+    + \pmb{\delta}(b_\mathrm{o}, r_\mathrm{o}, \valpha)
     \Bigg\}
     \nonumber \\[0.5em]
     c_1 &=
-    \frac{1 + b_o^4 - b_o^2(5 + 2 r_o^2) + r_o^4 + r_o^2}{3 \sqrt{1 - (b_o - r_o)^2}}
+    \frac{1 + b_\mathrm{o}^4 - b_\mathrm{o}^2(5 + 2 r_\mathrm{o}^2) + r_\mathrm{o}^4 + r_\mathrm{o}^2}{3 \sqrt{1 - (b_\mathrm{o} - r_\mathrm{o})^2}}
     \nonumber \\[0.5em]
-    c_2 &= \frac{(b_o^2+7r_o^2-4)\sqrt{1 - (b_o - r_o)^2}}{3}
+    c_2 &= \frac{(b_\mathrm{o}^2+7r_\mathrm{o}^2-4)\sqrt{1 - (b_\mathrm{o} - r_\mathrm{o})^2}}{3}
     \nonumber \\[0.5em]
-    c_3 &= \frac{b_o + r_o}{(b_o - r_o)\sqrt{1 - (b_o - r_o)^2}}
+    c_3 &= \frac{b_\mathrm{o} + r_\mathrm{o}}{(b_\mathrm{o} - r_\mathrm{o})\sqrt{1 - (b_\mathrm{o} - r_\mathrm{o})^2}}
     \quad,
     \\
     \intertext{and}
     %
-    \delta(b_o, r_o, \alpha) &=
+    \delta(b_\mathrm{o}, r_\mathrm{o}, \alpha) &=
     \begin{cases}
         -2\pi
          &
         \qquad
-        \alpha > \frac{3\pi}{2} \,\, \text{and} \,\, b_o > r_o
+        \alpha > \frac{3\pi}{2} \,\, \text{and} \,\, b_\mathrm{o} > r_\mathrm{o}
         \\
         +2\pi
          &
         \qquad
-        \alpha > \frac{3\pi}{2} \,\, \text{and} \,\, b_o < r_o
+        \alpha > \frac{3\pi}{2} \,\, \text{and} \,\, b_\mathrm{o} < r_\mathrm{o}
         \\
         0
          &
@@ -3864,7 +3867,7 @@ kind, with
 %
 \begin{proof}{p2}
     \label{eq:n}
-    n & = -\frac{4 b_o r_o}{(r_o - b_o)^2}
+    n & = -\frac{4 b_\mathrm{o} r_\mathrm{o}}{(r_\mathrm{o} - b_\mathrm{o})^2}
     \quad.
 \end{proof}
 %
@@ -3872,7 +3875,7 @@ kind, with
 While stable algorithms exist to evaluate $\Pi(n; \psi \,|\, m)$
 \citep[e.g.][]{Bulirsch1969}, we find that the parametrization above has
 poor numerical stability, particularly in the vicinity of the singular
-points $b_o = r_o$ and $b_o = 1 + r_o$. In practice, we find that
+points $b_\mathrm{o} = r_\mathrm{o}$ and $b_\mathrm{o} = 1 + r_\mathrm{o}$. In practice, we find that
 numerical evaluation of Equation~(\ref{eq:p2}) via Gaussian quadrature
 is more numerically stable and just as computationally efficient as
 the procedure outlined above.
@@ -3901,7 +3904,7 @@ The latter is given by
 \begin{proof}{tT}
     \xi_1 &=
     \begin{cases}
-        0   & \qquad \qquad (1 - x_o'')^2 + {y_o''}^2 < r_o^2
+        0   & \qquad \qquad (1 - x_\mathrm{o}'')^2 + {y_\mathrm{o}''}^2 < r_\mathrm{o}^2
         \\
         \pi & \qquad \qquad \text{otherwise}
         \quad.
@@ -3929,9 +3932,8 @@ projection of a point on the ellipse onto the unit circle
 (see Figure~\ref{fig:geometry}).
 
 The solution to Equation~(\ref{eq:tT}) involves repeated application
-of the binomial theorem. The result is given on the following
-page in Equation~(\ref{eq:tn}) along with the usual validation link,
-where we define
+of the binomial theorem.
+If we define the quantities
 %
 \begin{proof}{tT}
     \label{eq:Zuvjk}
@@ -3948,143 +3950,150 @@ where we define
     %
     \delta(b, \xi) & =
     \begin{cases}
-        0               & \qquad 0 \leq \xi < \frac{\pi}{2}     \\
-        \pi             & \qquad \frac{\pi}{2} \leq \xi < \pi   \\
-        2 |b| b_c       & \qquad \pi \leq \xi < \frac{3\pi}{2}  \\
-        \pi + 2 |b| b_c & \qquad \frac{3\pi}{2} \leq \xi < 2\pi
-        \quad.
+        0                        & \qquad 0 \leq \xi < \frac{\pi}{2}     \\
+        \pi                      & \qquad \frac{\pi}{2} \leq \xi < \pi   \\
+        2 |b| b_\mathrm{c}       & \qquad \pi \leq \xi < \frac{3\pi}{2}  \\
+        \pi + 2 |b| b_\mathrm{c} & \qquad \frac{3\pi}{2} \leq \xi < 2\pi
+        \quad,
     \end{cases}
 \end{proof}
 %
-\afterpage{
-    \begin{proof}{tT}
-        \label{eq:tn}
-        \tag{\ref*{eq:Zuvjk}*}
-        \mathbb{t}_n & =
-        \begin{cases}
-            %
-            %
-            b\cos\theta'
-            \sum\limits_{j=0}^{\frac{\nu}{2}}
-            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-            Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
-            (b, \theta') \,
-            \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
-            \\
-            \quad\quad\quad\quad
-            - \, \sin\theta'
-            \sum\limits_{j=0}^{\frac{\nu}{2}}
-            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-            Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
-            (b, \theta') \,
-            \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
-            %
-             & \qquad
-            \mathrel{\raisebox{1.25em}{$\mu, \nu, \, \text{even}$}}
-            %
-            %
-            \\[3em]
-            %
-            %
-            \frac{1}{3}
-            \Delta
-            \Big\{
-            \arctan\left( \frac{|b|\sin\vxi}{\cos\vxi} \right)
-            \\
-            \qquad\quad\quad
-            - \, \sgn\left({\sin\vxi}\right)
-            \left(
-            \arctan
-            \left(
-                \frac{
-                    \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
-                }{2 |b| b_c}
-                \right)
-            + |b| b_c \cos\vxi
-            \right)
-            %
-             & \qquad \mu = \nu = 1
-            %
-            \\
-            \qquad\quad\quad
-            + \, \pmb{\delta}(b, \vxi)
-            \Big\}
-            %
-            \\[3em]
-            %
-            %
-            -bb_c^3\sin\theta'
-            \sum\limits_{j=0}^{l-2}
-            Z^{0, l-2}_{0,j}
-            (b, \theta') \,
-            \iH_{j + 1, l + 1 - j}(\pmb{\xi})
-            \\
-            \quad\quad\quad\quad
-            - \, b_c^3\cos\theta'
-            \sum\limits_{j=0}^{l-2}
-            Z^{0, l-2}_{0,j}
-            (b, \theta') \,
-            \iH_{j, l + 2 - j}(\pmb{\xi})
-            %
-             & \qquad
-            \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{even}$}}
-            %
-            %
-            \\[3em]
-            %
-            %
-            -bb_c^3\sin^2\theta'
-            \sum\limits_{j=0}^{l-3}
-            Z^{0, l-3}_{0,j}
-            (b, \theta') \,
-            \iH_{j + 2, l - j}(\pmb{\xi})
-            \\
-            \quad\quad\quad\quad
-            - \, b b_c^3\cos^2\theta'
-            \sum\limits_{j=0}^{l-3}
-            Z^{0, l-3}_{0,j}
-            (b, \theta') \,
-            \iH_{j, l + 2 - j}(\pmb{\xi})
-            %
-            %
-             & \qquad
-            \mathrel{\raisebox{0em}{$\nu \, \text{odd}, \mu = 1, l \, \text{odd}$}}
-            %
-            \\
-            \quad\quad\quad\quad
-            - \, b_c^5\sin\theta'\cos\theta'
-            \sum\limits_{j=0}^{l-3}
-            Z^{0, l-3}_{0,k}
-            (b, \theta') \,
-            \iH_{j + 1, l + 1 - j}(\pmb{\xi})
-            %
-            %
-            %
-            \\[3em]
-            bb_c^3\cos\theta'
-            \sum\limits_{j=0}^{\frac{\nu}{2}}
-            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-            Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
-            (b, \theta') \,
-            \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
-            \\
-            \quad\quad\quad\quad
-            - \, b_c^3\sin\theta'
-            \sum\limits_{j=0}^{\frac{\nu}{2}}
-            \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
-            Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
-            (b, \theta') \,
-            \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
-            %
-             & \qquad
-            \mathrel{\raisebox{1.25em}{$\text{otherwise}$}}
-            %
-            %
-        \end{cases}
-    \end{proof}
-    \vfill
-}
+we may express the solution to the $\mathbb{t}_n$ integral as
+
 %
+\clearpage
+%
+
+\begin{proof}{tT}
+    \label{eq:tn}
+    \mathbb{t}_n & =
+    \begin{cases}
+        %
+        %
+        b\cos\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
+        (b, \theta') \,
+        \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, \sin\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        Z^{\frac{\nu}{2}, \frac{\mu+2}{2}}_{j,k}
+        (b, \theta') \,
+        \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
+        %
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\mu, \nu, \, \text{even}$}}
+        %
+        %
+        \\[3em]
+        %
+        %
+        \frac{1}{3}
+        \Delta
+        \Big\{
+        \arctan\left( \frac{|b|\sin\vxi}{\cos\vxi} \right)
+        \\
+        \qquad\quad\quad
+        - \, \sgn\left({\sin\vxi}\right)
+        \left(
+        \arctan
+        \left(
+            \frac{
+                \left(\frac{\sin\vxi}{1 + \cos\vxi}\right)^2 + 2 b^2 - 1
+            }{2 |b| b_\mathrm{c}}
+            \right)
+        + |b| b_\mathrm{c} \cos\vxi
+        \right)
+        %
+         & \qquad \mu = \nu = 1
+        %
+        \\
+        \qquad\quad\quad
+        + \, \pmb{\delta}(b, \vxi)
+        \Big\}
+        %
+        \\[3em]
+        %
+        %
+        -bb_c^3\sin\theta'
+        \sum\limits_{j=0}^{l-2}
+        Z^{0, l-2}_{0,j}
+        (b, \theta') \,
+        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, b_\mathrm{c}^3\cos\theta'
+        \sum\limits_{j=0}^{l-2}
+        Z^{0, l-2}_{0,j}
+        (b, \theta') \,
+        \iH_{j, l + 2 - j}(\pmb{\xi})
+        %
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\nu \, \text{odd}, \mu = 1, l \, \text{even}$}}
+        %
+        %
+        \\[3em]
+        %
+        %
+        -bb_c^3\sin^2\theta'
+        \sum\limits_{j=0}^{l-3}
+        Z^{0, l-3}_{0,j}
+        (b, \theta') \,
+        \iH_{j + 2, l - j}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, b b_\mathrm{c}^3\cos^2\theta'
+        \sum\limits_{j=0}^{l-3}
+        Z^{0, l-3}_{0,j}
+        (b, \theta') \,
+        \iH_{j, l + 2 - j}(\pmb{\xi})
+        %
+        %
+         & \qquad
+        \mathrel{\raisebox{0em}{$\nu \, \text{odd}, \mu = 1, l \, \text{odd}$}}
+        %
+        \\
+        \quad\quad\quad\quad
+        - \, b_\mathrm{c}^5\sin\theta'\cos\theta'
+        \sum\limits_{j=0}^{l-3}
+        Z^{0, l-3}_{0,k}
+        (b, \theta') \,
+        \iH_{j + 1, l + 1 - j}(\pmb{\xi})
+        %
+        %
+        %
+        \\[3em]
+        bb_c^3\cos\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
+        (b, \theta') \,
+        \iH_{j + k + 1, l + 1 - j - k}(\pmb{\xi})
+        \\
+        \quad\quad\quad\quad
+        - \, b_\mathrm{c}^3\sin\theta'
+        \sum\limits_{j=0}^{\frac{\nu}{2}}
+        \sum\limits_{k=0}^{\frac{\mu + 2}{2}}
+        Z^{\frac{\nu-1}{2}, \frac{\mu - 3}{2}}_{j,k}
+        (b, \theta') \,
+        \iH_{j + k, l + 2 - j - k}(\pmb{\xi})
+        %
+         & \qquad
+        \mathrel{\raisebox{1.25em}{$\text{otherwise}$}}
+        %
+        %
+    \end{cases}
+\end{proof}
+
+%
+\vfill
+\clearpage
+%
+
 The solution to Equation~(\ref{eq:tn}) depends on the matrix
 $\viH$, whose components are given by the integral
 %
@@ -4168,7 +4177,7 @@ to the night side,
 \begin{proof}{qT}
     \lambda_0 &=
     \begin{cases}
-        \theta'        & \qquad \qquad \cos^2\theta' + (\sin\theta' - b_o)^2 < r_o^2
+        \theta'        & \qquad \qquad \cos^2\theta' + (\sin\theta' - b_\mathrm{o})^2 < r_\mathrm{o}^2
         \\
         \theta ' + \pi & \qquad \qquad \text{otherwise}
         \quad.
@@ -4180,7 +4189,7 @@ and the limb of the occulted body,
 %
 \begin{proof}{qT}
     \lambda_1 & =
-    \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_o ^ 2 + b_o ^ 2}{2 b_o}\right) - \frac{\pi}{2}\right)
+    \frac{\pi}{2} \pm \left(\arcsin\left(\frac{1 - r_\mathrm{o} ^ 2 + b_\mathrm{o} ^ 2}{2 b_\mathrm{o}}\right) - \frac{\pi}{2}\right)
     \quad,
 \end{proof}
 %
