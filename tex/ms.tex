@@ -123,7 +123,10 @@ and infer their surface properties
 In particular, \citet{Dunbar1986} developed an efficient analytic
 algorithm to model Pluto-Charon occultation light curves in reflected light
 assuming uniform surfaces and used it to infer the two body's
-average geometrical albedos. Later, \citet{Reinsch1994} analyzed
+average geometrical albedos. Later,
+\citet{Buie1992} used a maximum entropy approach to reconstruct two-dimensional
+maps of the two bodies and
+\citet{Reinsch1994} analyzed
 the complete mutual occultation dataset to infer longitudinal maps of Pluto's
 albedo.
 
@@ -185,7 +188,7 @@ and supplemented with an extensive
 and suite of
 \href{https://starry.readthedocs.io/en/latest/tutorials/}{tutorials}.
 %
-As in \citet{Luger2019}, in the caption of each of the figures
+As in all papers in the \starry series, in the caption of each of the figures
 we provide links \codeicon\ to the exact \Python scripts that
 generated them. Next to many of the equations we also provide
 links \prooficon\ to \textsf{Jupyter} notebooks containing
@@ -300,7 +303,7 @@ For convenience, Tables~\ref{tab:symbols}--\ref{tab:matrices} at the end
 list all symbols and variables used in the text, with descriptions and
 links to the equations in which they are defined.
 
-\section{Reflected light curves in \starry}
+\section{Reflected light curves in starry}
 \label{sec:validation}
 
 \subsection{Sample light curves}
@@ -1349,7 +1352,7 @@ in the toolbox.
 \subsection{Limitations}
 \label{sec:limitations}
 
-There are several limitations to the \starry model that are important
+There are a few limitations to the \starry model that are important
 to bear in mind. The primary limitation concerns the maximum spherical
 harmonic degree of the model. While the expressions derived here are
 valid at arbitrary degree, we find that their numerical stability quickly
@@ -1372,27 +1375,7 @@ $l=20$. If cases arise requiring a resolution smaller than about
 $180^\circ / 20 = 9^\circ$ on the surface, the \starry algorithm
 will have to be revisited.
 
-The second limitation involves a potential failure of the \starry
-algorithm. The \starry code includes a large suite of unit tests that compare
-the flux computations to numerical models and to various benchmarks
-for a wide variety of inputs. While we have done our best to
-develop tests over the full range of occultation configurations,
-there may be edge cases in which the \starry algorithm fails and returns
-the wrong flux. This could happen, for instance, if the quartic root
-solver (\S\ref{sec:which-case}) fails to find the points of intersection
-between the occultor and the day/night terminator, leading to
-an incorrect case identification (Figure~\ref{fig:cases}) and thus the
-wrong value for the flux. In the development of the algorithm, these cases
-would occasionally show up as a single, obvious outlier in a light curve
-model. All such cases we encountered
-have been fixed by adding consistency
-checks in the root solver and switching to alternate evaluation methods
-near known singularities. However, it is possible that there may still be
-rare cases in which this happens, in which case we ask that users
-raise an \href{https://github.com/rodluger/starry/issues}{issue} on
-GitHub so that we can provide a fix.
-
-The third limitation concerns the flexibility of the \starry model.
+The second limitation concerns the flexibility of the \starry model.
 While we presented ways to capture non-Lambertian scattering
 in \starry (\S\ref{sec:nonlambertian}), there are certain aspects
 of light curves in reflected light that cannot be captured by the model.
@@ -2446,6 +2429,13 @@ the terminator. We do so in the following sections.
             \S\ref{sec:cases-hard}), which
             include the terminator. These involve the evaluation of incomplete
             elliptic integrals and are derived below.
+            %
+            Note, finally, that there are additional subcases not shown above.
+            For instance, cases 4, 5, 7, and 8 also encompass configurations
+            in which the occultor does not intersect the limb of the occulted
+            body. However, as this distinction does not affect the procedure
+            for computing the flux in these cases (see text), we omit these
+            subcases from the figure.
             \label{fig:cases}
         }
     \end{centering}
@@ -4221,6 +4211,29 @@ Given $\vlambda$, the solution to Equation~(\ref{eq:qT}) is straightforward:
 \end{proof}
 %
 where the matrix $\viH$ is given by Equation~(\ref{eq:H}).
+
+
+\section{Caveats}
+\label{sec:cases-missing}
+%
+The \starry code includes a large suite of unit tests that compare
+the flux computations to numerical models and to various benchmarks
+for a wide variety of inputs. While we have done our best to
+develop tests over the full range of occultation configurations,
+there may be edge cases in which the \starry algorithm fails and returns
+the wrong flux. This could happen, for instance, if the quartic root
+solver (\S\ref{sec:which-case}) fails to find the points of intersection
+between the occultor and the day/night terminator, leading to
+an incorrect case identification (Figure~\ref{fig:cases}) and thus the
+wrong value for the flux. In the development of the algorithm, these cases
+would occasionally show up as a single, obvious outlier in a light curve
+model. All such cases we encountered
+have been fixed by adding consistency
+checks in the root solver and switching to alternate evaluation methods
+near known singularities. However, it is possible that there may still be
+rare cases in which this happens, in which case we ask that users
+raise an \href{https://github.com/rodluger/starry/issues}{issue} on
+GitHub so that we can provide a fix.
 
 
 % TABLE
