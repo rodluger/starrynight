@@ -35,4 +35,4 @@ jobs:
           branch-suffix: "-pdf"
           commit-message: "Committing automatically from GitHub Actions"
           path: |
-            tex/**.pdf
+            tex

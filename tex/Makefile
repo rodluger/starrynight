@@ -16,7 +16,7 @@ ms.pdf: ms.tex bib.bib $(FIGURES)
 	python gen_links.py
 	# Compile the paper with either tectonic or pdflatex
 	if [ "${TECTONIC}" = "true" ]; then\
-		tectonic ms.tex --print --keep-logs;\
+		tectonic ms.tex --print --keep-logs --keep-intermediates;\
 	else\
 		${LATEX} ms.tex;\
 		( ${CHECK_RERUN} && ${LATEX} ms.tex ) || echo "Done.";\
