@@ -93,7 +93,7 @@ even life.
 
 There is an extensive literature on techniques for mapping exoplanet surfaces
 based on their phase curves
-\citep[e.g.,][]{Russell1906,Lacis1972,Knutson2007,Cowan2008,Oakley2009,Berdyugina2017,PaperI,PaperII}
+\citep[e.g.,][]{Russell1906,Lacis1972,Knutson2007,Cowan2008,Oakley2009,Berdyugina2017,PaperI,PaperII,Heng2021}
 and occultation light curves
 \citep[e.g.,][]{Williams2006,Rauscher2007,Majeau2012,deWit2012,Rauscher2018},
 both in thermal and reflected (scattered) light.
@@ -303,12 +303,6 @@ For convenience, Tables~\ref{tab:symbols}--\ref{tab:matrices} at the end
 list all symbols and variables used in the text, with descriptions and
 links to the equations in which they are defined.
 
-\section{Reflected light curves in starry}
-\label{sec:validation}
-
-\subsection{Sample light curves}
-\label{sec:sample}
-
 \begin{figure}[t!]
     \begin{centering}
         \includegraphics[width=\linewidth]{figures/earthphase.pdf}
@@ -329,6 +323,15 @@ links to the equations in which they are defined.
         }
     \end{centering}
 \end{figure}
+
+% HACK
+\pagebreak
+
+\section{Reflected light curves in starry}
+\label{sec:validation}
+
+\subsection{Sample light curves}
+\label{sec:sample}
 
 Figure~\ref{fig:earthphase} shows a sample application of the algorithm
 developed in this paper: a reflected light phase curve of the
@@ -678,6 +681,9 @@ and (2) the body is an ideal Lambertian scatterer. Both of these
 assumptions can be relaxed within \starry, and below we discuss modifications
 to the code to allow for this.
 
+% HACK
+\pagebreak
+
 \subsection{Extended illumination source}
 \label{sec:extended}
 
@@ -850,6 +856,9 @@ However, neither approximation is particularly good, since Kelt-9b
 changes illumination phase significantly from ingress to egress
 owing to its proximity to the star.
 
+% HACK
+\pagebreak
+
 \subsection{Non-Lambertian scatterers}
 \label{sec:nonlambertian}
 
@@ -903,7 +912,8 @@ radiation (viewer) vector $\mathbf{v}$ in a frame in which the $z$-axis
 points along the surface normal.
 
 Treatment of a generalized, flexible scattering model is beyond the scope
-of this paper. However, as an example of how a scattering model may be
+of this paper; see \citet{Heng2021} for recent results on this front.
+However, as an example of how a scattering model may be
 incorporated
 into the \starry algorithm, we consider in detail the case of the rough surface
 scattering model of \citet{OrenNayar1994}, commonly used in computer
