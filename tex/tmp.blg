@@ -1,0 +1,15 @@
+This is BibTeX, Version 0.99d
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: tmp.aux
+The style file: aasjournal.bst
+Database file #1: bib.bib
+I was expecting a `,' or a `}'---line 174 of file bib.bib
+ : 
+ : url = {https://www.lpi.usra.edu/meetings/lpsc2005/pdf/1862.pdf}
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Warning--entry type for "exoplanet" isn't style-file defined
+--line 404 of file bib.bib
+Warning--empty journal in astroquery1
+Warning--empty publisher in Seager2010
+(There was 1 error message)

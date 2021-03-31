@@ -1,0 +1,349 @@
+\begin{thebibliography}{}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\href{#1}{#1}}
+
+\bibitem[{Agol {et~al.}(2020)Agol, Luger, \& Foreman-Mackey}]{Agol2020}
+Agol, E., {et~al.} 2020, The Astronomical Journal, 159, 123.
+\newblock \url{https://doi.org/10.3847/1538-3881/ab4fee}
+
+\bibitem[{{Ahlers} {et~al.}(2020){Ahlers}, {Johnson}, {Stassun}, {Colon},
+  {Barnes}, {Stevens}, {Beatty}, {Gaudi}, {Collins}, {Rodriguez}, {Ricker},
+  {Vanderspek}, {Latham}, {Seager}, {Winn}, {Jenkins}, {Caldwell}, {Goeke},
+  {Osborn}, {Paegert}, {Rowden}, \& {Tenenbaum}}]{Ahlers2020}
+{Ahlers}, J.~P., {et~al.} 2020, arXiv e-prints, arXiv:2004.14812
+
+\bibitem[{{Aizawa} {et~al.}(2020){Aizawa}, {Kawahara}, \& {Fan}}]{Aizawa2020}
+{Aizawa}, M., {et~al.} 2020, arXiv e-prints, arXiv:2004.03941
+
+\bibitem[{{Aksnes} {et~al.}(1984){Aksnes}, {Franklin}, {Millis}, {Birch},
+  {Blanco}, {Catalano}, \& {Piironen}}]{Aksnes1984}
+{Aksnes}, K., {et~al.} 1984, \aj, 89, 280
+
+\bibitem[{{Arlot} {et~al.}(1974){Arlot}, {Camichel}, \& {Link}}]{Arlot1974}
+{Arlot}, J.~E., {et~al.} 1974, \aap, 35, 115
+
+\bibitem[{{Arlot} {et~al.}(2014){Arlot}, {Emelyanov}, {Varfolomeev},
+  {Amoss{\'e}}, {Arena}, {Assafin}, {Barbieri}, {Bolzoni}, {Bragas-Ribas},
+  {Camargo}, {Casarramona}, {Casas}, {Christou}, {Colas}, {Collard}, {Combe},
+  {Constantinescu}, {Dangl}, {De Cat}, {Degenhardt}, {Delcroix},
+  {Dias-Oliveira}, {Dourneau}, {Douvris}, {Druon}, {Ellington}, {Estraviz},
+  {Farissier}, {Farmakopoulos}, {Garlitz}, {Gault}, {George}, {Gorda},
+  {Grismore}, {Guo}, {Herald}, {Ida}, {Ishida}, {Ivanov}, {Klemt}, {Koshkin},
+  {Le Campion}, {Liakos}, {Liao}, {Li}, {Loader}, {Lopresti}, {Lo Savio},
+  {Marchini}, {Marino}, {Masi}, {Massall{\'e}}, {Maulella}, {McFarland},
+  {Miyashita}, {Napoli}, {Noyelles}, {Pauwels}, {Pavlov}, {Peng},
+  {Perell{\'o}}, {Priban}, {Prost}, {Razemon}, {Rousselle}, {Rovira}, {Ruisi},
+  {Ruocco}, {Salvaggio}, {Sbarufatti}, {Shakun}, {Scheck}, {Sciuto}, {da Silva
+  Neto}, {Sinyaeva}, {Sofia}, {Sonka}, {Talbot}, {Tang}, {Tejfel}, {Thuillot},
+  {Tigani}, {Timerson}, {Tontodonati}, {Tsamis}, {Unwin}, {Venable},
+  {Vieira-Martins}, {Vilar}, {Vingerhoets}, {Watanabe}, {Yin}, {Yu}, \&
+  {Zambelli}}]{Arlot2014}
+---. 2014, \aap, 572, A120
+
+\bibitem[{{Arnold} \& {Schneider}(2004)}]{Arnold2004}
+{Arnold}, L., \& {Schneider}, J. 2004, \aap, 420, 1153
+
+\bibitem[{{Barnes} {et~al.}(2011){Barnes}, {Soderblom}, {Brown}, {Soderblom},
+  {Stephan}, {Jaumann}, {Le Mou{\'e}lic}, {Rodriguez}, {Sotin}, {Buratti},
+  {Baines}, {Clark}, \& {Nicholson}}]{Barnes2011}
+{Barnes}, J.~W., {et~al.} 2011, \icarus, 211, 722
+
+\bibitem[{{Bartoli{\'c}} {et~al.}(2021){Bartoli{\'c}}, {Luger},
+  {Foreman-Mackey}, {Howell}, \& {Rathbun}}]{Bartolic2021}
+{Bartoli{\'c}}, F., {et~al.} 2021, arXiv e-prints, arXiv:2103.03758
+
+\bibitem[{Becker \& Geissler(2005)}]{Becker2005}
+Becker, T., \& Geissler, P. 2005, Lunar and Planetary Science XXXVI, 36, 1862
+
+\bibitem[{{Berdyugina} \& {Kuhn}(2017)}]{Berdyugina2017}
+{Berdyugina}, S.~V., \& {Kuhn}, J.~R. 2017, arXiv e-prints, arXiv:1711.00185
+
+\bibitem[{Buie {et~al.}(1992)Buie, Tholen, \& Horne}]{Buie1992}
+Buie, M.~W., {et~al.} 1992, Icarus, 97, 211.
+\newblock
+  \url{https://www.sciencedirect.com/science/article/pii/001910359290129U}
+
+\bibitem[{Bulirsch(1965)}]{Bulirsch1965}
+Bulirsch, R. 1965, Numerische Mathematik, 7, 78.
+\newblock \url{https://doi.org/10.1007/BF01397975}
+
+\bibitem[{Bulirsch(1969)}]{Bulirsch1969}
+---. 1969, Numerische Mathematik, 13, 305.
+\newblock \url{https://doi.org/10.1007/BF02165405}
+
+\bibitem[{{Cabrera} \& {Schneider}(2007)}]{Cabrera2007}
+{Cabrera}, J., \& {Schneider}, J. 2007, \aap, 464, 1133
+
+\bibitem[{{Carter}(2019)}]{Carter2019}
+{Carter}, J.~L. 2019, arXiv e-prints, arXiv:1901.01361
+
+\bibitem[{Cowan \& Agol(2008)}]{Cowan2008}
+Cowan, N.~B., \& Agol, E. 2008, The Astrophysical Journal, 678, L129.
+\newblock \url{https://doi.org/10.1086%2F588553}
+
+\bibitem[{{Cowan} {et~al.}(2009){Cowan}, {Agol}, {Meadows}, {Robinson},
+  {Livengood}, {Deming}, {Lisse}, {A'Hearn}, {Wellnitz}, {Seager},
+  {Charbonneau}, \& {EPOXI Team}}]{Cowan2009}
+{Cowan}, N.~B., {et~al.} 2009, \apj, 700, 915
+
+\bibitem[{Cowan {et~al.}(2011)Cowan, Robinson, Livengood, Deming, Agol,
+  A'Hearn, Charbonneau, Lisse, Meadows, Seager, Shields, \&
+  Wellnitz}]{Cowan2011b}
+Cowan, N.~B., {et~al.} 2011, The Astrophysical Journal, 731, 76.
+\newblock \url{https://doi.org/10.1088/0004-637x/731/1/76}
+
+\bibitem[{{de Kleer} {et~al.}(2017){de Kleer}, {Skrutskie}, {Leisenring},
+  {Davies}, {Conrad}, {de Pater}, {Resnick}, {Bailey}, {Defr{\`e}re}, {Hinz},
+  {Skemer}, {Spalding}, {Vaz}, {Veillet}, \& {Woodward}}]{deKleer2017}
+{de Kleer}, K., {et~al.} 2017, \nat, 545, 199
+
+\bibitem[{{de Wit} {et~al.}(2012){de Wit}, {Gillon}, {Demory}, \&
+  {Seager}}]{deWit2012}
+{de Wit}, J., {et~al.} 2012, \aap, 548, A128
+
+\bibitem[{{Duane} {et~al.}(1987){Duane}, {Kennedy}, {Pendleton}, \&
+  {Roweth}}]{Duane1987}
+{Duane}, S., {et~al.} 1987, Physics Letters B, 195, 216
+
+\bibitem[{{Dunbar} \& {Tedesco}(1986)}]{Dunbar1986}
+{Dunbar}, R.~S., \& {Tedesco}, E.~F. 1986, \aj, 92, 1201
+
+\bibitem[{Edelman \& Murakami(1995)}]{Edelman1995}
+Edelman, A., \& Murakami, H. 1995, Mathematics of Computation, 64, 763
+
+\bibitem[{Fan {et~al.}(2019)Fan, Li, Li, Bartlett, Jiang, Natraj, Crisp, \&
+  Yung}]{Fan2019}
+Fan, S., {et~al.} 2019, The Astrophysical Journal, 882, L1.
+\newblock \url{https://doi.org/10.3847%2F2041-8213%2Fab3a49}
+
+\bibitem[{{Farr} {et~al.}(2018){Farr}, {Farr}, {Cowan}, {Haggard}, \&
+  {Robinson}}]{Farr2018}
+{Farr}, B., {et~al.} 2018, \aj, 156, 146
+
+\bibitem[{{Fienup}(1978)}]{Fienup1978}
+{Fienup}, J.~R. 1978, in Society of Photo-Optical Instrumentation Engineers
+  (SPIE) Conference Series, Vol. 149, \procspie, ed. A.~G. {Tescher}, 72--81
+
+\bibitem[{Folkner {et~al.}(2014)Folkner, Williams, Boggs, Park, \&
+  Kuchynka}]{Folkner2014}
+Folkner, W.~M., {et~al.} 2014, IPN Progress Report, 42
+
+\bibitem[{{Ford} {et~al.}(2001){Ford}, {Seager}, \& {Turner}}]{Ford2001}
+{Ford}, E.~B., {et~al.} 2001, \nat, 412, 885
+
+\bibitem[{Foreman-Mackey {et~al.}(2020)Foreman-Mackey, Luger, Czekala, Agol,
+  Price-Whelan, \& Barclay}]{exoplanet}
+Foreman-Mackey, D., {et~al.} 2020, exoplanet-dev/exoplanet: exoplanet v0.3.2,
+  vv0.3.2,  Zenodo, doi:10.5281/zenodo.3785072.
+\newblock \url{https://doi.org/10.5281/zenodo.3785072}
+
+\bibitem[{{Fujii} \& {Kawahara}(2012)}]{Fujii2012}
+{Fujii}, Y., \& {Kawahara}, H. 2012, \apj, 755, 101
+
+\bibitem[{Ginsburg {et~al.}(2013)Ginsburg, Robitaille, Parikh, Deil, Mirocha,
+  Woillez, Svoboda, Willett, Allen, Grollier, Persson, \& Shiga}]{astroquery1}
+Ginsburg, A., {et~al.} 2013, doi:10.6084/m9.figshare.805208.v2.
+\newblock \url{https://figshare.com/articles/Astroquery_v0_1/805208}
+
+\bibitem[{Ginsburg {et~al.}(2019)Ginsburg, Sip{\H{o}}cz, Brasseur,
+  Cowperthwaite, Craig, Deil, Guillochon, Guzman, Liedtke, Lim, Lockhart,
+  Mommert, Morris, Norman, Parikh, Persson, Robitaille, Segovia, Singer,
+  Tollerud, de~Val-Borro, Valtchanov, \& and}]{astroquery2}
+---. 2019, The Astronomical Journal, 157, 98.
+\newblock \url{https://doi.org/10.3847%2F1538-3881%2Faafc33}
+
+\bibitem[{{G{\'o}rski} {et~al.}(2005){G{\'o}rski}, {Hivon}, {Banday},
+  {Wandelt}, {Hansen}, {Reinecke}, \& {Bartelmann}}]{healpix}
+{G{\'o}rski}, K.~M., {et~al.} 2005, \apj, 622, 759
+
+\bibitem[{Guennebaud {et~al.}(2010)Guennebaud, Jacob, {et~al.}}]{eigen}
+Guennebaud, G., {et~al.} 2010, Eigen, v3,  Online.
+\newblock \url{http://eigen.tuxfamily.org}
+
+\bibitem[{{Haggard} \& {Cowan}(2018)}]{Haggard2018}
+{Haggard}, H.~M., \& {Cowan}, N.~B. 2018, \mnras, 478, 371
+
+\bibitem[{{Heng} {et~al.}(2021){Heng}, {Morris}, \& {Kitzmann}}]{Heng2021}
+{Heng}, K., {et~al.} 2021, arXiv e-prints, arXiv:2103.02673
+
+\bibitem[{{Hoffman} \& {Gelman}(2011)}]{Hoffman2011}
+{Hoffman}, M.~D., \& {Gelman}, A. 2011, arXiv e-prints, arXiv:1111.4246
+
+\bibitem[{{Hughes} \& {Chraibi}(2011)}]{Hughes2011}
+{Hughes}, G.~B., \& {Chraibi}, M. 2011, arXiv e-prints, arXiv:1106.3787
+
+\bibitem[{Jakob {et~al.}(2017)Jakob, Rhinelander, \& Moldovan}]{pybind11}
+Jakob, W., {et~al.} 2017, \textsf{pybind11}: Seamless operability between C++11
+  and Python, v2.2,  GitHub.
+\newblock \url{https://github.com/pybind/pybind11}
+
+\bibitem[{{Jiang} {et~al.}(2018){Jiang}, {Zhai}, {Herman}, {Zhai}, {Hu}, {Su},
+  {Natraj}, {Li}, {Xu}, \& {Yung}}]{Jiang2018}
+{Jiang}, J.~H., {et~al.} 2018, \aj, 156, 26
+
+\bibitem[{Jones {et~al.}(2001)Jones, Oliphant, Peterson, {et~al.}}]{scipy}
+Jones, E., {et~al.} 2001, \textsf{SciPy}: Open source scientific tools for
+  \textsf{Python}, v1.0.0,  Online.
+\newblock \url{http://www.scipy.org/}
+
+\bibitem[{{Kawahara}(2020)}]{Kawahara2020}
+{Kawahara}, H. 2020, \apj, 894, 58
+
+\bibitem[{{Kawahara} \& {Fujii}(2010)}]{Kawahara2010}
+{Kawahara}, H., \& {Fujii}, Y. 2010, \apj, 720, 1333
+
+\bibitem[{{Kawahara} \& {Fujii}(2011)}]{Kawahara2011}
+---. 2011, The Astrophysical Journal, 739, L62
+
+\bibitem[{{Knuth} {et~al.}(2017){Knuth}, {Placek}, {Angerhausen}, {Carter},
+  {D'Angelo}, {Gai}, \& {Carado}}]{Knuth2017}
+{Knuth}, K., {et~al.} 2017, Entropy, 19, 559
+
+\bibitem[{{Knutson} {et~al.}(2007){Knutson}, {Charbonneau}, {Allen}, {Fortney},
+  {Agol}, {Cowan}, {Showman}, {Cooper}, \& {Megeath}}]{Knutson2007}
+{Knutson}, H.~A., {et~al.} 2007, \nat, 447, 183
+
+\bibitem[{{Kopal}(1954)}]{Kopal1954}
+{Kopal}, Z. 1954, \mnras, 114, 101
+
+\bibitem[{{Lacis} \& {Fix}(1972)}]{Lacis1972}
+{Lacis}, A.~A., \& {Fix}, J.~D. 1972, \apj, 174, 449
+
+\bibitem[{Livengood {et~al.}(2011)Livengood, Deming, A{\textquotesingle}Hearn,
+  Charbonneau, Hewagama, Lisse, McFadden, Meadows, Robinson, Seager, \&
+  Wellnitz}]{Livengood2011}
+Livengood, T.~A., {et~al.} 2011, Astrobiology, 11, 907.
+\newblock \url{https://doi.org/10.1089/ast.2011.0614}
+
+\bibitem[{{Louden} \& {Kreidberg}(2018)}]{Louden2018}
+{Louden}, T., \& {Kreidberg}, L. 2018, \mnras, 477, 2613
+
+\bibitem[{{Luger} {et~al.}(2018){Luger}, {Agol}, {Foreman-Mackey}, {Fleming},
+  {Lustig-Yaeger}, \& {Deitrick}}]{starry}
+{Luger}, R., {et~al.} 2018, {STARRY: Analytic computation of occultation light
+  curves}, v1.0.0,  Online, ascl:1810.005.
+\newblock \url{https://github.com/rodluger/starry}
+
+\bibitem[{{Luger} {et~al.}(2019{\natexlab{a}}){Luger}, {Agol},
+  {Foreman-Mackey}, {Fleming}, {Lustig-Yaeger}, \& {Deitrick}}]{Luger2019}
+---. 2019{\natexlab{a}}, \aj, 157, 64
+
+\bibitem[{{Luger} {et~al.}(2019{\natexlab{b}}){Luger}, {Bedell}, {Vanderspek},
+  \& {Burke}}]{Luger2019b}
+---. 2019{\natexlab{b}}, arXiv e-prints, arXiv:1903.12182
+
+\bibitem[{{Luger} {et~al.}(2021{\natexlab{a}}){Luger}, {Foreman-Mackey}, \&
+  {Hedges}}]{PaperII}
+---. 2021{\natexlab{a}}, arXiv e-prints, arXiv:2102.01697
+
+\bibitem[{{Luger} {et~al.}(2021{\natexlab{b}}){Luger}, {Foreman-Mackey},
+  {Hedges}, \& {Hogg}}]{PaperI}
+---. 2021{\natexlab{b}}, arXiv e-prints, arXiv:2102.00007
+
+\bibitem[{{Luger} {et~al.}(2017){Luger}, {Lustig-Yaeger}, \&
+  {Agol}}]{Luger2017}
+---. 2017, \apj, 851, 94
+
+\bibitem[{{Lustig-Yaeger} {et~al.}(2018){Lustig-Yaeger}, {Meadows}, {Tovar
+  Mendoza}, {Schwieterman}, {Fujii}, {Luger}, \& {Robinson}}]{LustigYaeger2018}
+{Lustig-Yaeger}, J., {et~al.} 2018, \aj, 156, 301
+
+\bibitem[{{Majeau} {et~al.}(2012){Majeau}, {Agol}, \& {Cowan}}]{Majeau2012}
+{Majeau}, C., {et~al.} 2012, \apjl, 747, L20
+
+\bibitem[{{Mandel} \& {Agol}(2002)}]{MandelAgol2002}
+{Mandel}, K., \& {Agol}, E. 2002, ApJL, 580, L171
+
+\bibitem[{Marcialis(1990)}]{Marcialis1990}
+Marcialis, R.~L. 1990, The Pluto-Charon system as revealed during the mutual
+  events,  The University of Arizona.
+\newblock \url{http://hdl.handle.net/10150/185001}
+
+\bibitem[{{Morgado} {et~al.}(2019){Morgado}, {Vieira-Martins}, {Assafin},
+  {Dias-Oliveira}, {Machado}, {Camargo}, {Malacarne}, {Sfair}, {Winter},
+  {Braga-Ribas}, {Benedetti-Rossi}, {Boldrin}, {Camargo}, {Gaspar},
+  {Gomes-J{\'u}nior}, {Miranda}, {de Santana}, \& {Trabuco}}]{Morgado2019}
+{Morgado}, B., {et~al.} 2019, \planss, 179, 104736
+
+\bibitem[{{Oakley} \& {Cash}(2009)}]{Oakley2009}
+{Oakley}, P.~H.~H., \& {Cash}, W. 2009, \apj, 700, 1428
+
+\bibitem[{Oren \& Nayar(1994)}]{OrenNayar1994}
+Oren, M., \& Nayar, S.~K. 1994, in Proceedings of the 21st Annual Conference on
+  Computer Graphics and Interactive Techniques, SIGGRAPH ’94 (New York, NY,
+  USA: Association for Computing Machinery), 239–246.
+\newblock \url{https://doi.org/10.1145/192161.192213}
+
+\bibitem[{{P{\'a}l}(2012)}]{Pal2012}
+{P{\'a}l}, A. 2012, \mnras, 420, 1630
+
+\bibitem[{Rauscher {et~al.}(2007)Rauscher, Menou, Seager, Deming, Cho, \&
+  Hansen}]{Rauscher2007}
+Rauscher, E., {et~al.} 2007, The Astrophysical Journal, 664, 1199.
+\newblock \url{https://doi.org/10.1086%2F519213}
+
+\bibitem[{{Rauscher} {et~al.}(2018){Rauscher}, {Suri}, \&
+  {Cowan}}]{Rauscher2018}
+{Rauscher}, E., {et~al.} 2018, \aj, 156, 235
+
+\bibitem[{{Reinsch} {et~al.}(1994){Reinsch}, {Burwitz}, \&
+  {Festou}}]{Reinsch1994}
+{Reinsch}, K., {et~al.} 1994, \icarus, 108, 209
+
+\bibitem[{{Robinson} {et~al.}(2014){Robinson}, {Ennico}, {Meadows}, {Sparks},
+  {Bussey}, {Schwieterman}, \& {Breiner}}]{Robinson2014}
+{Robinson}, T.~D., {et~al.} 2014, \apj, 787, 171
+
+\bibitem[{{Russell}(1906)}]{Russell1906}
+{Russell}, H.~N. 1906, \apj, 24, 1
+
+\bibitem[{Salvatier {et~al.}(2016)Salvatier, Wiecki, \& Fonnesbeck}]{pymc3}
+Salvatier, J., {et~al.} 2016, PeerJ Computer Science, 2, e55
+
+\bibitem[{{Saquet} {et~al.}(2018){Saquet}, {Emelyanov}, {Robert}, {Arlot},
+  {Anbazhagan}, {Bailli{\'e}}, {Bardecker}, {Berezhnoy}, {Bretton}, {Campos},
+  {Capannoli}, {Carry}, {Castet}, {Charbonnier}, {Chernikov}, {Christou},
+  {Colas}, {Coliac}, {Dangl}, {Dechambre}, {Delcroix}, {Dias-Oliveira},
+  {Drillaud}, {Duchemin}, {Dunford}, {Dupouy}, {Ellington}, {Fabre},
+  {Filippov}, {Finnegan}, {Foglia}, {Font}, {Gaillard}, {Galli}, {Garlitz},
+  {Gasmi}, {Gaspar}, {Gault}, {Gazeas}, {George}, {Gorda}, {Gorshanov},
+  {Gualdoni}, {Guhl}, {Halir}, {Hanna}, {Henry}, {Herald}, {Houdin}, {Ito},
+  {Izmailov}, {Jacobsen}, {Jones}, {Kamoun}, {Kardasis}, {Karimov},
+  {Khovritchev}, {Kulikova}, {Laborde}, {Lainey}, {Lavayssiere}, {Le Guen},
+  {Leroy}, {Loader}, {Lopez}, {Lyashenko}, {Lyssenko}, {Machado}, {Maigurova},
+  {Manek}, {Marchini}, {Midavaine}, {Montier}, {Morgado}, {Naumov}, {Nedelcu},
+  {Newman}, {Ohlert}, {Oksanen}, {Pavlov}, {Petrescu}, {Pomazan}, {Popescu},
+  {Pratt}, {Raskhozhev}, {Resch}, {Robilliard}, {Roschina}, {Rothenberg},
+  {Rottenborn}, {Rusov}, {Saby}, {Saya}, {Selvakumar}, {Signoret},
+  {Slesarenko}, {Sokov}, {Soldateschi}, {Sonka}, {Soulie}, {Talbot}, {Tejfel},
+  {Thuillot}, {Timerson}, {Toma}, {Torsellini}, {Trabuco}, {Traverse},
+  {Tsamis}, {Unwin}, {Abbeel}, {Vand enbruaene}, {Vasundhara}, {Velikodsky},
+  {Vienne}, {Vilar}, {Vugnon}, {Wuensche}, \& {Zeleny}}]{Saquet2018}
+{Saquet}, E., {et~al.} 2018, \mnras, 474, 4730
+
+\bibitem[{{Seager}(2010)}]{Seager2010}
+{Seager}, S. 2010, {Exoplanet Atmospheres: Physical Processes}
+
+\bibitem[{{Stern}(1992)}]{Stern1992}
+{Stern}, S.~A. 1992, \araa, 30, 185
+
+\bibitem[{{Theano Development Team}(2016)}]{theano}
+{Theano Development Team}. 2016, arXiv e-prints, abs/1605.02688.
+\newblock \url{http://arxiv.org/abs/1605.02688}
+
+\bibitem[{{Tholen} \& {Buie}(1990)}]{Tholen1990}
+{Tholen}, D.~J., \& {Buie}, M.~W. 1990, in \baas, Vol.~22, 1129--1129
+
+\bibitem[{Williams {et~al.}(2006)Williams, Charbonneau, Cooper, Showman, \&
+  Fortney}]{Williams2006}
+Williams, P. K.~G., {et~al.} 2006, The Astrophysical Journal, 649, 1020.
+\newblock \url{https://doi.org/10.1086%2F506468}
+
+\bibitem[{{Wong} {et~al.}(2019){Wong}, {Shporer}, {Morris}, {Heng}, {Kitzmann},
+  {Hoeijmakers}, {Demory}, {Mansfield}, {Bean}, {Daylan}, {Fetherolf},
+  {Rodriguez}, {Benneke}, {Ricker}, {Latham}, {Vanderspek}, {Seager}, {Winn},
+  {Jenkins}, {Burke}, {Christiansen}, {Essack}, {Rose}, {Smith}, {Tenenbaum},
+  \& {Yahalomi}}]{Wong2019}
+{Wong}, I., {et~al.} 2019, arXiv e-prints, arXiv:1910.01607
+
+\end{thebibliography}
