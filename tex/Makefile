@@ -14,15 +14,25 @@ default: ms.pdf
 ms.pdf: ms.tex bib.bib $(FIGURES)
 	# Generate links to current git commit
 	python gen_links.py
+	# Generate temp file with custom defs
+ifdef LINENOS
+	echo "\\\def\\\LINENOS{1}\n\\\input{ms}" > tmp.tex
+endif
+ifndef LINENOS
+	echo "\\\input{ms}" > tmp.tex
+endif
 	# Compile the paper with either tectonic or pdflatex
 	if [ "${TECTONIC}" = "true" ]; then\
-		tectonic ms.tex --print --keep-logs --keep-intermediates;\
+		tectonic tmp.tex --print --keep-logs --keep-intermediates;\
 	else\
-		${LATEX} ms.tex;\
-		( ${CHECK_RERUN} && ${LATEX} ms.tex ) || echo "Done.";\
-		( ${CHECK_RERUN} && ${LATEX} ms.tex ) || echo "Done.";\
-		( ${CHECK_RERUN} && ${LATEX} ms.tex ) || echo "Done.";\
+		${LATEX} tmp.tex;\
+		( ${CHECK_RERUN} && ${LATEX} tmp.tex ) || echo "Done.";\
+		( ${CHECK_RERUN} && ${LATEX} tmp.tex ) || echo "Done.";\
+		( ${CHECK_RERUN} && ${LATEX} tmp.tex ) || echo "Done.";\
 	fi
+	# Remove the temp file
+	mv tmp.pdf ms.pdf
+	rm tmp.tex
 
 clean:
 	# Remove temporaries and output

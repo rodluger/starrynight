@@ -1,11 +1,30 @@
 % !TeX root = ./ms.tex
-\documentclass[modern]{aastex62}
+\ifdefined\LINENOS
+    \documentclass[modern,linenumbers]{aastex62}
+\else
+    \documentclass[modern]{aastex62}
+\fi
 
 % Load the corTeX style definitions
 \input{cortex}
 
 % Load custom style
 \input{style}
+
+% Force line numbers in paragraphs containing equations
+\ifdefined\LINENOS
+    \usepackage{lineno}
+    \linenumbers
+    \let\oldalign\align
+    \let\oldendalign\endalign
+    \renewenvironment{align}{%
+        \linenomath%
+            \oldalign%
+    }{%
+        \endlinenomath%
+            \oldendalign%
+    }
+\fi
 
 % Bibliography
 \bibliographystyle{aasjournal}
@@ -203,7 +222,7 @@ illuminated by a monochromatic source that may or may not be
 occulted by a (possibly different) spherical body. This applies, for example,
 to the case of planetary phase curves, secondary
 eclipse (occultation) light curves, and moon-moon, planet-moon, and
-planet-planet occultations (in the Solar System or not),
+planet-planet occultations \citep[in the Solar System or not; e.g.,][]{Cabrera2007,Luger2019b},
 all seen in reflected light. We derive all expressions in
 the limit that the reflecting
 body is Lambertian, i.e., it scatters light isotropically, but we relax
@@ -707,7 +726,8 @@ where $a$ the semi-major axis of the orbit (where we implictly assume
 the eccentricity is zero).
 For planets like the Earth, this quantity is only about $0.26^\circ$,
 resulting in a negligible effect on the planet's light curve. However,
-for very close-in planets, the effect can be significant. For instance,
+for very close-in planets, the effect can be significant
+\citep{Knuth2017,Carter2019}. For instance,
 the hot Jupiter Kelt-9b has $\nicefrac{R_\mathrm{p}}{R_\star} = 0.083$ and
 $\nicefrac{a}{R_\star} = 3.16$
 planet \citep{Wong2019}. Assuming zero eccentricity and ignoring any
@@ -1415,7 +1435,7 @@ variations of vegetation are not accounted for in the model, although
 the \href{https://starry.readthedocs.io}{documentation} discusses
 how one may approach the modeling of temporal features.
 
-Finally, we would like to emphasize that while spherical harmonics are
+We would also like to emphasize that while spherical harmonics are
 a convenient basis for the purpose of computing light curves, they
 have a significant drawback when it comes to modeling real planetary
 surfaces: it can be difficult to strictly enforce physical
@@ -1479,6 +1499,20 @@ as spherical harmonic coefficients are sufficient.
 %
 The \href{https://starry.readthedocs.io}{documentation}
 includes tutorials on how to implement this in practice.
+
+%
+
+Finally, while the algorithm presented here can be used to model
+planet-planet and planet-moon occultations in reflected light, we only
+account for the physical blocking of light rays from the planet by the occultor;
+we do not account for the attenuation of the reflected light due to the
+\emph{shadow} of the occultor on the planet.
+This can be an important effect at certain orbital phases
+\citep[e.g.,][]{Cabrera2007}. However, since the shadow of the occultor is not necessarily
+circular, it is significantly harder to model in closed form. A proper treatment
+of this and other effects, such as occultations and shadows due to rings
+\citep[e.g.,][]{Arnold2004}, is deferred to future work.
+
 
 \section{Conclusions}
 \label{sec:conclusions}
